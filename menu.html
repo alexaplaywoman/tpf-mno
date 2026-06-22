@@ -1,28 +1,48 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
-        <title>Lab Kontrol</title>
-    </head>
-    <body class="d-flex justify-content-center align-items-center vh-100">
-        <div class="text-center">
-            <h1><b>LAB KONTROL</b></h1>
-            <h4>Reserve un laboratorio para sus actividades academicas</h4>
-            <br><br>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <button id="botonReserva" type="button" class="btn bg-dark bg-dark text-white btn-lg" onclick="reservar()">
-                    Realizar una reserva
-                </button>
-                <button id="botonConsultar" type="button" class="btn bg-dark bg-dark text-white btn-lg" onclick="consultar()">
-                    Consultar una reserva
-                </button>
-            </div>
-            <p id="btn1"></p>
-            <script src="nombrejs1.js"></script>
-            <p id="btn2"></p>
-            <script src="nombrejs2.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/estilos.css">
+
+    <title>Lab Kontrol</title>
+</head>
+
+<body>
+
+<nav class="navbar w-100"></nav>
+
+<!-- SOLO AÑADO ESTA CLASE -->
+<div class="contenido d-flex justify-content-center align-items-center vh-100">
+
+    <div class="text-center">
+
+        <h1><b>LAB KONTROL</b></h1>
+        <h4>Reserve un laboratorio para sus actividades academicas</h4>
+
+        <br><br>
+
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+            <button id="botonReserva" class="btn btn-lg" onclick="reservar()">
+                Realizar una reserva
+            </button>
+
+            <button id="botonConsultar" class="btn btn-lg" onclick="consultar()">
+                Consultar una reserva
+            </button>
+
         </div>
-    </body>
+
+    </div>
+
+</div>
+
+<script src="menu.js"></script>
+
+</body>
+
 </html>
