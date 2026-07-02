@@ -3,7 +3,7 @@ const Sybase = require('sybase');
 const router = express.Router();
 
 function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2638, 'labcontrol', usuario, clave);
+    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
 }
 
 const manejarError = (err, res, action) => {
@@ -95,7 +95,7 @@ router.post('/add', (req, res) => {
             SELECT ID_RESERVA FROM RESERVAS
             WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
               AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
-              AND ID_ESTADO_RESERVA != 3
+              AND ESTADO_RESERVA != 'Cancelado'
               AND HORA_INICIO < '${hora_fin}'
               AND HORA_FIN > '${hora_inicio}'
         `;
