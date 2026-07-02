@@ -3,7 +3,7 @@ const Sybase = require('sybase');
 const router = express.Router();
 
 function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2638, 'labcontrol', usuario, clave);
+    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
 }
 
 const manejarError = (err, res, action) => {
@@ -38,8 +38,8 @@ router.get('/', (req, res) => {
                    td.NOMBRE AS tipo_documento
             FROM SOLICITANTES s
             LEFT JOIN CARRERAS c ON s.ID_CARRERA = c.ID_CARRERA
-            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_TIPO_SOLICITANTE
-            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.ID_TIPO_DOCUMENTO
+            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_SOLICITANTE
+            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.TIPO_DOCUMENTO
             ORDER BY s.APELLIDO, s.NOMBRE
         `;
 
@@ -70,8 +70,8 @@ router.get('/:cedula', (req, res) => {
                    td.NOMBRE AS tipo_documento
             FROM SOLICITANTES s
             LEFT JOIN CARRERAS c ON s.ID_CARRERA = c.ID_CARRERA
-            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_TIPO_SOLICITANTE
-            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.ID_TIPO_DOCUMENTO
+            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_SOLICITANTE
+            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.TIPO_DOCUMENTO
             WHERE s.CEDULA_IDENTIDAD = ${cedula}
         `;
 
