@@ -1,0 +1,53 @@
+// app.js - Configuración inicial del servidor
+const express = require('express');
+const path = require('path');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware para analizar datos en formato JSON
+app.use(express.json());
+
+// Hacer accesible Bootstrap desde node_modules
+app.use('/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist')));
+
+// Servir archivos estáticos desde la carpeta frontend/public
+app.use(express.static(path.join(__dirname, 'frontend/public')));
+
+// Página principal (login.html)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/login.html'));
+});
+
+// Páginas del sistema para que en el url se escriba un valor y lo busque en el sitema
+app.get('/menu', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/menu.html'));
+});
+
+app.get('/edificio', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/edificio.html'));
+});
+
+app.get('/evento', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/evento.html'));
+});
+
+app.get('/laboratorio', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/laboratorio.html'));
+});
+
+app.get('/confirmar', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/confirmar.html'));
+});
+
+// Usar la ruta backend desde archivos separados
+const loginRoute = require('./Backend/Routes/reservas');
+app.use('/api/reservas', loginRoute);
+
+const areasRoute = require('./Backend/Routes/laboratorios');
+app.use('/api/laboratorios', areasRoute);
+
+// Iniciar servidor
+app.listen(PORT, () => {
+    console.log(`✅ Servidor iniciado en http://localhost:${PORT}`);
+});
