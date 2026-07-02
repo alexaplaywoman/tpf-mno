@@ -38,20 +38,21 @@ router.get('/', (req, res) => {
                    td.NOMBRE AS tipo_documento
             FROM SOLICITANTES s
             LEFT JOIN CARRERAS c ON s.ID_CARRERA = c.ID_CARRERA
-            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_TIPO_SOLICITANTE
-            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.ID_TIPO_DOCUMENTO
+            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_SOLICITANTE
+            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.TIPO_DOCUMENTO
             ORDER BY s.APELLIDO, s.NOMBRE
         `;
 
         connection.query(sql, (err, result) => {
             connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar solicitante');
+            if (err) return manejarError(err, res, 'consultar solicitantes');
+            return res.json(result);
         });
     });
 });
 
 router.get('/:cedula', (req, res) => {
-    const { id } = req.params;
+    const { cedula } = req.params;
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
@@ -69,8 +70,8 @@ router.get('/:cedula', (req, res) => {
                    td.NOMBRE AS tipo_documento
             FROM SOLICITANTES s
             LEFT JOIN CARRERAS c ON s.ID_CARRERA = c.ID_CARRERA
-            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_TIPO_SOLICITANTE
-            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.ID_TIPO_DOCUMENTO
+            LEFT JOIN TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_SOLICITANTE
+            LEFT JOIN TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.TIPO_DOCUMENTO
             WHERE s.CEDULA_IDENTIDAD = ${cedula}
         `;
 
@@ -86,16 +87,12 @@ router.get('/:cedula', (req, res) => {
 router.post('/add', (req, res) => {
     const {
         cedula_identidad, correo, id_carrera, id_solicitante, tipo_documento,
-        nombre, apellido, telefono, departamento,
-        usuario, clave
+        nombre, apellido, telefono, departamento, usuario, clave
     } = req.body;
 
-    const cedula = toInt(cedula_identidad);
-    if (!usuario || !clave || !correo || !nombre || !apellido)
+    if (!usuario || !clave || !cedula_identidad || !correo || !nombre || !apellido)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
-    if (cedula === null){
-        return res.status(400).json({ success: false, error: 'Cedula invalida.' });
-    }
+
     const connection = getConnection(usuario, clave);
 
     connection.connect((err) => {
@@ -103,11 +100,11 @@ router.post('/add', (req, res) => {
 
         const sql = `
             INSERT INTO SOLICITANTES
-                (CEDULA_IDENTIDAD, CORREO, ID_CARRERA, ID_SOLICITANTE,
-                TIPO_SOLICITANTE, NOMBRE, APELLIDO, TELEFONO, DEPARTAMENTO)
+                (CEDULA_IDENTIDAD, CORREO, ID_CARRERA, ID_SOLICITANTE, TIPO_DOCUMENTO,
+                 NOMBRE, APELLIDO, TELEFONO, DEPARTAMENTO)
             VALUES
-                ${cedula}, ${esc(correo)}, ${toInt(id_carrera) ?? 'NULL'}, ${toInt(id_solicitante) ?? 'NULL'},
-                ${toInt(tipo_documento) ?? 'NULL'}, ${esc(nombre)}, ${esc(apellido)}, ${esc(telefono)}, ${esc(departamento)})
+                (${cedula_identidad}, '${correo}', ${id_carrera || 'NULL'}, ${id_solicitante || 'NULL'},
+                 ${tipo_documento || 'NULL'}, '${nombre}', '${apellido}', '${telefono}', '${departamento}')
         `;
 
         connection.query(sql, (err) => {
@@ -119,18 +116,15 @@ router.post('/add', (req, res) => {
 });
 
 router.post('/update/:cedula', (req, res) => {
-    const cedula = toInt(req.params.cedula);
+    const { cedula } = req.params;
     const {
-        correo, id_carrera, id_solicitante,
-        tipo_documento, nombre, apellido, telefono, departamento,
-        usuario, clave
+        correo, id_carrera, id_solicitante, tipo_documento,
+        nombre, apellido, telefono, departamento, usuario, clave
     } = req.body;
 
     if (!usuario || !clave || !correo || !nombre || !apellido)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
-    if (cedula === null){
-        return res.status(400).json({ success: false, error: 'Cedula invalida.' });
-    }
+
     const connection = getConnection(usuario, clave);
 
     connection.connect((err) => {
@@ -138,14 +132,14 @@ router.post('/update/:cedula', (req, res) => {
 
         const sql = `
             UPDATE SOLICITANTES
-            SET CORREO         = ${esc(correo)},
-                ID_CARRERA     = ${toInt(id_carrera) ?? 'NULL'},
-                ID_SOLICITANTE = ${toInt(id_solicitante) ?? 'NULL'},
-                TIPO_DOCUMENTO = ${toInt(tipo_documento) ?? 'NULL'},
-                NOMBRE         = ${esc(nombre)},
-                APELLIDO       = ${esc(apellido)},
-                TELEFONO       = ${esc(telefono)},
-                DEPARTAMENTO   = ${esc(departamento)}
+            SET CORREO         = '${correo}',
+                ID_CARRERA     = ${id_carrera || 'NULL'},
+                ID_SOLICITANTE = ${id_solicitante || 'NULL'},
+                TIPO_DOCUMENTO = ${tipo_documento || 'NULL'},
+                NOMBRE         = '${nombre}',
+                APELLIDO       = '${apellido}',
+                TELEFONO       = '${telefono}',
+                DEPARTAMENTO   = '${departamento}'
             WHERE CEDULA_IDENTIDAD = ${cedula}
         `;
 
@@ -158,12 +152,10 @@ router.post('/update/:cedula', (req, res) => {
 });
 
 router.delete('/delete/:cedula', (req, res) => {
-    const cedula = toInt(req.params.cedula);
+    const { cedula } = req.params;
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
-    if (cedula === null)
-        return res.status(400).json({ success: false, error: 'Cédula inválida.' });
 
     const connection = getConnection(usuario, clave);
 

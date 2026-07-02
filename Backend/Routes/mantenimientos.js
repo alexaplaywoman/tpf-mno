@@ -20,9 +20,9 @@ const manejarError = (err, res, action) => {
     });
 };
 
-const ESTADO_LAB_MANTENIMIENTO = 3; // realizado
-const ESTADO_LAB_DISPONIBLE = 1; //disponible
-const ESTADO_MANT_FINALIZADOS = [3,4]; //realizado o cancelado
+const ESTADO_LAB_MANTENIMIENTO = 3; // laboratorio en mantenimiento
+const ESTADO_LAB_DISPONIBLE = 1;    // laboratorio disponible
+const ESTADOS_MANT_FINALIZADOS = [3, 4]; // Realizado o Cancelado
 
 router.get('/', (req, res) => {
     const { usuario, clave } = req.query;
@@ -35,10 +35,10 @@ router.get('/', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            SELECT m.ID_MANTENIMIENTO, m.NUEVO_LABORATORIO, m.FECHA_INICIO,
-            m.FECHA_FIN_PREVISTA, m.OBSERVACIONES, m.ID_ESTADO_MANTENIMIENTO,
-            em.ESTADO_MANTENIMIENTO AS estado_mantenimiento,
-            l.EDIFICIO
+            SELECT m.ID_MANTENIMIENTO, m.NUMERO_LABORATORIO, m.FECHA_INICIO,
+                   m.FECHA_FIN_PREVISTA, m.OBSERVACIONES, m.ID_ESTADO_MANTENIMIENTO,
+                   em.ESTADO_MANTENIMIENTO AS estado_mantenimiento,
+                   l.EDIFICIO
             FROM MANTENIMIENTOS m
             LEFT JOIN ESTADOS_MANTENIMIENTOS em ON m.ID_ESTADO_MANTENIMIENTO = em.ID_ESTADO_MANTENIMIENTO
             LEFT JOIN LABORATORIOS l ON m.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
@@ -64,26 +64,25 @@ router.get('/:id', (req, res) => {
     connection.connect((err) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        connection.query(sql, (err, result) => {
+        connection.query(
             `SELECT * FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
             (err, result) => {
                 connection.disconnect();
                 if (err) return manejarError(err, res, 'consultar mantenimiento');
-                if (result.length > 0) return res.json({ success: true, laboratorio: result[0] });
+                if (result.length > 0) return res.json({ success: true, mantenimiento: result[0] });
                 return res.json({ success: false, error: 'Mantenimiento no encontrado.' });
             }
-        });
+        );
     });
 });
 
 router.post('/add', (req, res) => {
     const {
         numero_laboratorio, id_estado_mantenimiento, fecha_inicio,
-        fecha_fin_prevista, observaciones,
-        usuario, clave
+        fecha_fin_prevista, observaciones, usuario, clave
     } = req.body;
 
-    if (!usuario || !clave || numeroLab === null || !fecha_inicio)
+    if (!usuario || !clave || !numero_laboratorio || !fecha_inicio)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
     const connection = getConnection(usuario, clave);
@@ -91,12 +90,12 @@ router.post('/add', (req, res) => {
     connection.connect((err) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sql = `
+        const sqlInsert = `
             INSERT INTO MANTENIMIENTOS
                 (ID_ESTADO_MANTENIMIENTO, NUMERO_LABORATORIO, FECHA_INICIO, FECHA_FIN_PREVISTA, OBSERVACIONES)
             VALUES
-                (${id_estado_mantenimiento || 'NULL'}, '${numeroLab}', ${fecha_inicio},
-                 ${fecha_fin_prevista}, ${observaciones})
+                (${id_estado_mantenimiento || 1}, ${numero_laboratorio}, '${fecha_inicio}',
+                 '${fecha_fin_prevista}', '${observaciones}')
         `;
 
         connection.query(sqlInsert, (err) => {
@@ -106,7 +105,7 @@ router.post('/add', (req, res) => {
             }
 
             connection.query(
-                `UPDATE LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                `UPDATE LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
                 (err) => {
                     connection.disconnect();
                     if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
@@ -146,8 +145,8 @@ router.post('/estado/:id', (req, res) => {
                 const sqlUpdate = `
                     UPDATE MANTENIMIENTOS
                     SET ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento},
-                        FECHA_FIN_PREVISTA       = ${esc(fecha_fin_prevista)},
-                        OBSERVACIONES             = ${esc(observaciones)}
+                        FECHA_FIN_PREVISTA       = '${fecha_fin_prevista}',
+                        OBSERVACIONES             = '${observaciones}'
                     WHERE ID_MANTENIMIENTO = ${id}
                 `;
 
