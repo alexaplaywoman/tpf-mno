@@ -95,7 +95,7 @@ router.post('/add', (req, res) => {
             SELECT ID_RESERVA FROM RESERVAS
             WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
               AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
-              AND ESTADO_RESERVA != 'Cancelado'
+              AND ESTADO_RESERVA != 'C'
               AND HORA_INICIO < '${hora_fin}'
               AND HORA_FIN > '${hora_inicio}'
         `;
