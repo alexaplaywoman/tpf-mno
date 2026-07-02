@@ -1,0 +1,200 @@
+const express = require('express');
+const Sybase = require('sybase');
+const router = express.Router();
+
+function getConnection(usuario, clave) {
+    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
+}
+
+const manejarError = (err, res, action) => {
+    let errorMessage;
+    if (err && typeof err === 'object') {
+        errorMessage = err.message || JSON.stringify(err);
+    } else {
+        errorMessage = String(err || 'Error de Base de Datos Desconocido');
+    }
+    console.error(`Error al ${action}:`, err);
+    return res.status(500).json({
+        success: false,
+        error: `Error de base de datos al ${action}: ${errorMessage}`
+    });
+};
+
+const ESTADO_LAB_MANTENIMIENTO = 3; // realizado
+const ESTADO_LAB_DISPONIBLE = 1; //disponible
+const ESTADO_MANT_FINALIZADOS = [3,4]; //realizado o cancelado
+
+router.get('/', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        const sql = `
+            SELECT m.ID_MANTENIMIENTO, m.NUEVO_LABORATORIO, m.FECHA_INICIO,
+            m.FECHA_FIN_PREVISTA, m.OBSERVACIONES, m.ID_ESTADO_MANTENIMIENTO,
+            em.ESTADO_MANTENIMIENTO AS estado_mantenimiento,
+            l.EDIFICIO
+            FROM MANTENIMIENTOS m
+            LEFT JOIN ESTADOS_MANTENIMIENTOS em ON m.ID_ESTADO_MANTENIMIENTO = em.ID_ESTADO_MANTENIMIENTO
+            LEFT JOIN LABORATORIOS l ON m.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
+            ORDER BY m.FECHA_INICIO DESC
+        `;
+
+        connection.query(sql, (err, result) => {
+            connection.disconnect();
+            if (err) return manejarError(err, res, 'consultar mantenimientos');
+            return res.json(result);
+        });
+    });
+});
+
+router.get('/:id', (req, res) => {
+    const { id } = req.params;
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(sql, (err, result) => {
+            `SELECT * FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar mantenimiento');
+                if (result.length > 0) return res.json({ success: true, laboratorio: result[0] });
+                return res.json({ success: false, error: 'Mantenimiento no encontrado.' });
+            }
+        });
+    });
+});
+
+router.post('/add', (req, res) => {
+    const {
+        numero_laboratorio, id_estado_mantenimiento, fecha_inicio,
+        fecha_fin_prevista, observaciones,
+        usuario, clave
+    } = req.body;
+
+    if (!usuario || !clave || numeroLab === null || !fecha_inicio)
+        return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        const sql = `
+            INSERT INTO MANTENIMIENTOS
+                (ID_ESTADO_MANTENIMIENTO, NUMERO_LABORATORIO, FECHA_INICIO, FECHA_FIN_PREVISTA, OBSERVACIONES)
+            VALUES
+                (${id_estado_mantenimiento || 'NULL'}, '${numeroLab}', ${fecha_inicio},
+                 ${fecha_fin_prevista}, ${observaciones})
+        `;
+
+        connection.query(sqlInsert, (err) => {
+            if (err) {
+                connection.disconnect();
+                return manejarError(err, res, 'agregar mantenimiento');
+            }
+
+            connection.query(
+                `UPDATE LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                (err) => {
+                    connection.disconnect();
+                    if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
+                    return res.json({ success: true });
+                }
+            );
+        });
+    });
+});
+
+router.post('/estado/:id', (req, res) => {
+    const { id } = req.params;
+    const { id_estado_mantenimiento, fecha_fin_prevista, observaciones, usuario, clave } = req.body;
+
+    if (!usuario || !clave || !id_estado_mantenimiento)
+        return res.status(400).json({ success: false, error: 'Faltan datos.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            `SELECT NUMERO_LABORATORIO FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+            (err, result) => {
+                if (err) {
+                    connection.disconnect();
+                    return manejarError(err, res, 'consultar mantenimiento');
+                }
+                if (result.length === 0) {
+                    connection.disconnect();
+                    return res.status(404).json({ success: false, error: 'Mantenimiento no encontrado.' });
+                }
+
+                const numeroLab = result[0].NUMERO_LABORATORIO;
+
+                const sqlUpdate = `
+                    UPDATE MANTENIMIENTOS
+                    SET ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento},
+                        FECHA_FIN_PREVISTA       = ${esc(fecha_fin_prevista)},
+                        OBSERVACIONES             = ${esc(observaciones)}
+                    WHERE ID_MANTENIMIENTO = ${id}
+                `;
+
+                connection.query(sqlUpdate, (err) => {
+                    if (err) {
+                        connection.disconnect();
+                        return manejarError(err, res, 'actualizar mantenimiento');
+                    }
+
+                    const estadoLab = ESTADOS_MANT_FINALIZADOS.some(e => e == id_estado_mantenimiento)
+                        ? ESTADO_LAB_DISPONIBLE
+                        : ESTADO_LAB_MANTENIMIENTO;
+
+                    connection.query(
+                        `UPDATE LABORATORIOS SET ESTADO = ${estadoLab} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                        (err) => {
+                            connection.disconnect();
+                            if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
+                            return res.json({ success: true });
+                        }
+                    );
+                });
+            }
+        );
+    });
+});
+
+router.delete('/delete/:id', (req, res) => {
+    const { id } = req.params;
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return manejarError(err, res, 'conectar para eliminar mantenimiento');
+
+        connection.query(
+            `DELETE FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+            (err) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'eliminar mantenimiento');
+                return res.json({ success: true });
+            }
+        );
+    });
+});
+
+module.exports = router;
