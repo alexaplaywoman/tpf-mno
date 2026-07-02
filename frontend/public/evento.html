@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/estilos.css">
+
+    <title>Reservas - Evento</title>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-dark w-100 px-3">
+
+    <a id="inicio" class="navbar-brand btn btn-sm" href="edificio.html">
+        Inicio
+    </a>
+
+</nav>
+
+<div class="d-flex flex-column justify-content-center align-items-center vh-100 contenido-ajustado">
+
+    <div class="text-center">
+
+        <h1 class="fw-bold">LAB KONTROL</h1>
+
+        <h2>Reserve un laboratorio para sus actividades académicas</h2>
+
+        <h4>Ingrese los datos de su evento</h4>
+
+        <div class="d-flex justify-content-center flex-wrap my-4">
+
+            <div class="rounded-pill py-2 px-4"
+                 style="background-color:#e5e5e5; color:#999; min-width:220px;">
+                1. Elegir Edificio
+            </div>
+
+            <div class="rounded-pill py-2 px-4 ms-2 text-white"
+                 style="background-color:#6c6480; min-width:220px;">
+                2. Elegir Tipo de Actividad
+            </div>
+
+            <div class="rounded-pill py-2 px-4 ms-2"
+                 style="background-color:#e5e5e5; color:#999; min-width:220px;">
+                3. Elegir Laboratorio
+            </div>
+
+            <div class="rounded-pill py-2 px-4 ms-2"
+                 style="background-color:#e5e5e5; color:#999; min-width:220px;">
+                4. Confirmar Reserva
+            </div>
+
+        </div>
+
+    </div>
+
+    <form id="form" style="width: 450px;">
+
+        <div class="mb-3 text-start">
+            <label for="alumnos" class="form-label">Cantidad de alumnos</label>
+            <input type="number" id="alumnos" name="alumnos" class="form-control" required>
+        </div>
+
+        <div class="mb-3 text-start">
+            <label for="evento" class="form-label">Tipo de actividad</label>
+
+            <select class="form-select" id="evento" name="evento" required>
+                <option value="">Seleccionar</option>
+                <option value="clase_regular">Clase regular</option>
+                <option value="examen">Examen</option>
+                <option value="capacitacion">Capacitación</option>
+                <option value="tutoria">Tutoría</option>
+                <option value="evento_institucional">Evento institucional</option>
+                <option value="practica_especial">Práctica especial</option>
+            </select>
+        </div>
+
+        <div class="mb-3 text-start">
+            <label for="fecha" class="form-label">Fecha para la reserva</label>
+            <input type="date" id="fecha" name="fecha" class="form-control" required>
+        </div>
+
+    </form>
+
+    <div class="d-flex justify-content-center gap-3 mt-4">
+
+        <button id="botonAtras" type="button" class="btn btn-lg">
+            Atrás
+        </button>
+
+        <button id="botonSiguiente" type="button" class="btn btn-lg">
+            Siguiente
+        </button>
+
+    </div>
+
+</div>
+
+<script src="./js/evento.js"></script>
+
+</body>
+</html>
