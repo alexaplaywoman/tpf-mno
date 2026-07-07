@@ -41,11 +41,23 @@ app.get('/confirmar', (req, res) => {
 });
 
 // Usar la ruta backend desde archivos separados
-const loginRoute = require('./Backend/Routes/reservas');
-app.use('/api/reservas', loginRoute);
+const reservasRoute = require('./Backend/Routes/reservas');
+app.use('/api/reservas', reservasRoute);
 
-const areasRoute = require('./Backend/Routes/laboratorios');
-app.use('/api/laboratorios', areasRoute);
+const laboratoriosRoute = require('./Backend/Routes/laboratorios');
+app.use('/api/laboratorios', laboratoriosRoute);
+
+const mantenimientosRoute = require('./Backend/Routes/mantenimientos');
+app.use('/api/mantenimientos', mantenimientosRoute);
+
+const solicitantesRoute = require('./Backend/Routes/solicitantes');
+app.use('/api/solicitantes', solicitantesRoute);
+
+const actividadesRoute = require('./Backend/Routes/actividades');
+app.use('/api/actividades', actividadesRoute);
+
+const reportesRoute = require('./Backend/Routes/reportes');
+app.use('/api/reportes', reportesRoute);
 
 const reservasRoute = require('./Backend/Routes/reservas');
 app.use('/api/reservas', reservasRoute);
