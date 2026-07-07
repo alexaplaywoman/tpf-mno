@@ -3,7 +3,7 @@ const Sybase = require('sybase');
 const router = express.Router();
 
 function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
+    return new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
 }
 
 const manejarError = (err, res, action) => {
