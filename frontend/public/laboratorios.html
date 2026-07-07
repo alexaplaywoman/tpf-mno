@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,10 +20,13 @@
 
     </nav>
 
+
     <div class="d-flex flex-column justify-content-center align-items-center min-vh-100"
          style="transform: translateY(-40px);">
 
+
         <div class="text-center w-100">
+
 
             <h1 class="fw-bold">LAB KONTROL</h1>
 
@@ -32,27 +35,30 @@
             </h2>
 
             <h4>
-                Elige el laboratorio donde se realizará su actividad
+                Seleccione el laboratorio y horario de su actividad
             </h4>
 
-            <br>
 
             <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 my-4">
+
 
                 <div class="rounded-pill d-flex justify-content-center align-items-center"
                      style="width:220px; height:45px; background:#e5e5e5; color:#999;">
                     1. Elegir Edificio
                 </div>
 
+
                 <div class="rounded-pill d-flex justify-content-center align-items-center"
                      style="width:220px; height:45px; background:#e5e5e5; color:#999;">
                     2. Elegir Tipo de Actividad
                 </div>
 
+
                 <div class="rounded-pill d-flex justify-content-center align-items-center text-white"
                      style="width:220px; height:45px; background:#6c6480;">
                     3. Elegir Laboratorio
                 </div>
+
 
                 <div class="rounded-pill d-flex justify-content-center align-items-center"
                      style="width:220px; height:45px; background:#e5e5e5; color:#999;">
@@ -63,92 +69,154 @@
 
         </div>
 
-        <div class="d-flex justify-content-center gap-4 flex-wrap">
+        <form id="form" class="card shadow p-4" style="width:500px;">
 
-            <button id="lab1"
-                    class="btn btn-outline-dark text-center p-2"
-                    style="width:160px; height:220px;"
-                    onclick="laboratorio1()">
+            <div id="listaLaboratorios" class="mb-3">
 
-                <img src="image/camara.jpeg"
-                     style="width:100%; height:130px; object-fit:cover;"
-                     class="mb-2">
 
-                <br>
+                <label class="form-label fw-bold">
+                    Laboratorio
+                </label>
 
-                <strong>Laboratorio 1</strong>
+                <div class="form-check mb-2">
 
-            </button>
+                    <input class="form-check-input" type="radio" name="laboratorio" id="lab1" value="Laboratorio 1" required>
 
-            <button id="lab2"
-                    class="btn btn-outline-dark text-center p-2"
-                    style="width:160px; height:220px;"
-                    onclick="laboratorio2()">
+                    <label class="form-check-label" for="laboratorio1">
+                        Laboratorio 1
+                    </label>
 
-                <img src="image/jo_pyo.png"
-                     style="width:100%; height:130px; object-fit:cover;"
-                     class="mb-2">
+                </div>
 
-                <br>
+                <div class="form-check mb-2">
 
-                <strong>Laboratorio 2</strong>
+                    <input class="form-check-input" type="radio" name="laboratorio" id="lab2" value="Laboratorio 2">
 
-            </button>
+                    <label class="form-check-label" for="laboratorio2">
+                        Laboratorio 2
+                    </label>
 
-            <button id="lab3"
-                    class="btn btn-outline-dark text-center p-2"
-                    style="width:160px; height:220px;"
-                    onclick="laboratorio3()">
+                </div>
 
-                <img src="image/Margarita.jpeg"
-                     style="width:100%; height:130px; object-fit:cover;"
-                     class="mb-2">
+                <div class="form-check mb-2">
 
-                <br>
+                    <input class="form-check-input" type="radio" name="laboratorio" id="lab3" value="Laboratorio 3">
 
-                <strong>Laboratorio 3</strong>
+                    <label class="form-check-label" for="laboratorio3">
+                        Laboratorio 3
+                    </label>
 
-            </button>
+                </div>
 
-            <button id="lab4"
-                    class="btn btn-outline-dark text-center p-2"
-                    style="width:160px; height:220px;"
-                    onclick="laboratorio4()">
+                <div class="form-check mb-2">
 
-                <img src="image/Mar y Rey.jpeg"
-                     style="width:100%; height:130px; object-fit:cover;"
-                     class="mb-2">
+                    <input class="form-check-input" type="radio" name="laboratorio" id="lab4" value="Laboratorio 4">
 
-                <br>
+                    <label class="form-check-label" for="laboratorio4">
+                        Laboratorio 4
+                    </label>
 
-                <strong>Laboratorio 4</strong>
+                </div>
 
-            </button>
+                <div class="form-check mb-2">
 
-            <button id="lab5"
-                    class="btn btn-outline-dark text-center p-2"
-                    style="width:160px; height:220px;"
-                    onclick="laboratorio5()">
+                    <input class="form-check-input" type="radio" name="laboratorio" id="lab5" value="Laboratorio 5">
 
-                <img src="image/periodismo.jpeg"
-                     style="width:100%; height:130px; object-fit:cover;"
-                     class="mb-2">
+                    <label class="form-check-label" for="laboratorio5">
+                        Laboratorio 5
+                    </label>
 
-                <br>
+                </div>
 
-                <strong>Laboratorio 5</strong>
+            </div>
 
-            </button>
+            <div class="row">
 
-        </div>
+                <div class="col-md-6 mb-3">
+
+                    <label for="horaInicio" class="form-label fw-bold">
+                        Hora Inicio
+                    </label>
+
+                    <select class="form-select"
+                            id="horaInicio"
+                            name="horaInicio"
+                            required>
+
+                        <option value="">
+                            Seleccionar
+                        </option>
+
+                        <option value="07:00">07:00</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                        <option value="19:00">19:00</option>
+                        <option value="20:00">20:00</option>
+                        <option value="21:00">21:00</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label for="horaFin" class="form-label fw-bold">
+                        Hora Fin
+                    </label>
+
+                    <select class="form-select"
+                            id="horaFin"
+                            name="horaFin"
+                            required>
+
+                        <option value="">
+                            Seleccionar
+                        </option>
+
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                        <option value="19:00">19:00</option>
+                        <option value="20:00">20:00</option>
+                        <option value="21:00">21:00</option>
+                        <option value="22:00">22:00</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </form>
 
         <div class="d-flex justify-content-center gap-3 mt-4">
 
-            <button id="botonAtras" type="button" class="btn btn-lg btn-secondary">
+            <button id="botonAtras"
+                    type="button"
+                    class="btn btn-lg btn-secondary">
                 Atrás
             </button>
 
-            <button id="botonSiguiente" type="button" class="btn btn-lg btn-primary">
+            <button id="botonSiguiente"
+                    type="button"
+                    class="btn btn-lg">
                 Siguiente
             </button>
 
@@ -156,7 +224,7 @@
 
     </div>
 
-    <script src="/js/laboratorio.js"></script>
+    <script src="./js/laboratorio.js"></script>
 
 </body>
 </html>
