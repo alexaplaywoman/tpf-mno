@@ -90,29 +90,61 @@ router.post('/add', (req, res) => {
     connection.connect((err) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sqlInsert = `
-            INSERT INTO MANTENIMIENTOS
-                (ID_ESTADO_MANTENIMIENTO, NUMERO_LABORATORIO, FECHA_INICIO, FECHA_FIN_PREVISTA, OBSERVACIONES)
-            VALUES
-                (${id_estado_mantenimiento || 1}, ${numero_laboratorio}, '${fecha_inicio}',
-                 '${fecha_fin_prevista}', '${observaciones}')
-        `;
-
-        connection.query(sqlInsert, (err) => {
-            if (err) {
-                connection.disconnect();
-                return manejarError(err, res, 'agregar mantenimiento');
-            }
-
-            connection.query(
-                `UPDATE LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
-                (err) => {
+        connection.query(
+            `SELECT ID_MANTENIMIENTO FROM MANTENIMIENTOS
+             WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
+               AND ID_ESTADO_MANTENIMIENTO IN (1, 2)`,
+            (err, activos) => {
+                if (err) {
                     connection.disconnect();
-                    if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
-                    return res.json({ success: true });
+                    return manejarError(err, res, 'verificar mantenimientos activos');
                 }
-            );
-        });
+                if (activos.length > 0) {
+                    connection.disconnect();
+                    return res.status(409).json({ success: false, error: 'Este laboratorio ya tiene un mantenimiento pendiente o en proceso.' });
+                }
+
+                const estadoMant = id_estado_mantenimiento || 1;
+
+                connection.query(
+                    `SELECT ID_ESTADO_MANTENIMIENTO FROM ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${estadoMant}`,
+                    (err, estados) => {
+                        if (err) {
+                            connection.disconnect();
+                            return manejarError(err, res, 'verificar estado de mantenimiento');
+                        }
+                        if (estados.length === 0) {
+                            connection.disconnect();
+                            return res.status(400).json({ success: false, error: 'Estado de mantenimiento no válido.' });
+                        }
+
+                        const sqlInsert = `
+                            INSERT INTO MANTENIMIENTOS
+                                (ID_ESTADO_MANTENIMIENTO, NUMERO_LABORATORIO, FECHA_INICIO, FECHA_FIN_PREVISTA, OBSERVACIONES)
+                            VALUES
+                                (${estadoMant}, ${numero_laboratorio}, '${fecha_inicio}',
+                                 '${fecha_fin_prevista}', '${observaciones}')
+                        `;
+
+                        connection.query(sqlInsert, (err) => {
+                            if (err) {
+                                connection.disconnect();
+                                return manejarError(err, res, 'agregar mantenimiento');
+                            }
+
+                            connection.query(
+                                `UPDATE LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
+                                (err) => {
+                                    connection.disconnect();
+                                    if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
+                                    return res.json({ success: true });
+                                }
+                            );
+                        });
+                    }
+                );
+            }
+        );
     });
 });
 
@@ -129,46 +161,60 @@ router.post('/estado/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT NUMERO_LABORATORIO FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
-            (err, result) => {
+            `SELECT ID_ESTADO_MANTENIMIENTO FROM ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento}`,
+            (err, estados) => {
                 if (err) {
                     connection.disconnect();
-                    return manejarError(err, res, 'consultar mantenimiento');
+                    return manejarError(err, res, 'verificar estado de mantenimiento');
                 }
-                if (result.length === 0) {
+                if (estados.length === 0) {
                     connection.disconnect();
-                    return res.status(404).json({ success: false, error: 'Mantenimiento no encontrado.' });
+                    return res.status(400).json({ success: false, error: 'Estado de mantenimiento no válido.' });
                 }
 
-                const numeroLab = result[0].NUMERO_LABORATORIO;
-
-                const sqlUpdate = `
-                    UPDATE MANTENIMIENTOS
-                    SET ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento},
-                        FECHA_FIN_PREVISTA       = '${fecha_fin_prevista}',
-                        OBSERVACIONES             = '${observaciones}'
-                    WHERE ID_MANTENIMIENTO = ${id}
-                `;
-
-                connection.query(sqlUpdate, (err) => {
-                    if (err) {
-                        connection.disconnect();
-                        return manejarError(err, res, 'actualizar mantenimiento');
-                    }
-
-                    const estadoLab = ESTADOS_MANT_FINALIZADOS.some(e => e == id_estado_mantenimiento)
-                        ? ESTADO_LAB_DISPONIBLE
-                        : ESTADO_LAB_MANTENIMIENTO;
-
-                    connection.query(
-                        `UPDATE LABORATORIOS SET ESTADO = ${estadoLab} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
-                        (err) => {
+                connection.query(
+                    `SELECT NUMERO_LABORATORIO FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+                    (err, result) => {
+                        if (err) {
                             connection.disconnect();
-                            if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
-                            return res.json({ success: true });
+                            return manejarError(err, res, 'consultar mantenimiento');
                         }
-                    );
-                });
+                        if (result.length === 0) {
+                            connection.disconnect();
+                            return res.status(404).json({ success: false, error: 'Mantenimiento no encontrado.' });
+                        }
+
+                        const numeroLab = result[0].NUMERO_LABORATORIO;
+
+                        const sqlUpdate = `
+                            UPDATE MANTENIMIENTOS
+                            SET ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento},
+                                FECHA_FIN_PREVISTA       = '${fecha_fin_prevista}',
+                                OBSERVACIONES             = '${observaciones}'
+                            WHERE ID_MANTENIMIENTO = ${id}
+                        `;
+
+                        connection.query(sqlUpdate, (err) => {
+                            if (err) {
+                                connection.disconnect();
+                                return manejarError(err, res, 'actualizar mantenimiento');
+                            }
+
+                            const estadoLab = ESTADOS_MANT_FINALIZADOS.some(e => e == id_estado_mantenimiento)
+                                ? ESTADO_LAB_DISPONIBLE
+                                : ESTADO_LAB_MANTENIMIENTO;
+
+                            connection.query(
+                                `UPDATE LABORATORIOS SET ESTADO = ${estadoLab} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                                (err) => {
+                                    connection.disconnect();
+                                    if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
+                                    return res.json({ success: true });
+                                }
+                            );
+                        });
+                    }
+                );
             }
         );
     });
