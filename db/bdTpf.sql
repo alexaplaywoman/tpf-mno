@@ -260,7 +260,7 @@ create domain D_NOMBRE as varchar(80);
 /*==============================================================*/
 /* User: DBA                                                    */
 /*==============================================================*/
-grant connect to DBA identified by "";
+grant connect to DBA identified by "sql";
 
 /*==============================================================*/
 /* Table: CARRERAS                                              */
