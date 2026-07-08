@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      Sybase SQL Anywhere 11                       */
-/* Created on:     2/7/2026 13:57:21                            */
+/* Created on:     7/7/2026 20:31:46                            */
 /*==============================================================*/
 
 
@@ -289,7 +289,7 @@ create table ESTADOS_OPERATIVOS
 (
    ESTADO               D_CLAVE                        not null default autoincrement,
    TIPO                 char(1)                        null default 'D'
-      constraint CKC_TIPO_ESTADOS_ check (TIPO is null or (TIPO in ('D','R','M','F','B'))),
+      constraint CKC_TIPO_ESTADOS_ check (TIPO is null or (TIPO in ('D','R','M','F','B') and TIPO = upper(TIPO))),
    constraint PK_ESTADOS_OPERATIVOS primary key clustered (ESTADO)
 );
 
@@ -299,7 +299,8 @@ create table ESTADOS_OPERATIVOS
 create table ESTADO_RESERVA 
 (
    ID_ESTADO_RESERVA    D_CLAVE                        not null,
-   ESTADO_RESERVA       D_NOMBRE                       not null,
+   ESTADO_RESERVA       varchar(1)                     not null default 'P'
+      constraint CKC_ESTADO_RESERVA_ESTADO_R check (ESTADO_RESERVA in ('A','P','C','U') and ESTADO_RESERVA = upper(ESTADO_RESERVA)),
    constraint PK_ESTADO_RESERVA primary key clustered (ID_ESTADO_RESERVA)
 );
 
@@ -348,7 +349,7 @@ create table PISOS
 create table PRIORIDADES 
 (
    ID_PRIORIDAD         D_CLAVE                        not null,
-   NOMBRE               varchar                        null,
+   NOMBRE               D_NOMBRE                       null,
    constraint PK_PRIORIDADES primary key clustered (ID_PRIORIDAD)
 );
 
