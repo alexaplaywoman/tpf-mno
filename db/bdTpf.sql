@@ -1,86 +1,86 @@
 /*==============================================================*/
 /* DBMS name:      Sybase SQL Anywhere 11                       */
-/* Created on:     7/7/2026 20:31:46                            */
+/* Created on:     8/7/2026 01:03:44                            */
 /*==============================================================*/
 
 
 if exists(select 1 from sys.sysforeignkey where role='FK_CARRERAS_REFERENCE_DEPARTAM') then
-    alter table CARRERAS
+    alter table DBA.CARRERAS
        delete foreign key FK_CARRERAS_REFERENCE_DEPARTAM
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_DEPARTAM_REFERENCE_EDIFICIO') then
-    alter table DEPARTAMENTOS
+    alter table DBA.DEPARTAMENTOS
        delete foreign key FK_DEPARTAM_REFERENCE_EDIFICIO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_LABORATO_REFERENCE_PISOS') then
-    alter table LABORATORIOS
+    alter table DBA.LABORATORIOS
        delete foreign key FK_LABORATO_REFERENCE_PISOS
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_LABORATO_REFERENCE_ESTADOS_') then
-    alter table LABORATORIOS
+    alter table DBA.LABORATORIOS
        delete foreign key FK_LABORATO_REFERENCE_ESTADOS_
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_MANTENIM_REFERENCE_ESTADOS_') then
-    alter table MANTENIMIENTOS
+    alter table DBA.MANTENIMIENTOS
        delete foreign key FK_MANTENIM_REFERENCE_ESTADOS_
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_MANTENIM_REFERENCE_LABORATO') then
-    alter table MANTENIMIENTOS
+    alter table DBA.MANTENIMIENTOS
        delete foreign key FK_MANTENIM_REFERENCE_LABORATO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_PISOS_REFERENCE_EDIFICIO') then
-    alter table PISOS
+    alter table DBA.PISOS
        delete foreign key FK_PISOS_REFERENCE_EDIFICIO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_RECURSOS_REFERENCE_LABORATO') then
-    alter table RECURSOS
+    alter table DBA.RECURSOS
        delete foreign key FK_RECURSOS_REFERENCE_LABORATO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_RESERVAS_REFERENCE_SOLICITA') then
-    alter table RESERVAS
+    alter table DBA.RESERVAS
        delete foreign key FK_RESERVAS_REFERENCE_SOLICITA
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_RESERVAS_REFERENCE_ESTADO_R') then
-    alter table RESERVAS
+    alter table DBA.RESERVAS
        delete foreign key FK_RESERVAS_REFERENCE_ESTADO_R
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_RESERVAS_REFERENCE_TIPO_ACT') then
-    alter table RESERVAS
+    alter table DBA.RESERVAS
        delete foreign key FK_RESERVAS_REFERENCE_TIPO_ACT
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_RESERVAS_REFERENCE_LABORATO') then
-    alter table RESERVAS
+    alter table DBA.RESERVAS
        delete foreign key FK_RESERVAS_REFERENCE_LABORATO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_SOLICITA_REFERENCE_CARRERAS') then
-    alter table SOLICITANTES
+    alter table DBA.SOLICITANTES
        delete foreign key FK_SOLICITA_REFERENCE_CARRERAS
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_SOLICITA_REFERENCE_TIPOS_SO') then
-    alter table SOLICITANTES
+    alter table DBA.SOLICITANTES
        delete foreign key FK_SOLICITA_REFERENCE_TIPOS_SO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_SOLICITA_REFERENCE_TIPOS_DO') then
-    alter table SOLICITANTES
+    alter table DBA.SOLICITANTES
        delete foreign key FK_SOLICITA_REFERENCE_TIPOS_DO
 end if;
 
 if exists(select 1 from sys.sysforeignkey where role='FK_TIPO_ACT_REFERENCE_PRIORIDA') then
-    alter table TIPO_ACTIVIDAD
+    alter table DBA.TIPO_ACTIVIDAD
        delete foreign key FK_TIPO_ACT_REFERENCE_PRIORIDA
 end if;
 
@@ -88,129 +88,147 @@ if exists(
    select 1 from sys.systable 
    where table_name='CARRERAS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table CARRERAS
+    drop table DBA.CARRERAS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='DEPARTAMENTOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table DEPARTAMENTOS
+    drop table DBA.DEPARTAMENTOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='EDIFICIOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table EDIFICIOS
+    drop table DBA.EDIFICIOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='ESTADOS_MANTENIMIENTOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table ESTADOS_MANTENIMIENTOS
+    drop table DBA.ESTADOS_MANTENIMIENTOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='ESTADOS_OPERATIVOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table ESTADOS_OPERATIVOS
+    drop table DBA.ESTADOS_OPERATIVOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='ESTADO_RESERVA'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table ESTADO_RESERVA
+    drop table DBA.ESTADO_RESERVA
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='LABORATORIOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table LABORATORIOS
+    drop table DBA.LABORATORIOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='MANTENIMIENTOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table MANTENIMIENTOS
+    drop table DBA.MANTENIMIENTOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='PISOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table PISOS
+    drop table DBA.PISOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='PRIORIDADES'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table PRIORIDADES
+    drop table DBA.PRIORIDADES
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='RECURSOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table RECURSOS
+    drop table DBA.RECURSOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='RESERVAS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table RESERVAS
+    drop table DBA.RESERVAS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='SOLICITANTES'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table SOLICITANTES
+    drop table DBA.SOLICITANTES
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='TIPOS_DOCUMENTOS'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table TIPOS_DOCUMENTOS
+    drop table DBA.TIPOS_DOCUMENTOS
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='TIPOS_SOLICITANTES'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table TIPOS_SOLICITANTES
+    drop table DBA.TIPOS_SOLICITANTES
 end if;
 
 if exists(
    select 1 from sys.systable 
    where table_name='TIPO_ACTIVIDAD'
      and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
 ) then
-    drop table TIPO_ACTIVIDAD
+    drop table DBA.TIPO_ACTIVIDAD
 end if;
+
+revoke connect from DBA;
 
 if exists(select 1 from sys.sysusertype where type_name='D_CLAVE') then
    drop domain D_CLAVE
@@ -240,9 +258,14 @@ create domain D_FECHA as date;
 create domain D_NOMBRE as varchar(80);
 
 /*==============================================================*/
+/* User: DBA                                                    */
+/*==============================================================*/
+grant connect to DBA identified by "";
+
+/*==============================================================*/
 /* Table: CARRERAS                                              */
 /*==============================================================*/
-create table CARRERAS 
+create table DBA.CARRERAS 
 (
    ID_CARRERA           D_CLAVE                        not null default autoincrement,
    ID_DEPARTAMENTO      int                            null,
@@ -253,7 +276,7 @@ create table CARRERAS
 /*==============================================================*/
 /* Table: DEPARTAMENTOS                                         */
 /*==============================================================*/
-create table DEPARTAMENTOS 
+create table DBA.DEPARTAMENTOS 
 (
    ID_DEPARTAMENTO      D_CLAVE                        not null default autoincrement,
    ID_EDIFICIO          integer                        null,
@@ -264,7 +287,7 @@ create table DEPARTAMENTOS
 /*==============================================================*/
 /* Table: EDIFICIOS                                             */
 /*==============================================================*/
-create table EDIFICIOS 
+create table DBA.EDIFICIOS 
 (
    ID_EDIFICIO          D_CLAVE                        not null,
    NOMBRE_EDIFICIO      D_NOMBRE                       null,
@@ -274,10 +297,10 @@ create table EDIFICIOS
 /*==============================================================*/
 /* Table: ESTADOS_MANTENIMIENTOS                                */
 /*==============================================================*/
-create table ESTADOS_MANTENIMIENTOS 
+create table DBA.ESTADOS_MANTENIMIENTOS 
 (
    ID_ESTADO_MANTENIMIENTO D_CLAVE                        not null,
-   ESTADO_MANTENIMIENTO varchar(1)                     not null default 'R'
+   ESTADO_MANTENIMIENTO varchar                        not null default 'R'
       constraint CKC_ESTADO_MANTENIMIE_ESTADOS_ check (ESTADO_MANTENIMIENTO in ('P','R','E','C') and ESTADO_MANTENIMIENTO = upper(ESTADO_MANTENIMIENTO)),
    constraint PK_ESTADOS_MANTENIMIENTOS primary key clustered (ID_ESTADO_MANTENIMIENTO)
 );
@@ -285,33 +308,33 @@ create table ESTADOS_MANTENIMIENTOS
 /*==============================================================*/
 /* Table: ESTADOS_OPERATIVOS                                    */
 /*==============================================================*/
-create table ESTADOS_OPERATIVOS 
+create table DBA.ESTADOS_OPERATIVOS 
 (
    ESTADO               D_CLAVE                        not null default autoincrement,
-   TIPO                 char(1)                        null default 'D'
-      constraint CKC_TIPO_ESTADOS_ check (TIPO is null or (TIPO in ('D','R','M','F','B') and TIPO = upper(TIPO))),
+   TIPO                 char                           null default 'D'
+      constraint CKC_TIPO_ESTADOS_ check (TIPO is null or (TIPO in ('D','R','M','F','B'))),
    constraint PK_ESTADOS_OPERATIVOS primary key clustered (ESTADO)
 );
 
 /*==============================================================*/
 /* Table: ESTADO_RESERVA                                        */
 /*==============================================================*/
-create table ESTADO_RESERVA 
+create table DBA.ESTADO_RESERVA 
 (
    ID_ESTADO_RESERVA    D_CLAVE                        not null,
-   ESTADO_RESERVA       varchar(1)                     not null default 'P'
-      constraint CKC_ESTADO_RESERVA_ESTADO_R check (ESTADO_RESERVA in ('A','P','C','U') and ESTADO_RESERVA = upper(ESTADO_RESERVA)),
-   constraint PK_ESTADO_RESERVA primary key clustered (ID_ESTADO_RESERVA)
+   ESTADO_RESERVA       varchar                        not null default 'P',
+   constraint PK_ESTADO_RESERVA primary key clustered (ID_ESTADO_RESERVA),
+   constraint CKC_ESTADO_RESERVA_ESTADO_R check (ESTADO_RESERVA in( 'P','U','C','A' ) and ESTADO_RESERVA = UPPER(ESTADO_RESERVA))
 );
 
 /*==============================================================*/
 /* Table: LABORATORIOS                                          */
 /*==============================================================*/
-create table LABORATORIOS 
+create table DBA.LABORATORIOS 
 (
    NUMERO_LABORATORIO   D_CLAVE                        not null default autoincrement,
-   ID_EDIFICIO          integer                        null,
-   ESTADO               int                            null,
+   ID_EDIFICIO          integer                        not null,
+   ESTADO               int                            not null,
    EDIFICIO             D_NOMBRE                       not null,
    CAPACIDAD_ALUMNOS    D_CLAVE                        not null,
    CANTIDAD_COMPUTADORAS D_CLAVE                        not null,
@@ -322,7 +345,7 @@ create table LABORATORIOS
 /*==============================================================*/
 /* Table: MANTENIMIENTOS                                        */
 /*==============================================================*/
-create table MANTENIMIENTOS 
+create table DBA.MANTENIMIENTOS 
 (
    ID_MANTENIMIENTO     D_CLAVE                        not null,
    ID_ESTADO_MANTENIMIENTO D_CLAVE                        not null,
@@ -336,7 +359,7 @@ create table MANTENIMIENTOS
 /*==============================================================*/
 /* Table: PISOS                                                 */
 /*==============================================================*/
-create table PISOS 
+create table DBA.PISOS 
 (
    ID_EDIFICIO          integer                        not null default autoincrement,
    NRO_PISO             integer                        null,
@@ -346,23 +369,23 @@ create table PISOS
 /*==============================================================*/
 /* Table: PRIORIDADES                                           */
 /*==============================================================*/
-create table PRIORIDADES 
+create table DBA.PRIORIDADES 
 (
    ID_PRIORIDAD         D_CLAVE                        not null,
-   NOMBRE               D_NOMBRE                       null,
+   NOMBRE               D_NOMBRE                       not null,
    constraint PK_PRIORIDADES primary key clustered (ID_PRIORIDAD)
 );
 
 /*==============================================================*/
 /* Table: RECURSOS                                              */
 /*==============================================================*/
-create table RECURSOS 
+create table DBA.RECURSOS 
 (
    ID_RECURSO           D_CLAVE                        not null,
    NUMERO_LABORATORIO   D_CLAVE                        null,
    NOMBRE               D_NOMBRE                       not null,
    DESCRIPCION          D_NOMBRE                       not null,
-   DISPONIBILIDAD       varchar(1)                     not null default 'S'
+   DISPONIBILIDAD       varchar                        not null default 'S'
       constraint CKC_DISPONIBILIDAD_RECURSOS check (DISPONIBILIDAD in ('S','N') and DISPONIBILIDAD = upper(DISPONIBILIDAD)),
    constraint PK_RECURSOS primary key clustered (ID_RECURSO)
 );
@@ -370,7 +393,7 @@ create table RECURSOS
 /*==============================================================*/
 /* Table: RESERVAS                                              */
 /*==============================================================*/
-create table RESERVAS 
+create table DBA.RESERVAS 
 (
    ID_RESERVA           D_CLAVE                        not null default autoincrement,
    NUMERO_LABORATORIO   int                            not null,
@@ -389,7 +412,7 @@ create table RESERVAS
 /*==============================================================*/
 /* Table: SOLICITANTES                                          */
 /*==============================================================*/
-create table SOLICITANTES 
+create table DBA.SOLICITANTES 
 (
    CEDULA_IDENTIDAD     D_CLAVE                        not null,
    CORREO               D_NOMBRE                       not null,
@@ -406,7 +429,7 @@ create table SOLICITANTES
 /*==============================================================*/
 /* Table: TIPOS_DOCUMENTOS                                      */
 /*==============================================================*/
-create table TIPOS_DOCUMENTOS 
+create table DBA.TIPOS_DOCUMENTOS 
 (
    TIPO_DOCUMENTO       D_CLAVE                        not null default autoincrement,
    NOMBRE               D_NOMBRE                       not null,
@@ -416,7 +439,7 @@ create table TIPOS_DOCUMENTOS
 /*==============================================================*/
 /* Table: TIPOS_SOLICITANTES                                    */
 /*==============================================================*/
-create table TIPOS_SOLICITANTES 
+create table DBA.TIPOS_SOLICITANTES 
 (
    ID_SOLICITANTE       D_CLAVE                        not null default autoincrement,
    TIPO_SOLICITANTE     D_NOMBRE                       not null,
@@ -426,7 +449,7 @@ create table TIPOS_SOLICITANTES
 /*==============================================================*/
 /* Table: TIPO_ACTIVIDAD                                        */
 /*==============================================================*/
-create table TIPO_ACTIVIDAD 
+create table DBA.TIPO_ACTIVIDAD 
 (
    ID_TIPO_ACTIVIDAD    D_CLAVE                        not null,
    ID_PRIORIDAD         integer                        null,
@@ -436,99 +459,99 @@ create table TIPO_ACTIVIDAD
    constraint PK_TIPO_ACTIVIDAD primary key clustered (ID_TIPO_ACTIVIDAD)
 );
 
-alter table CARRERAS
+alter table DBA.CARRERAS
    add constraint FK_CARRERAS_REFERENCE_DEPARTAM foreign key (ID_DEPARTAMENTO)
-      references DEPARTAMENTOS (ID_DEPARTAMENTO)
+      references DBA.DEPARTAMENTOS (ID_DEPARTAMENTO)
       on update restrict
       on delete restrict;
 
-alter table DEPARTAMENTOS
+alter table DBA.DEPARTAMENTOS
    add constraint FK_DEPARTAM_REFERENCE_EDIFICIO foreign key (ID_EDIFICIO)
-      references EDIFICIOS (ID_EDIFICIO)
+      references DBA.EDIFICIOS (ID_EDIFICIO)
       on update restrict
       on delete restrict;
 
-alter table LABORATORIOS
+alter table DBA.LABORATORIOS
    add constraint FK_LABORATO_REFERENCE_PISOS foreign key (ID_EDIFICIO)
-      references PISOS (ID_EDIFICIO)
+      references DBA.PISOS (ID_EDIFICIO)
       on update restrict
       on delete restrict;
 
-alter table LABORATORIOS
+alter table DBA.LABORATORIOS
    add constraint FK_LABORATO_REFERENCE_ESTADOS_ foreign key (ESTADO)
-      references ESTADOS_OPERATIVOS (ESTADO)
+      references DBA.ESTADOS_OPERATIVOS (ESTADO)
       on update restrict
       on delete restrict;
 
-alter table MANTENIMIENTOS
+alter table DBA.MANTENIMIENTOS
    add constraint FK_MANTENIM_REFERENCE_ESTADOS_ foreign key (ID_ESTADO_MANTENIMIENTO)
-      references ESTADOS_MANTENIMIENTOS (ID_ESTADO_MANTENIMIENTO)
+      references DBA.ESTADOS_MANTENIMIENTOS (ID_ESTADO_MANTENIMIENTO)
       on update restrict
       on delete restrict;
 
-alter table MANTENIMIENTOS
+alter table DBA.MANTENIMIENTOS
    add constraint FK_MANTENIM_REFERENCE_LABORATO foreign key (NUMERO_LABORATORIO)
-      references LABORATORIOS (NUMERO_LABORATORIO)
+      references DBA.LABORATORIOS (NUMERO_LABORATORIO)
       on update restrict
       on delete restrict;
 
-alter table PISOS
+alter table DBA.PISOS
    add constraint FK_PISOS_REFERENCE_EDIFICIO foreign key (ID_EDIFICIO)
-      references EDIFICIOS (ID_EDIFICIO)
+      references DBA.EDIFICIOS (ID_EDIFICIO)
       on update restrict
       on delete restrict;
 
-alter table RECURSOS
+alter table DBA.RECURSOS
    add constraint FK_RECURSOS_REFERENCE_LABORATO foreign key (NUMERO_LABORATORIO)
-      references LABORATORIOS (NUMERO_LABORATORIO)
+      references DBA.LABORATORIOS (NUMERO_LABORATORIO)
       on update restrict
       on delete restrict;
 
-alter table RESERVAS
+alter table DBA.RESERVAS
    add constraint FK_RESERVAS_REFERENCE_SOLICITA foreign key (CEDULA_IDENTIDAD, CORREO)
-      references SOLICITANTES (CEDULA_IDENTIDAD, CORREO)
+      references DBA.SOLICITANTES (CEDULA_IDENTIDAD, CORREO)
       on update restrict
       on delete restrict;
 
-alter table RESERVAS
+alter table DBA.RESERVAS
    add constraint FK_RESERVAS_REFERENCE_ESTADO_R foreign key (ID_ESTADO_RESERVA)
-      references ESTADO_RESERVA (ID_ESTADO_RESERVA)
+      references DBA.ESTADO_RESERVA (ID_ESTADO_RESERVA)
       on update restrict
       on delete restrict;
 
-alter table RESERVAS
+alter table DBA.RESERVAS
    add constraint FK_RESERVAS_REFERENCE_TIPO_ACT foreign key (ID_TIPO_ACTIVIDAD)
-      references TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD)
+      references DBA.TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD)
       on update restrict
       on delete restrict;
 
-alter table RESERVAS
+alter table DBA.RESERVAS
    add constraint FK_RESERVAS_REFERENCE_LABORATO foreign key (NUMERO_LABORATORIO)
-      references LABORATORIOS (NUMERO_LABORATORIO)
+      references DBA.LABORATORIOS (NUMERO_LABORATORIO)
       on update restrict
       on delete restrict;
 
-alter table SOLICITANTES
+alter table DBA.SOLICITANTES
    add constraint FK_SOLICITA_REFERENCE_CARRERAS foreign key (ID_CARRERA)
-      references CARRERAS (ID_CARRERA)
+      references DBA.CARRERAS (ID_CARRERA)
       on update restrict
       on delete restrict;
 
-alter table SOLICITANTES
+alter table DBA.SOLICITANTES
    add constraint FK_SOLICITA_REFERENCE_TIPOS_SO foreign key (ID_SOLICITANTE)
-      references TIPOS_SOLICITANTES (ID_SOLICITANTE)
+      references DBA.TIPOS_SOLICITANTES (ID_SOLICITANTE)
       on update restrict
       on delete restrict;
 
-alter table SOLICITANTES
+alter table DBA.SOLICITANTES
    add constraint FK_SOLICITA_REFERENCE_TIPOS_DO foreign key (TIPO_DOCUMENTO)
-      references TIPOS_DOCUMENTOS (TIPO_DOCUMENTO)
+      references DBA.TIPOS_DOCUMENTOS (TIPO_DOCUMENTO)
       on update restrict
       on delete restrict;
 
-alter table TIPO_ACTIVIDAD
+alter table DBA.TIPO_ACTIVIDAD
    add constraint FK_TIPO_ACT_REFERENCE_PRIORIDA foreign key (ID_PRIORIDAD)
-      references PRIORIDADES (ID_PRIORIDAD)
+      references DBA.PRIORIDADES (ID_PRIORIDAD)
       on update restrict
       on delete restrict;
 

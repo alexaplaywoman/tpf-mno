@@ -1,0 +1,332 @@
+/*==============================================================*/
+/* Objetos de lógica de negocio: funciones, procedimientos y    */
+/* triggers.                                                     */
+/* IMPORTANTE: pegar ESTE bloque al FINAL de bdTpf.sql,          */
+/* despues de crear todas las tablas y las foreign keys.        */
+/* Orden: 1) funciones  2) procedimientos  3) triggers          */
+/*==============================================================*/
+
+
+/*==============================================================*/
+/* 0. Limpieza (para que el script sea re-ejecutable).          */
+/*    Se borra en orden inverso a las dependencias:             */
+/*    triggers -> procedimientos -> funciones.                  */
+/*==============================================================*/
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_concide_horario_fecha_reserva') then
+    drop trigger tr_concide_horario_fecha_reserva
+end if;
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_validar_capacidad_lab') then
+    drop trigger tr_validar_capacidad_lab
+end if;
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_validar_estados_operativos_lab') then
+    drop trigger tr_validar_estados_operativos_lab
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='sp_laboratorios_disponibles') then
+    drop procedure sp_laboratorios_disponibles
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='sp_horarios_disponibles') then
+    drop procedure sp_horarios_disponibles
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='fn_existe_mantenimiento') then
+    drop function fn_existe_mantenimiento
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='fn_existe_solapamiento_reservas') then
+    drop function fn_existe_solapamiento_reservas
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='fn_validar_horarios_mantenimiento') then
+    drop function fn_validar_horarios_mantenimiento
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='fn_validar_horarios') then
+    drop function fn_validar_horarios
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='fn_validar_fechas_y_fin_semana') then
+    drop function fn_validar_fechas_y_fin_semana
+end if;
+
+
+/*==============================================================*/
+/* 1. FUNCIONES                                                 */
+/*==============================================================*/
+
+CREATE FUNCTION "DBA"."fn_validar_fechas_y_fin_semana"( IN fecha DATE )
+RETURNS INTEGER
+NOT DETERMINISTIC          -- usa CURRENT DATE
+BEGIN
+    -- 1 = invalida (pasado o fin de semana), 0 = valida
+    IF fecha < CURRENT DATE THEN
+        RETURN 1;
+    END IF;
+    IF DOW(fecha) IN (1, 7) THEN   -- 1=domingo, 7=sabado
+        RETURN 1;
+    END IF;
+    RETURN 0;
+END;
+
+
+CREATE FUNCTION "DBA"."fn_validar_horarios"( IN hora_inicio TIME, IN hora_fin TIME, IN fecha DATE )
+RETURNS INTEGER
+NOT DETERMINISTIC          -- usa CURRENT TIME
+BEGIN
+    -- 1 = inicio >= fin ; 2 = inicio en el pasado (hoy) ; 0 = valido
+    IF hora_inicio >= hora_fin THEN
+        RETURN 1;
+    END IF;
+    IF fecha = CURRENT DATE AND hora_inicio < CURRENT TIME THEN
+        RETURN 2;
+    END IF;
+    RETURN 0;
+END;
+
+
+CREATE FUNCTION "DBA"."fn_validar_horarios_mantenimiento"( IN fecha_inicio DATE, IN fecha_fin DATE )
+RETURNS INTEGER
+NOT DETERMINISTIC
+BEGIN
+    -- 1 = invalida, 0 = valida
+    IF fecha_inicio > fecha_fin THEN
+        RETURN 1;
+    END IF;
+    IF fecha_inicio < CURRENT DATE THEN
+        RETURN 1;
+    END IF;
+    RETURN 0;
+END;
+
+
+CREATE FUNCTION "DBA"."fn_existe_solapamiento_reservas"(
+    IN p_numero_laboratorio INT,
+    IN p_fecha              DATE,
+    IN p_hora_inicio        TIME,
+    IN p_hora_fin           TIME,
+    IN p_id_reserva_excluir INT,   -- ID de la reserva a ignorar (para UPDATE); NULL si no aplica
+    IN p_id_tipo_actividad  INT )  -- tipo de actividad de la nueva reserva; NULL = consulta pura
+RETURNS INTEGER
+NOT DETERMINISTIC
+BEGIN
+    DECLARE v_count INTEGER;
+    DECLARE v_prioridad_nueva INT;
+
+    -- Si nos pasaron tipo de actividad, buscamos su prioridad real
+    IF p_id_tipo_actividad IS NOT NULL THEN
+        SELECT PRIORIDAD INTO v_prioridad_nueva
+        FROM "DBA"."TIPO_ACTIVIDAD"
+        WHERE ID_TIPO_ACTIVIDAD = p_id_tipo_actividad;
+    END IF;
+
+    SELECT COUNT(*) INTO v_count
+    FROM "DBA"."RESERVAS" r
+    JOIN "DBA"."TIPO_ACTIVIDAD" ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
+    JOIN "DBA"."ESTADO_RESERVA" er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
+    WHERE r.NUMERO_LABORATORIO = p_numero_laboratorio
+      AND r.FECHA_A_RESERVAR   = p_fecha
+      AND (p_id_reserva_excluir IS NULL OR r.ID_RESERVA <> p_id_reserva_excluir)
+      AND er.ESTADO_RESERVA NOT IN ('C','A')          -- Cancelada y Ausente no bloquean
+      AND (v_prioridad_nueva IS NULL OR ta.PRIORIDAD <= v_prioridad_nueva)
+      AND p_hora_inicio < r.HORA_FIN
+      AND p_hora_fin    > r.HORA_INICIO;
+
+    RETURN v_count;
+END;
+
+
+CREATE FUNCTION "DBA"."fn_existe_mantenimiento"(
+    IN p_numero_laboratorio INT,
+    IN p_fecha DATE )
+RETURNS INTEGER
+NOT DETERMINISTIC
+BEGIN
+    DECLARE v_count INTEGER;
+
+    SELECT COUNT(*) INTO v_count
+    FROM "DBA"."MANTENIMIENTOS" ma
+    JOIN "DBA"."ESTADOS_MANTENIMIENTOS" em
+         ON em.ID_ESTADO_MANTENIMIENTO = ma.ID_ESTADO_MANTENIMIENTO
+    WHERE ma.NUMERO_LABORATORIO = p_numero_laboratorio
+      AND p_fecha BETWEEN ma.FECHA_INICIO AND ma.FECHA_FIN_PREVISTA
+      AND em.ESTADO_MANTENIMIENTO IN ('P','E');
+
+    RETURN v_count;
+END;
+
+
+/*==============================================================*/
+/* 2. PROCEDIMIENTOS                                            */
+/*==============================================================*/
+
+CREATE PROCEDURE "DBA"."sp_horarios_disponibles"(
+    IN p_numero_laboratorio INT,
+    IN p_fecha              DATE,
+    IN p_duracion_horas     INT,
+    IN p_id_tipo_actividad  INT )
+RESULT (HORA_INICIO TIME, HORA_FIN TIME)
+BEGIN
+    DECLARE v_duracion_max INT;
+
+    SELECT DURACION_MAX_HORAS INTO v_duracion_max
+      FROM TIPO_ACTIVIDAD
+     WHERE ID_TIPO_ACTIVIDAD = p_id_tipo_actividad;
+
+    IF v_duracion_max IS NULL THEN
+        RAISERROR 99010 'Tipo de actividad inexistente';
+        RETURN;
+    END IF;
+
+    IF p_duracion_horas < 1 OR p_duracion_horas > v_duracion_max THEN
+        RAISERROR 99011 'La duracion solicitada supera el maximo permitido para este tipo de actividad';
+        RETURN;
+    END IF;
+
+    -- El mantenimiento depende solo del lab y la fecha: se chequea una vez
+    IF DBA."fn_existe_mantenimiento"(p_numero_laboratorio, p_fecha) > 0 THEN
+        RETURN;   -- lab en mantenimiento: no hay horarios disponibles ese dia
+    END IF;
+
+    -- Genera inicios candidatos cada 1 hora entre 07:00 y el cierre (22:00)
+    SELECT c.HORA_INICIO, c.HORA_FIN
+      FROM (
+            SELECT CAST(DATEADD(HOUR, rg.row_num - 1, CAST('07:00:00' AS TIME)) AS TIME) AS HORA_INICIO,
+                   CAST(DATEADD(HOUR, rg.row_num - 1 + p_duracion_horas, CAST('07:00:00' AS TIME)) AS TIME) AS HORA_FIN
+              FROM sa_rowgenerator(1, 15) rg
+             WHERE (7 + rg.row_num - 1 + p_duracion_horas) <= 22
+           ) c
+     WHERE DBA."fn_existe_solapamiento_reservas"(
+               p_numero_laboratorio,
+               p_fecha,
+               c.HORA_INICIO,
+               c.HORA_FIN,
+               NULL,
+               NULL) = 0
+     ORDER BY 1;
+END;
+
+
+CREATE PROCEDURE "DBA"."sp_laboratorios_disponibles"(
+    IN p_fecha        DATE,
+    IN p_hora_inicio  TIME,
+    IN p_hora_fin     TIME )
+BEGIN
+    DECLARE v_val INTEGER;
+
+    -- Coherencia del horario pedido
+    SET v_val = DBA.fn_validar_horarios(p_hora_inicio, p_hora_fin, p_fecha);
+
+    IF v_val = 1 THEN
+        RAISERROR 99999 'La hora de inicio debe ser anterior a la hora de fin.';
+        RETURN;
+    END IF;
+    IF v_val = 2 THEN
+        RAISERROR 99999 'La hora de inicio debe ser posterior a la hora actual en una fecha disponible.';
+        RETURN;
+    END IF;
+
+    -- Fecha valida (no pasado, no fin de semana)
+    IF DBA.fn_validar_fechas_y_fin_semana(p_fecha) = 1 THEN
+        RAISERROR 99999 'Fecha invalida: no se permite pasado ni fines de semana.';
+        RETURN;
+    END IF;
+
+    -- Labs cuyo estado global no sea M/F/B y que NO tengan una reserva
+    -- (no cancelada) que se solape con la franja pedida
+    SELECT l.*
+    FROM LABORATORIOS l
+    JOIN ESTADOS_OPERATIVOS eo ON eo.ESTADO = l.ESTADO
+    WHERE eo.TIPO NOT IN ('M','F','B')
+      AND DBA."fn_existe_solapamiento_reservas"(
+            l.NUMERO_LABORATORIO,
+            p_fecha,
+            p_hora_inicio,
+            p_hora_fin,
+            NULL,
+            NULL) = 0;
+END;
+
+
+/*==============================================================*/
+/* 3. TRIGGERS (sobre RESERVAS)                                 */
+/*==============================================================*/
+
+CREATE TRIGGER "tr_validar_estados_operativos_lab" BEFORE INSERT   -- solo INSERT
+ORDER 1 ON "DBA"."RESERVAS"
+REFERENCING NEW AS new_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_tipo CHAR(1);
+
+    SELECT eo.TIPO
+    INTO   v_tipo
+    FROM   LABORATORIOS l
+    INNER JOIN ESTADOS_OPERATIVOS eo ON eo.ESTADO = l.ESTADO
+    WHERE  l.NUMERO_LABORATORIO = new_row.NUMERO_LABORATORIO;
+
+    IF v_tipo IN ('M','F','B') THEN
+        RAISERROR 99999 'El laboratorio no esta disponible (mantenimiento, fuera de servicio o bloqueado).';
+    END IF;
+END;
+
+
+CREATE TRIGGER "tr_validar_capacidad_lab" BEFORE INSERT, UPDATE
+ORDER 2 ON "DBA"."RESERVAS"
+REFERENCING NEW AS new_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_cap INTEGER;
+
+    SELECT l.CAPACIDAD_ALUMNOS INTO v_cap
+    FROM LABORATORIOS l
+    WHERE l.NUMERO_LABORATORIO = new_row.NUMERO_LABORATORIO;
+
+    IF v_cap < new_row.CANTIDAD_ALUMNOS THEN
+        RAISERROR 99999 'La cantidad de alumnos supera la capacidad de la sala.';
+    END IF;
+END;
+
+
+CREATE TRIGGER "tr_concide_horario_fecha_reserva" BEFORE INSERT, UPDATE
+ORDER 3 ON "DBA"."RESERVAS"
+REFERENCING NEW AS new_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_val INTEGER;
+
+    SET v_val = DBA.fn_validar_horarios(new_row.HORA_INICIO, new_row.HORA_FIN, new_row.FECHA_A_RESERVAR);
+
+    -- Fecha valida (no pasado, no fin de semana)
+    IF DBA.fn_validar_fechas_y_fin_semana(new_row.FECHA_A_RESERVAR) = 1 THEN
+        RAISERROR 99999 'Fecha invalida: no se permite pasado ni fines de semana.';
+        RETURN;
+    END IF;
+
+    -- Horario coherente (inicio < fin)
+    IF v_val = 1 THEN
+        RAISERROR 99999 'La hora de inicio debe ser anterior a la hora de fin.';
+        RETURN;
+    END IF;
+
+    -- Inicio posterior a la hora actual en una fecha disponible
+    IF v_val = 2 THEN
+        RAISERROR 99999 'La hora de inicio debe ser posterior a la hora actual en una fecha disponible.';
+        RETURN;
+    END IF;
+
+    -- Solapamiento con otra reserva
+    IF "DBA"."fn_existe_solapamiento_reservas"(
+           new_row.NUMERO_LABORATORIO,
+           new_row.FECHA_A_RESERVAR,
+           new_row.HORA_INICIO,
+           new_row.HORA_FIN,
+           new_row.ID_RESERVA,
+           new_row.ID_TIPO_ACTIVIDAD) > 0 THEN
+        RAISERROR 99999 'El horario coincide con una reserva ya existente.';
+        RETURN;
+    END IF;
+END;

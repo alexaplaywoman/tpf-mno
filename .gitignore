@@ -1,0 +1,6 @@
+# Base de datos binaria Sybase (NO se versiona)
+*.db
+*.log
+
+# Node
+node_modules/
