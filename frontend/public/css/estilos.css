@@ -6,13 +6,11 @@
     --cards: #F1D9DA;
 }
 
-/* fondo */
 body {
     margin: 0;
     background-color: var(--bg);
 }
 
-/* BARRA */
 .navbar {
     height: 60px;
     background-color: var(--bar) !important;
@@ -21,70 +19,94 @@ body {
     padding-left: 10px;
 }
 
-/* texto general de la barra en negro */
 .navbar * {
-    color: #000000 !important;
+    color: #000 !important;
 }
 
-/* excepción: botón Inicio en blanco */
 #inicio {
     background-color: var(--purple) !important;
     border-color: var(--purple) !important;
-    color: #ffffff !important;
+    color: #fff !important;
 }
 
-/* centro */
 .contenido {
     width: 100%;
-    transform: translateY(-20px);
 }
 
-/* BOTONES PRINCIPALES */
+.contenido-ajustado {
+    padding: 30px;
+    transform: translateY(-15px);
+}
+
 #botonReserva,
 #botonConsultar,
 #botonAtras,
 #botonSiguiente,
+#botonConfirmar,
 #botonSalir {
-
     background-color: var(--purple) !important;
     border-color: var(--purple) !important;
-    color: #ffffff !important;
-
+    color: #fff !important;
 }
 
-/* hover */
 #botonReserva:hover,
 #botonConsultar:hover,
 #botonAtras:hover,
 #botonSiguiente:hover,
+#botonConfirmar:hover,
 #botonSalir:hover {
-
     background-color: var(--dark) !important;
     border-color: var(--dark) !important;
-    color: #ffffff !important;
-
-}
-
-/* cuadros de fotos */
-.btn-outline-dark,
-.card-edificio {
-
-    background-color: var(--cards) !important;
-    border-color: var(--cards) !important;
-
-}
-.contenido-ajustado {
-    transform: translateY(-15px);
+    color: #fff !important;
 }
 
 .btn-login {
-    background-color: #8b597b;
-    border-color: #8b597b;
-    color: white;
+    background-color: var(--purple) !important;
+    border-color: var(--purple) !important;
+    color: #fff !important;
 }
 
 .btn-login:hover {
-    background-color: #774b69;
-    border-color: #774b69;
-    color: white;
+    background-color: var(--dark) !important;
+    border-color: var(--dark) !important;
+    color: #fff !important;
+}
+
+.btn-outline-dark,
+.card-edificio {
+    background-color: var(--cards) !important;
+    border-color: var(--cards) !important;
+}
+
+.layout {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 25px;
+    padding-left: 30px;
+    padding-top: 20px;
+}
+
+.contenedor-izquierda {
+    width: 450px;
+}
+
+.col-derecha {
+    width: 300px;
+}
+
+.form-check-input {
+    width: 1.1em;
+    height: 1.1em;
+    border: 2px solid var(--purple);
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--purple) !important;
+    border-color: var(--purple) !important;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(139, 89, 123, 0.25);
 }

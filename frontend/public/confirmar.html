@@ -46,7 +46,7 @@
 
         <div class="rounded-pill d-flex justify-content-center align-items-center"
              style="width:220px; height:45px; background:#e5e5e5; color:#999;">
-            2. Elegir Tipo de Evento
+            2. Elegir Tipo de Actividad
         </div>
 
         <div class="rounded-pill d-flex justify-content-center align-items-center"
@@ -61,7 +61,7 @@
 
     </div>
 
-    <div class="row justify-content-center g-5">
+    <div id="form" class="row justify-content-center g-5">
 
         <div class="col-lg-6">
 
@@ -69,41 +69,61 @@
 
                 <div class="card-body p-4">
 
+                    <!-- Documento de Identidad -->
                     <div class="mb-3">
                         <label class="form-label">Documento de Identidad</label>
-                        <input type="number" class="form-control">
+
+                        <div class="row">
+
+                            <div id="documento" class="col-md-5 mb-2">
+                                <select class="form-select">
+                                    <option selected disabled>Tipo</option>
+                                    <option>Cédula de Identidad</option>
+                                    <option>Pasaporte</option>
+                                    <option>Documento Extranjero</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-7">
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    placeholder="Número de documento">
+                            </div>
+
+                        </div>
                     </div>
 
                     <div class="row">
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Nombre</label>
-                            <input type="text" class="form-control">
+                            <input type="text" id="nombre" class="form-control">
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Apellido</label>
-                            <input type="text" class="form-control">
+                            <input type="text" id="apellido" class="form-control">
                         </div>
 
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Correo Institucional</label>
-                        <input type="email" class="form-control">
+                        <input type="email" id="correo" class="form-control">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Teléfono</label>
-                        <input type="number" class="form-control">
+                        <input type="number" id="telefono" class="form-control">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Departamento</label>
 
-                        <select class="form-select">
+                        <select id="departamento" class="form-select">
 
-                            <option>Seleccionar</option>
+                            <option selected disabled>Seleccionar</option>
                             <option>DA - Arquitectura</option>
                             <option>DAS - Análisis de Sistemas</option>
                             <option>DEI - Ing. Informática y Electrónica</option>
@@ -115,11 +135,11 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Solicitante</label>
+                        <label id="solicitante" class="form-label">Solicitante</label>
 
                         <select class="form-select">
 
-                            <option>Seleccionar</option>
+                            <option selected disabled>Seleccionar</option>
                             <option>Docente</option>
                             <option>Estudiante</option>
                             <option>Personal Administrativo</option>
@@ -136,7 +156,7 @@
                             Atrás
                         </button>
 
-                        <button id="botonSiguiente"
+                        <button id="botonConfirmar"
                                 type="button"
                                 class="btn btn-primary px-4">
                             Confirmar

@@ -1,0 +1,173 @@
+:root {
+    --primary: #8b597b;
+    --secondary: #8b597b;
+    --accent: #c9a6bb;
+    --light: #f8f9fa;
+    --dark: #2d3436;
+    --text: #636e72;
+    --today: #8b597b;
+    --selected: #a29bfe;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.calendar-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+/* CABECERA */
+
+.calendar-header {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.month-year {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+/* NAV */
+
+.nav-buttons {
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+}
+
+.nav-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* DÍAS DE LA SEMANA */
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px; /* 🔥 CLAVE */
+    padding: 10px 15px;
+    background: rgba(139, 89, 123, 0.08);
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.weekday {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+/* DÍAS */
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    padding: 10px 15px 15px 15px;
+}
+
+.day {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    color: var(--dark);
+}
+
+.day:hover {
+    background: rgba(139, 89, 123, 0.12);
+}
+
+.day.today {
+    background: var(--today);
+    color: white;
+    font-weight: bold;
+}
+
+.day.selected {
+    background: var(--selected);
+    color: white;
+    font-weight: bold;
+}
+
+.day.other-month {
+    opacity: 0.35;
+}
+
+.day.has-events::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 5px;
+}
+
+/* FOOTER */
+
+.calendar-footer {
+    padding: 15px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.today-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.today-btn:hover {
+    background: #744a67;
+    transform: translateY(-2px);
+}
+
+.event-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--accent);
+    font-size: 0.85rem;
+}
