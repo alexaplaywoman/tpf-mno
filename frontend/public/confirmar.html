@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -61,112 +61,175 @@
 
     </div>
 
-    <div id="form" class="row justify-content-center g-5">
+    <div class="row justify-content-center g-5">
 
         <div class="col-lg-6">
 
-            <div class="card shadow-sm border-0">
+            <form id="form">
 
-                <div class="card-body p-4">
+                <div class="card shadow-sm border-0">
 
-                    <!-- Documento de Identidad -->
-                    <div class="mb-3">
-                        <label class="form-label">Documento de Identidad</label>
+                    <div class="card-body p-4">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Documento de Identidad
+                            </label>
+
+                            <div class="row">
+
+                                <div class="col-md-5 mb-2">
+
+                                    <select id="tipoDocumento" name="tipoDocumento" class="form-select">
+
+                                        <option value="">Tipo</option>
+                                        <option>Cédula de Identidad</option>
+                                        <option>Pasaporte</option>
+                                        <option>Documento Extranjero</option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-7">
+
+                                    <input
+                                        type="text"
+                                        id="numeroDocumento"
+                                        name="numeroDocumento"
+                                        class="form-control"
+                                        placeholder="Número de documento">
+
+                                </div>
+
+                            </div>
+
+                        </div>
 
                         <div class="row">
 
-                            <div id="documento" class="col-md-5 mb-2">
-                                <select class="form-select">
-                                    <option selected disabled>Tipo</option>
-                                    <option>Cédula de Identidad</option>
-                                    <option>Pasaporte</option>
-                                    <option>Documento Extranjero</option>
-                                </select>
-                            </div>
+                            <div class="col-md-6 mb-3">
 
-                            <div class="col-md-7">
+                                <label class="form-label">
+                                    Nombre
+                                </label>
+
                                 <input
-                                    type="number"
-                                    class="form-control"
-                                    placeholder="Número de documento">
+                                    type="text"
+                                    id="nombre"
+                                    name="nombre"
+                                    class="form-control">
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Apellido
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="apellido"
+                                    name="apellido"
+                                    class="form-control">
+
                             </div>
 
                         </div>
-                    </div>
 
-                    <div class="row">
+                        <div class="mb-3">
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Nombre</label>
-                            <input type="text" id="nombre" class="form-control">
+                            <label class="form-label">
+                                Correo Institucional
+                            </label>
+
+                            <input
+                                type="email"
+                                id="correo"
+                                name="correo"
+                                class="form-control">
+
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Apellido</label>
-                            <input type="text" id="apellido" class="form-control">
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Teléfono
+                            </label>
+
+                            <input
+                                type="number"
+                                id="telefono"
+                                name="telefono"
+                                class="form-control">
+
                         </div>
 
-                    </div>
+                        <div class="mb-3">
 
-                    <div class="mb-3">
-                        <label class="form-label">Correo Institucional</label>
-                        <input type="email" id="correo" class="form-control">
-                    </div>
+                            <label class="form-label">
+                                Departamento
+                            </label>
 
-                    <div class="mb-3">
-                        <label class="form-label">Teléfono</label>
-                        <input type="number" id="telefono" class="form-control">
-                    </div>
+                            <select id="departamento" name="departamento" class="form-select">
 
-                    <div class="mb-3">
-                        <label class="form-label">Departamento</label>
+                                <option value="">Seleccionar</option>
+                                <option>DA - Arquitectura</option>
+                                <option>DAS - Análisis de Sistemas</option>
+                                <option>DEI - Ing. Informática y Electrónica</option>
+                                <option>DICIA - Ing. Civil, Industrial y Ambiental</option>
+                                <option>DIS - Diseño Gráfico e Industrial</option>
 
-                        <select id="departamento" class="form-select">
+                            </select>
 
-                            <option selected disabled>Seleccionar</option>
-                            <option>DA - Arquitectura</option>
-                            <option>DAS - Análisis de Sistemas</option>
-                            <option>DEI - Ing. Informática y Electrónica</option>
-                            <option>DICIA - Ing. Civil, Industrial y Ambiental</option>
-                            <option>DIS - Diseño Gráfico e Industrial</option>
+                        </div>
 
-                        </select>
+                        <div class="mb-4">
 
-                    </div>
+                            <label class="form-label">
+                                Solicitante
+                            </label>
 
-                    <div class="mb-4">
-                        <label id="solicitante" class="form-label">Solicitante</label>
+                            <select id="solicitante" name="solicitante" class="form-select">
 
-                        <select class="form-select">
+                                <option value="">Seleccionar</option>
+                                <option>Docente</option>
+                                <option>Estudiante</option>
+                                <option>Personal Administrativo</option>
 
-                            <option selected disabled>Seleccionar</option>
-                            <option>Docente</option>
-                            <option>Estudiante</option>
-                            <option>Personal Administrativo</option>
+                            </select>
 
-                        </select>
+                        </div>
 
-                    </div>
+                        <div class="d-flex justify-content-between">
 
-                    <div class="d-flex justify-content-between">
-
-                        <button id="botonAtras"
+                            <button
+                                id="botonAtras"
                                 type="button"
                                 class="btn btn-outline-secondary px-4">
-                            Atrás
-                        </button>
 
-                        <button id="botonConfirmar"
+                                Atrás
+
+                            </button>
+
+                            <button
+                                id="botonConfirmar"
                                 type="button"
                                 class="btn btn-primary px-4">
-                            Confirmar
-                        </button>
+
+                                Confirmar
+
+                            </button>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-            </div>
+            </form>
 
         </div>
 
@@ -185,23 +248,45 @@
 
                 <div class="card-body">
 
-                    <p><strong>Fecha:</strong></p>
+                    <p>
+                        <strong>Fecha:</strong>
+                        <span id="fechaReserva"></span>
+                    </p>
 
                     <hr>
 
-                    <p><strong>Cantidad de alumnos:</strong></p>
+                    <p>
+                        <strong>Cantidad de alumnos:</strong>
+                        <span id="cantidadReserva"></span>
+                    </p>
 
                     <hr>
 
-                    <p><strong>Tipo de actividad:</strong></p>
+                    <p>
+                        <strong>Tipo de actividad:</strong>
+                        <span id="actividadReserva"></span>
+                    </p>
 
                     <hr>
 
-                    <p><strong>Edificio:</strong></p>
+                    <p>
+                        <strong>Edificio:</strong>
+                        <span id="edificioReserva"></span>
+                    </p>
 
                     <hr>
 
-                    <p><strong>Laboratorio:</strong></p>
+                    <p>
+                        <strong>Laboratorio:</strong>
+                        <span id="laboratorioReserva"></span>
+                    </p>
+
+                    <hr>
+
+                    <p>
+                        <strong>Horario:</strong>
+                        <span id="horarioReserva"></span>
+                    </p>
 
                 </div>
 

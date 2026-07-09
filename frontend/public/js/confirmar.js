@@ -18,7 +18,8 @@ document.getElementById("botonConfirmar").addEventListener("click", function () 
 
     function validar() {
         let desabilitar = false;
-        if (form.documento.value === "") desabilitar = true;
+        if (form.tipoDocumento.value === "") desabilitar = true;
+        if (form.numeroDocumento.value === "") desabilitar = true;
         if (form.nombre.value === "") desabilitar = true;
         if (form.apellido.value === "") desabilitar = true;
         if (form.correo.value === "") desabilitar = true;
@@ -34,4 +35,29 @@ document.getElementById("botonConfirmar").addEventListener("click", function () 
 
     // ejecutar validación inicial por si ya hay datos
     validar();
+
+    //recupera los datos guadados anteriormente
+
+    let edificio = sessionStorage.getItem("edificioSeleccionado");
+
+    let reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
+
+    let reservaLaboratorio = JSON.parse(sessionStorage.getItem("reservaLaboratorio"));
+
+    //muestra los datos de la reserva
+
+    let fecha = new Date(reservaEvento.fecha);
+
+    document.getElementById("fechaReserva").textContent = fecha.toLocaleDateString("es-PY");
+
+    document.getElementById("cantidadReserva").textContent = reservaEvento.alumnos;
+
+    document.getElementById("actividadReserva").textContent = reservaEvento.actividad;
+
+    document.getElementById("edificioReserva").textContent = edificio;
+
+    document.getElementById("laboratorioReserva").textContent = reservaLaboratorio.laboratorio;
+
+    document.getElementById("horarioReserva").textContent = reservaLaboratorio.horaInicio + " - " + reservaLaboratorio.horaFin;
 });
+

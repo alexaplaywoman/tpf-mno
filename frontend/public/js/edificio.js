@@ -24,36 +24,35 @@
     document.getElementById("inicio").addEventListener("click", function () {
         window.location.href = "menu.html";
     });
-    document.getElementById("inicio").addEventListener("click", function () {
-        window.location.href = "menu.html";
-    });
 
     document.getElementById("edif1").addEventListener("click", function () {
-        window.location.href = "evento.html";
+        seleccionarEdificio("Biblioteca Pablo VI");
     });
 
     document.getElementById("edif2").addEventListener("click", function () {
-        window.location.href = "evento.html";
+        seleccionarEdificio("Ciencias Contables");
     });
 
     document.getElementById("edif3").addEventListener("click", function () {
-        window.location.href = "evento.html";
+        seleccionarEdificio("Ciencias y Tecnología");
     });
 
     document.getElementById("edif4").addEventListener("click", function () {
-        window.location.href = "evento.html";
+        seleccionarEdificio("Bloque G");
     });
 });
 
-function seleccionarEdificio(id) {
-    sessionStorage.setItem('edificioSeleccionado', id);
+function seleccionarEdificio(nombreEdificio) {
+    sessionStorage.setItem('edificioSeleccionado', nombreEdificio);
 
-    notificarEdificioAlBackend(id)
+    notificarEdificioAlBackend(nombreEdificio)
         .then(() => {
             window.location.href = `evento.html?edificio=${id}`;
         })
         .catch(error => {
             console.error('❌ No se pudo notificar el edificio al backend:', error);
+
+        window.location.href = "evento.html";
             
         });
 }
