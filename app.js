@@ -41,6 +41,10 @@ app.get('/confirmar', (req, res) => {
 });
 
 // Usar la ruta backend desde archivos separados
+
+const accesosRoute = require('./Backend/Routes/accesos');
+app.use('/api/accesos', accesosRoute);
+
 const reservasRoute = require('./Backend/Routes/reservas');
 app.use('/api/reservas', reservasRoute);
 
@@ -58,6 +62,7 @@ app.use('/api/actividades', actividadesRoute);
 
 const reportesRoute = require('./Backend/Routes/reportes');
 app.use('/api/reportes', reportesRoute);
+
 
 // Iniciar servidor
 app.listen(PORT, () => {
