@@ -3,7 +3,7 @@ const Sybase = require('sybase');
 const router = express.Router();
 
 function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
+    return new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
 }
 
 const manejarError = (err, res, action) => {
@@ -20,6 +20,20 @@ const manejarError = (err, res, action) => {
     });
 };
 
+function verificarAdmin(connection, usuario, callback) {
+    connection.query(
+        `SELECT COUNT(*) AS es_admin
+         FROM sys.sysgroup sg
+         JOIN sys.sysuserperm g ON g.user_id = sg.group_id
+         JOIN sys.sysuserperm m ON m.user_id = sg.group_member
+         WHERE g.user_name = 'ADMINISTRADORES' AND m.user_name = '${usuario}'`,
+        (err, permiso) => {
+            if (err) return callback(err, false);
+            callback(null, !!(permiso[0] && permiso[0].es_admin));
+        }
+    );
+}
+
 const MOTIVOS_CANCELACION_VALIDOS = ['Solapamiento de horarios', 'Error de fecha', 'Enfermedad', 'Otros'];
 
 router.get('/', (req, res) => {
@@ -34,10 +48,10 @@ router.get('/', (req, res) => {
 
         const sql = `
             SELECT r.*, l.EDIFICIO, s.NOMBRE, s.APELLIDO, ta.NOMBRE AS tipo_actividad
-            FROM RESERVAS r
-            JOIN LABORATORIOS l ON r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
-            JOIN SOLICITANTES s ON r.CEDULA_IDENTIDAD = s.CEDULA_IDENTIDAD AND r.CORREO = s.CORREO
-            JOIN TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
+            FROM DBA.RESERVAS r
+            JOIN DBA.LABORATORIOS l ON r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
+            JOIN DBA.SOLICITANTES s ON r.CEDULA_IDENTIDAD = s.CEDULA_IDENTIDAD AND r.CORREO = s.CORREO
+            JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
             ORDER BY r.FECHA_A_RESERVAR, r.HORA_INICIO
         `;
 
@@ -61,7 +75,7 @@ router.get('/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT * FROM RESERVAS WHERE ID_RESERVA = ${id}`,
+            `SELECT * FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
             (err, result) => {
                 connection.disconnect();
                 if (err) return manejarError(err, res, 'consultar reserva');
@@ -96,7 +110,7 @@ router.post('/add', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT ESTADO FROM LABORATORIOS WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
+            `SELECT ESTADO FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
             (err, labEstado) => {
                 if (err) {
                     connection.disconnect();
@@ -112,7 +126,7 @@ router.post('/add', (req, res) => {
                 }
 
                 connection.query(
-                    `SELECT PRIORIDAD FROM TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
+                    `SELECT PRIORIDAD FROM DBA.TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
                     (err, tipos) => {
                         if (err) {
                             connection.disconnect();
@@ -127,8 +141,8 @@ router.post('/add', (req, res) => {
 
                         const sqlSolapamiento = `
                             SELECT r.ID_RESERVA, ta.PRIORIDAD
-                            FROM RESERVAS r
-                            JOIN TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
+                            FROM DBA.RESERVAS r
+                            JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
                             WHERE r.NUMERO_LABORATORIO = ${numero_laboratorio}
                               AND r.FECHA_A_RESERVAR = '${fecha_a_reservar}'
                               AND r.ID_ESTADO_RESERVA != 3
@@ -154,10 +168,10 @@ router.post('/add', (req, res) => {
 
                                 const ids = solapados.map(s => s.ID_RESERVA).join(',');
                                 connection.query(
-                                    `UPDATE RESERVAS
+                                    `UPDATE DBA.RESERVAS
                                      SET ID_ESTADO_RESERVA = 3,
                                          MOTIVO_CANCELACION = 'Desplazada automaticamente por una reserva de mayor prioridad',
-                                         USUARIO_CANCELACION = '${usuario}'
+                                         USUARIO_CANCELACION = '${cedula_identidad}'
                                      WHERE ID_RESERVA IN (${ids})`,
                                     (err) => {
                                         if (err) {
@@ -171,7 +185,7 @@ router.post('/add', (req, res) => {
 
                             continuar(() => {
                                 const sqlCapacidad = `
-                                    SELECT CAPACIDAD_ALUMNOS FROM LABORATORIOS
+                                    SELECT CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS
                                     WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
                                 `;
 
@@ -199,7 +213,7 @@ router.post('/add', (req, res) => {
 
                                         const idsRecursos = listaRecursos.join(',');
                                         connection.query(
-                                            `SELECT ID_RECURSO, NOMBRE, DISPONIBILIDAD FROM RECURSOS
+                                            `SELECT ID_RECURSO, NOMBRE, DISPONIBILIDAD FROM DBA.RECURSOS
                                              WHERE ID_RECURSO IN (${idsRecursos}) AND NUMERO_LABORATORIO = ${numero_laboratorio}`,
                                             (err, result) => {
                                                 if (err) {
@@ -222,7 +236,7 @@ router.post('/add', (req, res) => {
 
                                     validarRecursos(() => {
                                         const sql = `
-                                            INSERT INTO RESERVAS
+                                            INSERT INTO DBA.RESERVAS
                                                 (NUMERO_LABORATORIO, CEDULA_IDENTIDAD, CORREO, ID_ESTADO_RESERVA,
                                                  ID_TIPO_ACTIVIDAD, FECHA_A_RESERVAR, HORA_INICIO, HORA_FIN,
                                                  CANTIDAD_ALUMNOS, FECHA_SOLICITUD)
@@ -253,9 +267,9 @@ router.post('/add', (req, res) => {
 
 router.post('/cancelar/:id', (req, res) => {
     const { id } = req.params;
-    const { usuario, clave, motivo } = req.body;
-    if (!usuario || !clave || !motivo)
-        return res.status(400).json({ success: false, error: 'Faltan credenciales o el motivo de cancelación.' });
+    const { usuario, clave, motivo, cedula_responsable } = req.body;
+    if (!usuario || !clave || !motivo || !cedula_responsable)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales, el motivo o la cédula del responsable.' });
 
     if (!MOTIVOS_CANCELACION_VALIDOS.includes(motivo))
         return res.status(400).json({ success: false, error: `Motivo inválido. Opciones: ${MOTIVOS_CANCELACION_VALIDOS.join(', ')}` });
@@ -266,15 +280,29 @@ router.post('/cancelar/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `UPDATE RESERVAS
-             SET ID_ESTADO_RESERVA = 3,
-                 MOTIVO_CANCELACION = '${motivo}',
-                 USUARIO_CANCELACION = '${usuario}'
-             WHERE ID_RESERVA = ${id}`,
-            (err) => {
-                connection.disconnect();
-                if (err) return manejarError(err, res, 'cancelar reserva');
-                return res.json({ success: true });
+            `SELECT CEDULA_IDENTIDAD FROM DBA.SOLICITANTES WHERE CEDULA_IDENTIDAD = ${cedula_responsable}`,
+            (err, solicitantes) => {
+                if (err) {
+                    connection.disconnect();
+                    return manejarError(err, res, 'verificar cédula del responsable');
+                }
+                if (solicitantes.length === 0) {
+                    connection.disconnect();
+                    return res.status(400).json({ success: false, error: 'La cédula del responsable no corresponde a ningún solicitante registrado.' });
+                }
+
+                connection.query(
+                    `UPDATE DBA.RESERVAS
+                     SET ID_ESTADO_RESERVA = 3,
+                         MOTIVO_CANCELACION = '${motivo}',
+                         USUARIO_CANCELACION = '${cedula_responsable}'
+                     WHERE ID_RESERVA = ${id}`,
+                    (err) => {
+                        connection.disconnect();
+                        if (err) return manejarError(err, res, 'cancelar reserva');
+                        return res.json({ success: true });
+                    }
+                );
             }
         );
     });
@@ -296,13 +324,119 @@ router.post('/marcar/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `UPDATE RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
+            `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
             (err) => {
                 connection.disconnect();
                 if (err) return manejarError(err, res, 'marcar reserva');
                 return res.json({ success: true });
             }
         );
+    });
+});
+
+router.post('/reprogramar/:id', (req, res) => {
+    const { id } = req.params;
+    const { numero_laboratorio, fecha_a_reservar, hora_inicio, hora_fin, usuario, clave } = req.body;
+
+    if (!usuario || !clave || !fecha_a_reservar || !hora_inicio || !hora_fin)
+        return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
+
+    const diaSemana = new Date(fecha_a_reservar).getDay();
+    if (diaSemana === 0 || diaSemana === 6)
+        return res.status(400).json({ success: false, error: 'No se puede reprogramar a un fin de semana.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
+                connection.disconnect();
+                return manejarError(err, res, 'verificar permisos de administrador');
+            }
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede reprogramar una reserva.' });
+            }
+
+            connection.query(
+                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                (err, reservaActual) => {
+                    if (err) {
+                        connection.disconnect();
+                        return manejarError(err, res, 'consultar reserva');
+                    }
+                    if (reservaActual.length === 0) {
+                        connection.disconnect();
+                        return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+                    }
+
+                    const numeroLab = numero_laboratorio || reservaActual[0].NUMERO_LABORATORIO;
+                    const cantidadAlumnos = reservaActual[0].CANTIDAD_ALUMNOS;
+
+                    connection.query(
+                        `SELECT ESTADO, CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                        (err, labs) => {
+                            if (err) {
+                                connection.disconnect();
+                                return manejarError(err, res, 'consultar laboratorio');
+                            }
+                            if (labs.length === 0) {
+                                connection.disconnect();
+                                return res.status(404).json({ success: false, error: 'Laboratorio no encontrado.' });
+                            }
+                            if (labs[0].ESTADO !== 1) {
+                                connection.disconnect();
+                                return res.status(409).json({ success: false, error: 'El laboratorio no está disponible (bloqueado, en mantenimiento o fuera de servicio).' });
+                            }
+                            if (cantidadAlumnos > labs[0].CAPACIDAD_ALUMNOS) {
+                                connection.disconnect();
+                                return res.status(400).json({
+                                    success: false,
+                                    error: `Cantidad de alumnos (${cantidadAlumnos}) supera la capacidad (${labs[0].CAPACIDAD_ALUMNOS}).`
+                                });
+                            }
+
+                            const sqlSolapamiento = `
+                                SELECT ID_RESERVA FROM DBA.RESERVAS
+                                WHERE NUMERO_LABORATORIO = ${numeroLab}
+                                  AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
+                                  AND ID_ESTADO_RESERVA != 3
+                                  AND ID_RESERVA != ${id}
+                                  AND HORA_INICIO < '${hora_fin}'
+                                  AND HORA_FIN > '${hora_inicio}'
+                            `;
+
+                            connection.query(sqlSolapamiento, (err, solapados) => {
+                                if (err) {
+                                    connection.disconnect();
+                                    return manejarError(err, res, 'verificar solapamiento');
+                                }
+                                if (solapados.length > 0) {
+                                    connection.disconnect();
+                                    return res.status(409).json({ success: false, error: 'Ya existe una reserva en ese horario.' });
+                                }
+
+                                connection.query(
+                                    `UPDATE DBA.RESERVAS
+                                     SET NUMERO_LABORATORIO = ${numeroLab},
+                                         FECHA_A_RESERVAR   = '${fecha_a_reservar}',
+                                         HORA_INICIO        = '${hora_inicio}',
+                                         HORA_FIN           = '${hora_fin}'
+                                     WHERE ID_RESERVA = ${id}`,
+                                    (err) => {
+                                        connection.disconnect();
+                                        if (err) return manejarError(err, res, 'reprogramar reserva');
+                                        return res.json({ success: true });
+                                    }
+                                );
+                            });
+                        }
+                    );
+                }
+            );
+        });
     });
 });
 
@@ -317,14 +451,25 @@ router.delete('/delete/:id', (req, res) => {
     connection.connect((err) => {
         if (err) return manejarError(err, res, 'conectar para eliminar reserva');
 
-        connection.query(
-            `DELETE FROM RESERVAS WHERE ID_RESERVA = ${id}`,
-            (err) => {
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
                 connection.disconnect();
-                if (err) return manejarError(err, res, 'eliminar reserva');
-                return res.json({ success: true });
+                return manejarError(err, res, 'verificar permisos de administrador');
             }
-        );
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede eliminar una reserva.' });
+            }
+
+            connection.query(
+                `DELETE FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                (err) => {
+                    connection.disconnect();
+                    if (err) return manejarError(err, res, 'eliminar reserva');
+                    return res.json({ success: true });
+                }
+            );
+        });
     });
 });
 

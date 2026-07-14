@@ -3,7 +3,7 @@ const Sybase = require('sybase');
 const router = express.Router();
 
 function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
+    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
 }
 
 const manejarError = (err, res, action) => {
@@ -19,6 +19,20 @@ const manejarError = (err, res, action) => {
         error: `Error de base de datos al ${action}: ${errorMessage}`
     });
 };
+
+function verificarAdmin(connection, usuario, callback) {
+    connection.query(
+        `SELECT COUNT(*) AS es_admin
+         FROM sys.sysgroup sg
+         JOIN sys.sysuserperm g ON g.user_id = sg.group_id
+         JOIN sys.sysuserperm m ON m.user_id = sg.group_member
+         WHERE g.user_name = 'ADMINISTRADORES' AND m.user_name = '${usuario}'`,
+        (err, permiso) => {
+            if (err) return callback(err, false);
+            callback(null, !!(permiso[0] && permiso[0].es_admin));
+        }
+    );
+}
 
 const ESTADO_LAB_MANTENIMIENTO = 3; // laboratorio en mantenimiento
 const ESTADO_LAB_DISPONIBLE = 1;    // laboratorio disponible
@@ -39,9 +53,9 @@ router.get('/', (req, res) => {
                    m.FECHA_FIN_PREVISTA, m.OBSERVACIONES, m.ID_ESTADO_MANTENIMIENTO,
                    em.ESTADO_MANTENIMIENTO AS estado_mantenimiento,
                    l.EDIFICIO
-            FROM MANTENIMIENTOS m
-            LEFT JOIN ESTADOS_MANTENIMIENTOS em ON m.ID_ESTADO_MANTENIMIENTO = em.ID_ESTADO_MANTENIMIENTO
-            LEFT JOIN LABORATORIOS l ON m.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
+            FROM DBA.MANTENIMIENTOS m
+            LEFT JOIN DBA.ESTADOS_MANTENIMIENTOS em ON m.ID_ESTADO_MANTENIMIENTO = em.ID_ESTADO_MANTENIMIENTO
+            LEFT JOIN DBA.LABORATORIOS l ON m.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
             ORDER BY m.FECHA_INICIO DESC
         `;
 
@@ -65,7 +79,7 @@ router.get('/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT * FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+            `SELECT * FROM DBA.MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
             (err, result) => {
                 connection.disconnect();
                 if (err) return manejarError(err, res, 'consultar mantenimiento');
@@ -91,7 +105,7 @@ router.post('/add', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT ID_MANTENIMIENTO FROM MANTENIMIENTOS
+            `SELECT ID_MANTENIMIENTO FROM DBA.MANTENIMIENTOS
              WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
                AND ID_ESTADO_MANTENIMIENTO IN (1, 2)`,
             (err, activos) => {
@@ -107,7 +121,7 @@ router.post('/add', (req, res) => {
                 const estadoMant = id_estado_mantenimiento || 1;
 
                 connection.query(
-                    `SELECT ID_ESTADO_MANTENIMIENTO FROM ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${estadoMant}`,
+                    `SELECT ID_ESTADO_MANTENIMIENTO FROM DBA.ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${estadoMant}`,
                     (err, estados) => {
                         if (err) {
                             connection.disconnect();
@@ -119,7 +133,7 @@ router.post('/add', (req, res) => {
                         }
 
                         const sqlInsert = `
-                            INSERT INTO MANTENIMIENTOS
+                            INSERT INTO DBA.MANTENIMIENTOS
                                 (ID_ESTADO_MANTENIMIENTO, NUMERO_LABORATORIO, FECHA_INICIO, FECHA_FIN_PREVISTA, OBSERVACIONES)
                             VALUES
                                 (${estadoMant}, ${numero_laboratorio}, '${fecha_inicio}',
@@ -133,7 +147,7 @@ router.post('/add', (req, res) => {
                             }
 
                             connection.query(
-                                `UPDATE LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
+                                `UPDATE DBA.LABORATORIOS SET ESTADO = ${ESTADO_LAB_MANTENIMIENTO} WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
                                 (err) => {
                                     connection.disconnect();
                                     if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
@@ -161,7 +175,7 @@ router.post('/estado/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT ID_ESTADO_MANTENIMIENTO FROM ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento}`,
+            `SELECT ID_ESTADO_MANTENIMIENTO FROM DBA.ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento}`,
             (err, estados) => {
                 if (err) {
                     connection.disconnect();
@@ -173,7 +187,7 @@ router.post('/estado/:id', (req, res) => {
                 }
 
                 connection.query(
-                    `SELECT NUMERO_LABORATORIO FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+                    `SELECT NUMERO_LABORATORIO FROM DBA.MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
                     (err, result) => {
                         if (err) {
                             connection.disconnect();
@@ -187,7 +201,7 @@ router.post('/estado/:id', (req, res) => {
                         const numeroLab = result[0].NUMERO_LABORATORIO;
 
                         const sqlUpdate = `
-                            UPDATE MANTENIMIENTOS
+                            UPDATE DBA.MANTENIMIENTOS
                             SET ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento},
                                 FECHA_FIN_PREVISTA       = '${fecha_fin_prevista}',
                                 OBSERVACIONES             = '${observaciones}'
@@ -205,7 +219,7 @@ router.post('/estado/:id', (req, res) => {
                                 : ESTADO_LAB_MANTENIMIENTO;
 
                             connection.query(
-                                `UPDATE LABORATORIOS SET ESTADO = ${estadoLab} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                                `UPDATE DBA.LABORATORIOS SET ESTADO = ${estadoLab} WHERE NUMERO_LABORATORIO = ${numeroLab}`,
                                 (err) => {
                                     connection.disconnect();
                                     if (err) return manejarError(err, res, 'actualizar estado del laboratorio');
@@ -231,14 +245,25 @@ router.delete('/delete/:id', (req, res) => {
     connection.connect((err) => {
         if (err) return manejarError(err, res, 'conectar para eliminar mantenimiento');
 
-        connection.query(
-            `DELETE FROM MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
-            (err) => {
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
                 connection.disconnect();
-                if (err) return manejarError(err, res, 'eliminar mantenimiento');
-                return res.json({ success: true });
+                return manejarError(err, res, 'verificar permisos de administrador');
             }
-        );
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede eliminar un mantenimiento.' });
+            }
+
+            connection.query(
+                `DELETE FROM DBA.MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
+                (err) => {
+                    connection.disconnect();
+                    if (err) return manejarError(err, res, 'eliminar mantenimiento');
+                    return res.json({ success: true });
+                }
+            );
+        });
     });
 });
 

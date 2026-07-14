@@ -151,6 +151,7 @@ function obtenerRecursos() {
 
 // esto es como un "paquete" que guarda las reservas que se hacen, cuando se da click en sgte
 //se inicializa con cada reserva
+
 document.getElementById("botonSiguiente").addEventListener("click", function () {
 
     let reservaEvento = {
@@ -160,8 +161,8 @@ document.getElementById("botonSiguiente").addEventListener("click", function () 
         recursos: obtenerRecursos()
     };
 
-    sessionStorage.setItem(
-        "reservaEvento",
-        JSON.stringify(reservaEvento)
+    console.log(reservaEvento);
+
+    sessionStorage.setItem("reservaEvento", JSON.stringify(reservaEvento)
     );
 });

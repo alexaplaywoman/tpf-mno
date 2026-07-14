@@ -1,52 +1,80 @@
+console.log("laboratorio.js cargado");
+
 document.addEventListener('DOMContentLoaded', function () {
+
     document.getElementById("inicio").addEventListener("click", function (e) {
         e.preventDefault();
         window.location.href = "menu.html";
     });
 
+
     document.getElementById("botonSiguiente").addEventListener("click", function (e) {
         e.preventDefault();
+
+        // Guarda la información del laboratorio y horario seleccionado
+        let reservaLaboratorio = {
+            laboratorio: document.querySelector('input[name="laboratorio"]:checked').value,
+            horaInicio: document.querySelector("#horaInicio").value,
+            horaFin: document.querySelector("#horaFin").value
+        };
+
+
+        sessionStorage.setItem(
+            "reservaLaboratorio",
+            JSON.stringify(reservaLaboratorio)
+        );
+
+
         window.location.href = "confirmar.html";
+
     });
+
+
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
         e.preventDefault();
-        window.location.href = "edificio.html";
+        window.location.href = "evento.html";
     });
+
+
 
     let form = document.querySelector("#form");
     let btn = document.querySelector("#botonSiguiente");
 
+
     function validar() {
+
         let desabilitar = false;
+
 
         if (form.laboratorio.value === "") desabilitar = true;
         if (form.horaInicio.value === "") desabilitar = true;
         if (form.horaFin.value === "") desabilitar = true;
 
+
         btn.disabled = desabilitar;
+
     }
 
     form.addEventListener("input", validar);
 
-    //ejecuta la validación inicial por si ya hay datos 
+    // ejecuta la validación inicial por si ya hay datos
     validar();
-
-
-    let reservaEvento = JSON.parse(
-        sessionStorage.getItem("reservaEvento")
-    );
-
-    cargarLaboratorios(reservaEvento);
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-
 
     // Recupera la información que el usuario eligió en la pantalla anterior
     let reservaEvento = JSON.parse(
         sessionStorage.getItem("reservaEvento")
     );
+
+
+    cargarLaboratorios(reservaEvento);
+
+
+});
+
+
+// Esta función después se conectará con el backend
+function cargarLaboratorios(reservaEvento) {
 
 
     // Después esto vendrá del backend
@@ -57,8 +85,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // });
 
 
+
     // Ejemplo temporal de cómo vendría del backend
     let laboratorios = [
+
         {
             numero: 1,
             capacidad: 40,
@@ -70,6 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
             estado: "habilitado"
         },
 
+
         {
             numero: 2,
             capacidad: 20,
@@ -78,6 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ],
             estado: "habilitado"
         },
+
 
         {
             numero: 3,
@@ -89,6 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ],
             estado: "deshabilitado"
         }
+
     ];
 
 
@@ -98,11 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-});
-
-
-
-
+}
 
 function verificarLaboratorios(laboratorios, reservaEvento) {
 
@@ -118,6 +147,7 @@ function verificarLaboratorios(laboratorios, reservaEvento) {
 
         if (disponible) {
 
+
             console.log(
                 "Laboratorio " + laboratorio.numero + " habilitado"
             );
@@ -125,9 +155,11 @@ function verificarLaboratorios(laboratorios, reservaEvento) {
 
         } else {
 
+
             console.log(
                 "Laboratorio " + laboratorio.numero + " deshabilitado"
             );
+
 
         }
 
@@ -136,11 +168,6 @@ function verificarLaboratorios(laboratorios, reservaEvento) {
 
 
 }
-
-
-
-
-
 
 function validarLaboratorio(laboratorio, reservaEvento) {
 
@@ -153,14 +180,12 @@ function validarLaboratorio(laboratorio, reservaEvento) {
     }
 
 
-
     // Verifica cantidad de alumnos
     if (reservaEvento.alumnos > laboratorio.capacidad) {
 
         return false;
 
     }
-
 
 
     // Verifica recursos necesarios
@@ -177,9 +202,7 @@ function validarLaboratorio(laboratorio, reservaEvento) {
     }
 
 
-
     // Si pasó todos los controles
     return true;
-
 
 }

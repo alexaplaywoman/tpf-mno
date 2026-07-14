@@ -3,7 +3,7 @@ const Sybase = require('sybase');
 const router = express.Router();
 
 function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
+    return new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
 }
 
 const manejarError = (err, res, action) => {
@@ -19,6 +19,20 @@ const manejarError = (err, res, action) => {
         error: `Error de base de datos al ${action}: ${errorMessage}`
     });
 };
+
+function verificarAdmin(connection, usuario, callback) {
+    connection.query(
+        `SELECT COUNT(*) AS es_admin
+         FROM sys.sysgroup sg
+         JOIN sys.sysuserperm g ON g.user_id = sg.group_id
+         JOIN sys.sysuserperm m ON m.user_id = sg.group_member
+         WHERE g.user_name = 'ADMINISTRADORES' AND m.user_name = '${usuario}'`,
+        (err, permiso) => {
+            if (err) return callback(err, false);
+            callback(null, !!(permiso[0] && permiso[0].es_admin));
+        }
+    );
+}
 
 function calcularHorariosDisponibles(reservasDelDia, duracionHoras, horaApertura = 7, horaCierre = 22) {
     const disponibles = [];
@@ -59,9 +73,9 @@ router.get('/', (req, res) => {
                    l.ID_EDIFICIO, l.ESTADO,
                    e.NOMBRE_EDIFICIO,
                    eo.TIPO AS estado_tipo
-            FROM LABORATORIOS l
-            LEFT JOIN EDIFICIOS e ON l.ID_EDIFICIO = e.ID_EDIFICIO
-            LEFT JOIN ESTADOS_OPERATIVOS eo ON l.ESTADO = eo.ESTADO
+            FROM DBA.LABORATORIOS l
+            LEFT JOIN DBA.EDIFICIOS e ON l.ID_EDIFICIO = e.ID_EDIFICIO
+            LEFT JOIN DBA.ESTADOS_OPERATIVOS eo ON l.ESTADO = eo.ESTADO
             ORDER BY l.NUMERO_LABORATORIO
         `;
 
@@ -90,9 +104,9 @@ router.get('/:id', (req, res) => {
                    l.ID_EDIFICIO, l.ESTADO,
                    e.NOMBRE_EDIFICIO,
                    eo.TIPO AS estado_tipo
-            FROM LABORATORIOS l
-            LEFT JOIN EDIFICIOS e ON l.ID_EDIFICIO = e.ID_EDIFICIO
-            LEFT JOIN ESTADOS_OPERATIVOS eo ON l.ESTADO = eo.ESTADO
+            FROM DBA.LABORATORIOS l
+            LEFT JOIN DBA.EDIFICIOS e ON l.ID_EDIFICIO = e.ID_EDIFICIO
+            LEFT JOIN DBA.ESTADOS_OPERATIVOS eo ON l.ESTADO = eo.ESTADO
             WHERE l.NUMERO_LABORATORIO = ${id}
         `;
 
@@ -121,7 +135,7 @@ router.post('/add', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            INSERT INTO LABORATORIOS
+            INSERT INTO DBA.LABORATORIOS
                 (ID_EDIFICIO, EDIFICIO, CAPACIDAD_ALUMNOS,
                  CANTIDAD_COMPUTADORAS, VELOCIDAD_CONEXION_INTERNET, ESTADO)
             VALUES
@@ -154,7 +168,7 @@ router.post('/update/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            UPDATE LABORATORIOS
+            UPDATE DBA.LABORATORIOS
             SET ID_EDIFICIO                = ${id_edificio || 'NULL'},
                 EDIFICIO                   = '${edificio}',
                 CAPACIDAD_ALUMNOS          = ${capacidad_alumnos},
@@ -183,42 +197,39 @@ router.post('/estado/:id', (req, res) => {
     connection.connect((err) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        connection.query(
-            `SELECT GROUP_MEMBER('ADMINISTRADORES', '${usuario}') AS es_admin`,
-            (err, permiso) => {
-                if (err) {
-                    connection.disconnect();
-                    return manejarError(err, res, 'verificar permisos de administrador');
-                }
-                if (!permiso[0].es_admin) {
-                    connection.disconnect();
-                    return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede cambiar el estado del laboratorio.' });
-                }
-
-                connection.query(
-                    `SELECT ESTADO FROM ESTADOS_OPERATIVOS WHERE ESTADO = ${estado}`,
-                    (err, result) => {
-                        if (err) {
-                            connection.disconnect();
-                            return manejarError(err, res, 'verificar estado');
-                        }
-                        if (result.length === 0) {
-                            connection.disconnect();
-                            return res.status(400).json({ success: false, error: 'Estado no válido.' });
-                        }
-
-                        connection.query(
-                            `UPDATE LABORATORIOS SET ESTADO = ${estado} WHERE NUMERO_LABORATORIO = ${id}`,
-                            (err) => {
-                                connection.disconnect();
-                                if (err) return manejarError(err, res, 'cambiar estado');
-                                return res.json({ success: true });
-                            }
-                        );
-                    }
-                );
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
+                connection.disconnect();
+                return manejarError(err, res, 'verificar permisos de administrador');
             }
-        );
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede cambiar el estado del laboratorio.' });
+            }
+
+            connection.query(
+                `SELECT ESTADO FROM DBA.ESTADOS_OPERATIVOS WHERE ESTADO = ${estado}`,
+                (err, result) => {
+                    if (err) {
+                        connection.disconnect();
+                        return manejarError(err, res, 'verificar estado');
+                    }
+                    if (result.length === 0) {
+                        connection.disconnect();
+                        return res.status(400).json({ success: false, error: 'Estado no válido.' });
+                    }
+
+                    connection.query(
+                        `UPDATE DBA.LABORATORIOS SET ESTADO = ${estado} WHERE NUMERO_LABORATORIO = ${id}`,
+                        (err) => {
+                            connection.disconnect();
+                            if (err) return manejarError(err, res, 'cambiar estado');
+                            return res.json({ success: true });
+                        }
+                    );
+                }
+            );
+        });
     });
 });
 
@@ -238,7 +249,7 @@ router.get('/disponibilidad/:id', (req, res) => {
 
         const sql = `
             SELECT HORA_INICIO, HORA_FIN, ID_ESTADO_RESERVA
-            FROM RESERVAS
+            FROM DBA.RESERVAS
             WHERE NUMERO_LABORATORIO = ${id}
               AND FECHA_A_RESERVAR = '${fecha}'
               AND ID_ESTADO_RESERVA != 3
@@ -274,7 +285,7 @@ router.get('/disponibilidad-horario', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const condicionRecursos = idsRecursos.length > 0
-            ? `WHEN (SELECT COUNT(*) FROM RECURSOS rec
+            ? `WHEN (SELECT COUNT(*) FROM DBA.RECURSOS rec
                      WHERE rec.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
                        AND rec.ID_RECURSO IN (${idsRecursos.join(',')})
                        AND rec.DISPONIBILIDAD = 'S') != ${idsRecursos.length} THEN 'N'`
@@ -285,7 +296,7 @@ router.get('/disponibilidad-horario', (req, res) => {
                    CASE
                        WHEN l.ESTADO != 1 THEN 'N'
                        WHEN EXISTS (
-                           SELECT 1 FROM RESERVAS r
+                           SELECT 1 FROM DBA.RESERVAS r
                            WHERE r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
                              AND r.FECHA_A_RESERVAR = '${fecha}'
                              AND r.ID_ESTADO_RESERVA != 3
@@ -295,7 +306,7 @@ router.get('/disponibilidad-horario', (req, res) => {
                        ${condicionRecursos}
                        ELSE 'S'
                    END AS disponible
-            FROM LABORATORIOS l
+            FROM DBA.LABORATORIOS l
             ORDER BY l.NUMERO_LABORATORIO
         `;
 
@@ -318,31 +329,42 @@ router.delete('/delete/:id', (req, res) => {
     connection.connect((err) => {
         if (err) return manejarError(err, res, 'conectar para eliminar laboratorio');
 
-        connection.query(
-            `SELECT ID_RESERVA FROM RESERVAS WHERE NUMERO_LABORATORIO = ${id}`,
-            (err, reservas) => {
-                if (err) {
-                    connection.disconnect();
-                    return manejarError(err, res, 'verificar reservas del laboratorio');
-                }
-                if (reservas.length > 0) {
-                    connection.disconnect();
-                    return res.status(409).json({
-                        success: false,
-                        error: 'No se puede eliminar el laboratorio: tiene reservas históricas asociadas.'
-                    });
-                }
-
-                connection.query(
-                    `DELETE FROM LABORATORIOS WHERE NUMERO_LABORATORIO = ${id}`,
-                    (err) => {
-                        connection.disconnect();
-                        if (err) return manejarError(err, res, 'eliminar laboratorio');
-                        return res.json({ success: true });
-                    }
-                );
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
+                connection.disconnect();
+                return manejarError(err, res, 'verificar permisos de administrador');
             }
-        );
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede eliminar un laboratorio.' });
+            }
+
+            connection.query(
+                `SELECT ID_RESERVA FROM DBA.RESERVAS WHERE NUMERO_LABORATORIO = ${id}`,
+                (err, reservas) => {
+                    if (err) {
+                        connection.disconnect();
+                        return manejarError(err, res, 'verificar reservas del laboratorio');
+                    }
+                    if (reservas.length > 0) {
+                        connection.disconnect();
+                        return res.status(409).json({
+                            success: false,
+                            error: 'No se puede eliminar el laboratorio: tiene reservas históricas asociadas.'
+                        });
+                    }
+
+                    connection.query(
+                        `DELETE FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${id}`,
+                        (err) => {
+                            connection.disconnect();
+                            if (err) return manejarError(err, res, 'eliminar laboratorio');
+                            return res.json({ success: true });
+                        }
+                    );
+                }
+            );
+        });
     });
 });
 

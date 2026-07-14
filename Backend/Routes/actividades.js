@@ -45,28 +45,23 @@ router.get('/', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            SELECT s.CEDULA_IDENTIDAD, s.CORREO, s.NOMBRE, s.APELLIDO, s.TELEFONO,
-                   s.DEPARTAMENTO, s.ID_CARRERA, s.ID_SOLICITANTE, s.TIPO_DOCUMENTO,
-                   c.NOMBRE AS carrera,
-                   ts.TIPO_SOLICITANTE AS tipo_solicitante,
-                   td.NOMBRE AS tipo_documento
-            FROM DBA.SOLICITANTES s
-            LEFT JOIN DBA.CARRERAS c ON s.ID_CARRERA = c.ID_CARRERA
-            LEFT JOIN DBA.TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_SOLICITANTE
-            LEFT JOIN DBA.TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.TIPO_DOCUMENTO
-            ORDER BY s.APELLIDO, s.NOMBRE
+            SELECT ta.ID_TIPO_ACTIVIDAD, ta.NOMBRE, ta.PRIORIDAD, ta.DURACION_MAX_HORAS,
+                   ta.ID_PRIORIDAD, p.NOMBRE AS prioridad_nombre
+            FROM DBA.TIPO_ACTIVIDAD ta
+            LEFT JOIN DBA.PRIORIDADES p ON ta.ID_PRIORIDAD = p.ID_PRIORIDAD
+            ORDER BY ta.PRIORIDAD, ta.NOMBRE
         `;
 
         connection.query(sql, (err, result) => {
             connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar solicitantes');
+            if (err) return manejarError(err, res, 'consultar tipos de actividad');
             return res.json(result);
         });
     });
 });
 
-router.get('/:cedula', (req, res) => {
-    const { cedula } = req.params;
+router.get('/:id', (req, res) => {
+    const { id } = req.params;
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
@@ -76,35 +71,25 @@ router.get('/:cedula', (req, res) => {
     connection.connect((err) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sql = `
-            SELECT s.CEDULA_IDENTIDAD, s.CORREO, s.NOMBRE, s.APELLIDO, s.TELEFONO,
-                   s.DEPARTAMENTO, s.ID_CARRERA, s.ID_SOLICITANTE, s.TIPO_DOCUMENTO,
-                   c.NOMBRE AS carrera,
-                   ts.TIPO_SOLICITANTE AS tipo_solicitante,
-                   td.NOMBRE AS tipo_documento
-            FROM DBA.SOLICITANTES s
-            LEFT JOIN DBA.CARRERAS c ON s.ID_CARRERA = c.ID_CARRERA
-            LEFT JOIN DBA.TIPOS_SOLICITANTES ts ON s.ID_SOLICITANTE = ts.ID_SOLICITANTE
-            LEFT JOIN DBA.TIPOS_DOCUMENTOS td ON s.TIPO_DOCUMENTO = td.TIPO_DOCUMENTO
-            WHERE s.CEDULA_IDENTIDAD = ${cedula}
-        `;
-
-        connection.query(sql, (err, result) => {
-            connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar solicitante');
-            if (result.length > 0) return res.json({ success: true, solicitante: result[0] });
-            return res.json({ success: false, error: 'Solicitante no encontrado.' });
-        });
+        connection.query(
+            `SELECT * FROM DBA.TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id}`,
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar tipo de actividad');
+                if (result.length > 0) return res.json({ success: true, tipo_actividad: result[0] });
+                return res.json({ success: false, error: 'Tipo de actividad no encontrada.' });
+            }
+        );
     });
 });
 
 router.post('/add', (req, res) => {
     const {
-        cedula_identidad, correo, id_carrera, id_solicitante, tipo_documento,
-        nombre, apellido, telefono, departamento, usuario, clave
+        id_prioridad, nombre, prioridad, duracion_max_horas,
+        usuario, clave
     } = req.body;
 
-    if (!usuario || !clave || !cedula_identidad || !correo || !nombre || !apellido)
+    if (!usuario || !clave || !nombre || !duracion_max_horas)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
     const connection = getConnection(usuario, clave);
@@ -113,30 +98,28 @@ router.post('/add', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            INSERT INTO DBA.SOLICITANTES
-                (CEDULA_IDENTIDAD, CORREO, ID_CARRERA, ID_SOLICITANTE, TIPO_DOCUMENTO,
-                 NOMBRE, APELLIDO, TELEFONO, DEPARTAMENTO)
+            INSERT INTO DBA.TIPO_ACTIVIDAD
+                (ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
             VALUES
-                (${cedula_identidad}, '${correo}', ${id_carrera || 'NULL'}, ${id_solicitante || 'NULL'},
-                 ${tipo_documento || 'NULL'}, '${nombre}', '${apellido}', '${telefono}', '${departamento}')
+                (${id_prioridad ?? 'NULL'}, '${nombre}', ${prioridad}, ${duracion_max_horas})
         `;
 
         connection.query(sql, (err) => {
             connection.disconnect();
-            if (err) return manejarError(err, res, 'agregar solicitante');
+            if (err) return manejarError(err, res, 'agregar tipo de actividad');
             return res.json({ success: true });
         });
     });
 });
 
-router.post('/update/:cedula', (req, res) => {
-    const { cedula } = req.params;
+router.post('/update/:id', (req, res) => {
+    const { id } = req.params;
     const {
-        correo, id_carrera, id_solicitante, tipo_documento,
-        nombre, apellido, telefono, departamento, usuario, clave
+        id_prioridad, nombre, prioridad, duracion_max_horas,
+        usuario, clave
     } = req.body;
 
-    if (!usuario || !clave || !correo || !nombre || !apellido)
+    if (!usuario || !clave || !nombre || !duracion_max_horas)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
     const connection = getConnection(usuario, clave);
@@ -145,28 +128,24 @@ router.post('/update/:cedula', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            UPDATE DBA.SOLICITANTES
-            SET CORREO         = '${correo}',
-                ID_CARRERA     = ${id_carrera || 'NULL'},
-                ID_SOLICITANTE = ${id_solicitante || 'NULL'},
-                TIPO_DOCUMENTO = ${tipo_documento || 'NULL'},
-                NOMBRE         = '${nombre}',
-                APELLIDO       = '${apellido}',
-                TELEFONO       = '${telefono}',
-                DEPARTAMENTO   = '${departamento}'
-            WHERE CEDULA_IDENTIDAD = ${cedula}
+            UPDATE DBA.TIPO_ACTIVIDAD
+            SET ID_PRIORIDAD       = ${id_prioridad ?? 'NULL'},
+                NOMBRE             = '${nombre}',
+                PRIORIDAD          = ${prioridad},
+                DURACION_MAX_HORAS = ${duracion_max_horas}
+            WHERE ID_TIPO_ACTIVIDAD = ${id}
         `;
 
         connection.query(sql, (err) => {
             connection.disconnect();
-            if (err) return manejarError(err, res, 'actualizar solicitante');
+            if (err) return manejarError(err, res, 'actualizar tipo de actividad');
             return res.json({ success: true });
         });
     });
 });
 
-router.delete('/delete/:cedula', (req, res) => {
-    const { cedula } = req.params;
+router.delete('/delete/:id', (req, res) => {
+    const { id } = req.params;
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
@@ -174,7 +153,7 @@ router.delete('/delete/:cedula', (req, res) => {
     const connection = getConnection(usuario, clave);
 
     connection.connect((err) => {
-        if (err) return manejarError(err, res, 'conectar para eliminar solicitante');
+        if (err) return manejarError(err, res, 'conectar para eliminar tipo de actividad');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
             if (err) {
@@ -183,14 +162,14 @@ router.delete('/delete/:cedula', (req, res) => {
             }
             if (!esAdmin) {
                 connection.disconnect();
-                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede eliminar un solicitante.' });
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede eliminar un tipo de actividad.' });
             }
 
             connection.query(
-                `DELETE FROM DBA.SOLICITANTES WHERE CEDULA_IDENTIDAD = ${cedula}`,
+                `DELETE FROM DBA.TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id}`,
                 (err) => {
                     connection.disconnect();
-                    if (err) return manejarError(err, res, 'eliminar solicitante');
+                    if (err) return manejarError(err, res, 'eliminar tipo de actividad');
                     return res.json({ success: true });
                 }
             );

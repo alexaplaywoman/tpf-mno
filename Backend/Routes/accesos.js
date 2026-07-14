@@ -7,7 +7,7 @@ router.post('/', (req, res) => {
   const { usuario, clave } = req.body;
 
   // Crear nueva instancia de conexión
-  const db = new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
+  const db = new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
 
   db.connect(err => {
     if (err) {
