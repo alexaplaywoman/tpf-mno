@@ -17,6 +17,18 @@ if exists(select 1 from sys.systrigger where trigger_name='tr_concide_horario_fe
     drop trigger tr_concide_horario_fecha_reserva
 end if;
 
+if exists(select 1 from sys.systrigger where trigger_name='tr_concide_horario_fecha_reserva_ins') then
+    drop trigger tr_concide_horario_fecha_reserva_ins
+end if;
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_concide_horario_fecha_reserva_upd') then
+    drop trigger tr_concide_horario_fecha_reserva_upd
+end if;
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_validad_cancelacion_reserva') then
+    drop trigger tr_validad_cancelacion_reserva
+end if;
+
 if exists(select 1 from sys.systrigger where trigger_name='tr_validar_capacidad_lab') then
     drop trigger tr_validar_capacidad_lab
 end if;
@@ -291,20 +303,34 @@ BEGIN
 END;
 
 
-CREATE TRIGGER "tr_concide_horario_fecha_reserva" BEFORE INSERT, UPDATE
+CREATE TRIGGER "tr_concide_horario_fecha_reserva_ins" BEFORE INSERT
 ORDER 3 ON "DBA"."RESERVAS"
 REFERENCING NEW AS new_row
 FOR EACH ROW
 BEGIN
     DECLARE v_val INTEGER;
+    DECLARE v_max INT;
+    SELECT DURACION_MAX_HORAS INTO v_max
+    FROM TIPO_ACTIVIDAD
+    WHERE ID_TIPO_ACTIVIDAD = new_row.ID_TIPO_ACTIVIDAD;
 
-    SET v_val = DBA.fn_validar_horarios(new_row.HORA_INICIO, new_row.HORA_FIN, new_row.FECHA_A_RESERVAR);
+    IF DATEDIFF(hour, new_row.HORA_INICIO, new_row.HORA_FIN) > v_max THEN
+        RAISERROR 99999 'La duracion supera el maximo permitido para este tipo de actividad.';
+        RETURN;
+    END IF;
 
     -- Fecha valida (no pasado, no fin de semana)
     IF DBA.fn_validar_fechas_y_fin_semana(new_row.FECHA_A_RESERVAR) = 1 THEN
         RAISERROR 99999 'Fecha invalida: no se permite pasado ni fines de semana.';
         RETURN;
     END IF;
+
+    IF DBA.fn_existe_mantenimiento(new_row.NUMERO_LABORATORIO, new_row.FECHA_A_RESERVAR) > 0 THEN
+    RAISERROR 99999 'El laboratorio tiene mantenimiento programado en esa fecha.';
+    RETURN;
+    END IF;
+
+    SET v_val = DBA.fn_validar_horarios(new_row.HORA_INICIO, new_row.HORA_FIN, new_row.FECHA_A_RESERVAR);
 
     -- Horario coherente (inicio < fin)
     IF v_val = 1 THEN
@@ -328,5 +354,98 @@ BEGIN
            new_row.ID_TIPO_ACTIVIDAD) > 0 THEN
         RAISERROR 99999 'El horario coincide con una reserva ya existente.';
         RETURN;
+    END IF;
+END;
+
+
+ALTER TRIGGER "tr_concide_horario_fecha_reserva_upd" BEFORE UPDATE
+ORDER 3 ON "DBA"."RESERVAS"
+REFERENCING OLD AS old_row NEW AS new_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_val INTEGER;
+    DECLARE v_tipo CHAR(1);
+    DECLARE v_max INT;
+    SELECT DURACION_MAX_HORAS INTO v_max
+    FROM TIPO_ACTIVIDAD
+    WHERE ID_TIPO_ACTIVIDAD = new_row.ID_TIPO_ACTIVIDAD;
+
+    IF DATEDIFF(hour, new_row.HORA_INICIO, new_row.HORA_FIN) > v_max THEN
+        RAISERROR 99999 'La duracion supera el maximo permitido para este tipo de actividad.';
+        RETURN;
+    END IF;
+    
+    IF old_row.FECHA_A_RESERVAR = new_row.FECHA_A_RESERVAR
+       AND old_row.HORA_INICIO = new_row.HORA_INICIO
+       AND old_row.HORA_FIN = new_row.HORA_FIN
+       AND old_row.NUMERO_LABORATORIO = new_row.NUMERO_LABORATORIO THEN
+        RETURN;   -- no cambio fecha/horario/lab, no hace falta revalidar
+    END IF;
+
+    IF DBA.fn_validar_fechas_y_fin_semana(new_row.FECHA_A_RESERVAR) = 1 THEN
+        RAISERROR 99999 'Fecha invalida: no se permite pasado ni fines de semana.';
+        RETURN;
+    END IF;
+    
+    IF DBA.fn_existe_mantenimiento(new_row.NUMERO_LABORATORIO, new_row.FECHA_A_RESERVAR) > 0 THEN
+    RAISERROR 99999 'El laboratorio tiene mantenimiento programado en esa fecha.';
+    RETURN;
+    END IF;
+    
+    SELECT eo.TIPO INTO v_tipo
+    FROM LABORATORIOS l
+    INNER JOIN ESTADOS_OPERATIVOS eo ON eo.ESTADO = l.ESTADO
+    WHERE l.NUMERO_LABORATORIO = new_row.NUMERO_LABORATORIO;
+
+    IF v_tipo IN ('M','F','B') THEN
+        RAISERROR 99999 'El laboratorio no esta disponible (mantenimiento, fuera de servicio o bloqueado).';
+        RETURN;
+    END IF;
+
+    SET v_val = DBA.fn_validar_horarios(new_row.HORA_INICIO, new_row.HORA_FIN, new_row.FECHA_A_RESERVAR);
+
+    IF v_val = 1 THEN
+        RAISERROR 99999 'La hora de inicio debe ser anterior a la hora de fin.';
+        RETURN;
+    END IF;
+
+    IF v_val = 2 THEN
+        RAISERROR 99999 'La hora de inicio debe ser posterior a la hora actual en una fecha disponible.';
+        RETURN;
+    END IF;
+
+    IF "DBA"."fn_existe_solapamiento_reservas"(
+           new_row.NUMERO_LABORATORIO, new_row.FECHA_A_RESERVAR,
+           new_row.HORA_INICIO, new_row.HORA_FIN,
+           new_row.ID_RESERVA, new_row.ID_TIPO_ACTIVIDAD) > 0 THEN
+        RAISERROR 99999 'El horario coincide con una reserva ya existente.';
+        RETURN;
+    END IF;
+END;
+
+CREATE TRIGGER "tr_validad_cancelacion_reserva" BEFORE INSERT, UPDATE
+ORDER 4 ON "DBA"."RESERVAS"
+REFERENCING NEW AS new_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_estado CHAR(1);
+
+    SELECT er.ESTADO_RESERVA INTO v_estado
+    FROM "DBA"."ESTADO_RESERVA" er
+    WHERE er.ID_ESTADO_RESERVA = new_row.ID_ESTADO_RESERVA;
+
+    IF v_estado = 'C' THEN
+        -- Si hay cancelacion, registra obligatoriamente el motivo
+        IF new_row.MOTIVO_CANCELACION IS NULL
+           OR TRIM(new_row.MOTIVO_CANCELACION) = '' THEN
+            RAISERROR 99999 'Una reserva cancelada debe registrar el motivo de la cancelacion.';
+            RETURN;
+        END IF;
+        -- Usuario responsable: si no viene, se completa con el usuario
+        -- de base de datos conectado (la auth del sistema usa usuarios reales)
+        IF new_row.USUARIO_CANCELACION IS NULL
+           OR TRIM(new_row.USUARIO_CANCELACION) = '' THEN
+            SET new_row.USUARIO_CANCELACION = CURRENT USER;
+        END IF;
     END IF;
 END;

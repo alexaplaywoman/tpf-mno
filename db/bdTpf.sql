@@ -1,6 +1,6 @@
 /*==============================================================*/
 /* DBMS name:      Sybase SQL Anywhere 11                       */
-/* Created on:     8/7/2026 01:03:44                            */
+/* Created on:     14/7/2026 00:13:21                           */
 /*==============================================================*/
 
 
@@ -347,7 +347,7 @@ create table DBA.LABORATORIOS
 /*==============================================================*/
 create table DBA.MANTENIMIENTOS 
 (
-   ID_MANTENIMIENTO     D_CLAVE                        not null,
+   ID_MANTENIMIENTO     D_CLAVE                        not null default autoincrement,
    ID_ESTADO_MANTENIMIENTO D_CLAVE                        not null,
    NUMERO_LABORATORIO   int                            not null,
    FECHA_INICIO         D_FECHA                        not null,
@@ -406,6 +406,8 @@ create table DBA.RESERVAS
    HORA_FIN             time                           not null,
    CANTIDAD_ALUMNOS     int                            not null,
    FECHA_SOLICITUD      D_FECHA                        not null,
+   MOTIVO_CANCELACION   varchar(100)                   null,
+   USUARIO_CANCELACION  varchar(50)                    null,
    constraint PK_RESERVAS primary key clustered (ID_RESERVA)
 );
 
