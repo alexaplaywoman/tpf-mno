@@ -358,7 +358,7 @@ BEGIN
 END;
 
 
-ALTER TRIGGER "tr_concide_horario_fecha_reserva_upd" BEFORE UPDATE
+CREATE TRIGGER "tr_concide_horario_fecha_reserva_upd" BEFORE UPDATE
 ORDER 3 ON "DBA"."RESERVAS"
 REFERENCING OLD AS old_row NEW AS new_row
 FOR EACH ROW
