@@ -1,10 +1,22 @@
 /*==============================================================*/
-/* Cambios aplicados en vivo contra bd/labcontrol.db durante     */
-/* el desarrollo del backend, todavía sin sumar a los scripts   */
-/* oficiales (bdTpf.sql / objetos_bd.sql / datos_prueba...sql). */
-/* Ya están probados y funcionando, esto es para dejarlos       */
-/* versionados y que la base se pueda recrear desde cero.       */
+/* Cambios aplicados en vivo durante el desarrollo del backend,  */
+/* todavía sin sumar a los scripts oficiales (bdTpf.sql /       */
+/* objetos_bd.sql / datos_prueba_labcontrol_ordenado.sql).      */
 /*==============================================================*/
+
+
+/*==============================================================*/
+/* 0. Revocar permisos peligrosos, por si ya corrieron una      */
+/*    version anterior de este script (v1) que le daba a       */
+/*    PUBLIC (incluido "solicitante") acceso de lectura a       */
+/*    sys.sysuserperm, tabla que tiene la columna "password"    */
+/*    con el hash de la clave de TODOS los usuarios (incluido   */
+/*    DBA). Si nadie corrio la v1 todavia, estos REVOKE no      */
+/*    hacen nada (no hay nada que revocar).                    */
+/*==============================================================*/
+
+REVOKE SELECT ON sys.sysuserperm FROM PUBLIC;
+REVOKE SELECT ON sys.sysgroup FROM PUBLIC;
 
 
 /*==============================================================*/
@@ -24,32 +36,24 @@ ALTER TABLE MANTENIMIENTOS ALTER ID_MANTENIMIENTO DEFAULT AUTOINCREMENT;
 
 
 /*==============================================================*/
-/* 3. Escala de prioridades 0-4 (0 = mayor prioridad)           */
-/*    Nota: no se puede borrar e insertar de nuevo los ids      */
-/*    1, 2 y 3 porque TIPO_ACTIVIDAD ya los referencia por FK   */
-/*    (FK_TIPO_ACT_REFERENCE_PRIORIDA). Por eso los 3 primeros  */
-/*    van con UPDATE y los nuevos (0 y 4) con INSERT.           */
+/* 3. Tipo de actividad para directores/decanos                */
+/*    PRIORIDADES no se toca (ya es correcta: Alta/Media Alta/  */
+/*    Media/Baja). Solo agregamos el TIPO_ACTIVIDAD que falta,  */
+/*    con PRIORIDAD = 0 (mas prioritario que Evento Institucional,*/
+/*    que hoy es el mas alto con PRIORIDAD = 1).                */
 /*==============================================================*/
 
-INSERT INTO PRIORIDADES (ID_PRIORIDAD, NOMBRE) VALUES (0, 'Directores y Decanos');
-UPDATE PRIORIDADES SET NOMBRE = 'Evento Institucional' WHERE ID_PRIORIDAD = 1;
-UPDATE PRIORIDADES SET NOMBRE = 'Examen'               WHERE ID_PRIORIDAD = 2;
-UPDATE PRIORIDADES SET NOMBRE = 'Exposicion y Tesis'   WHERE ID_PRIORIDAD = 3;
-INSERT INTO PRIORIDADES (ID_PRIORIDAD, NOMBRE) VALUES (4, 'Clase');
-
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Clase Regular';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 2, PRIORIDAD = 2 WHERE NOMBRE = 'Examen';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Capacitacion';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Tutoria';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 1, PRIORIDAD = 1 WHERE NOMBRE = 'Evento';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Practica';
-
--- Tipos de actividad nuevos que no existían todavía
 INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
-VALUES (7, 0, 'Actividad Directiva', 0, 4);
+VALUES (8, 1, 'Actividad Directiva', 0, 4);
 
-INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
-VALUES (8, 3, 'Exposicion y Tesis', 3, 3);
+/* DECISION PENDIENTE DEL GRUPO (como ya les habían marcado):
+   'Defensa Proyecto Final' (ID 6) parece ser el mismo concepto
+   que 'Exposicion y Tesis'. Si el grupo confirma que es lo mismo,
+   descomentar este UPDATE (no hace falta tocar el numero de
+   PRIORIDAD, ya está en 3). Si prefieren mantenerlos separados,
+   dejar comentado y no hacer nada. */
+
+-- UPDATE TIPO_ACTIVIDAD SET NOMBRE = 'Exposicion y Tesis' WHERE NOMBRE = 'Defensa Proyecto Final';
 
 
 /*==============================================================*/
@@ -62,10 +66,9 @@ GRANT CONNECT TO solicitante IDENTIFIED BY 'soli123';
 -- admin es personal administrativo, con privilegios amplios
 GRANT DBA TO admin;
 
--- grupo que usa el backend para validar quién puede hacer
--- acciones administrativas (cambiar estado de laboratorio,
--- reprogramar/eliminar reservas, eliminar registros, etc.)
-GRANT CONNECT TO ADMINISTRADORES IDENTIFIED BY 'unaClaveSegura123';
+-- Grupo para validar acciones administrativas desde el backend.
+-- Sin IDENTIFIED BY: el grupo no necesita poder loguearse.
+GRANT CONNECT TO ADMINISTRADORES;
 GRANT GROUP TO ADMINISTRADORES;
 GRANT MEMBERSHIP IN GROUP ADMINISTRADORES TO admin;
 
@@ -84,27 +87,24 @@ GRANT SELECT ON DBA.EDIFICIOS TO solicitante;
 GRANT SELECT ON DBA.PISOS TO solicitante;
 GRANT SELECT ON DBA.ESTADOS_OPERATIVOS TO solicitante;
 
+-- Procedimientos que llama la interfaz móvil
+GRANT EXECUTE ON DBA.sp_laboratorios_disponibles TO solicitante;
+GRANT EXECUTE ON DBA.sp_horarios_disponibles TO solicitante;
+
+-- Nota: NO se necesita ningún GRANT sobre sys.sysgroup ni
+-- sys.sysuserperm. El backend valida membresía de admin contra
+-- la vista SYSGROUPS (group_name, member_name), que ya es
+-- legible por PUBLIC por defecto en SQL Anywhere y no expone
+-- nada sensible (a diferencia de las tablas base del catálogo).
+
+COMMIT;
+
 
 /*==============================================================*/
-/* 5. Permiso para que cualquier usuario (incluido solicitante) */
-/*    pueda consultar la membresía de ADMINISTRADORES sin que   */
-/*    el chequeo del backend tire "Permission denied"           */
-/*==============================================================*/
-
-GRANT SELECT ON sys.sysgroup TO PUBLIC;
-GRANT SELECT ON sys.sysuserperm TO PUBLIC;
-
-
-/*==============================================================*/
-/* 6. Verificación rápida (opcional, para confirmar que quedó   */
+/* 5. Verificación rápida (opcional, para confirmar que quedó   */
 /*    todo bien después de correr este script)                 */
 /*==============================================================*/
 
-SELECT * FROM PRIORIDADES ORDER BY ID_PRIORIDAD;
 SELECT ID_TIPO_ACTIVIDAD, NOMBRE, PRIORIDAD, ID_PRIORIDAD FROM TIPO_ACTIVIDAD ORDER BY PRIORIDAD;
 
-SELECT g.user_name AS grupo, m.user_name AS miembro
-FROM sys.sysgroup sg
-JOIN sys.sysuserperm g ON g.user_id = sg.group_id
-JOIN sys.sysuserperm m ON m.user_id = sg.group_member
-WHERE g.user_name = 'ADMINISTRADORES';
+SELECT * FROM SYSGROUPS WHERE group_name = 'ADMINISTRADORES';

@@ -23,10 +23,8 @@ const manejarError = (err, res, action) => {
 function verificarAdmin(connection, usuario, callback) {
     connection.query(
         `SELECT COUNT(*) AS es_admin
-         FROM sys.sysgroup sg
-         JOIN sys.sysuserperm g ON g.user_id = sg.group_id
-         JOIN sys.sysuserperm m ON m.user_id = sg.group_member
-         WHERE g.user_name = 'ADMINISTRADORES' AND m.user_name = '${usuario}'`,
+         FROM SYSGROUPS
+         WHERE group_name = 'ADMINISTRADORES' AND member_name = '${usuario}'`,
         (err, permiso) => {
             if (err) return callback(err, false);
             callback(null, !!(permiso[0] && permiso[0].es_admin));
@@ -83,6 +81,38 @@ router.get('/:id', (req, res) => {
                 return res.json({ success: false, error: 'Reserva no encontrada.' });
             }
         );
+    });
+});
+
+router.get('/mis-reservas/:cedula', (req, res) => {
+    const { cedula } = req.params;
+    const { usuario, clave, incluirPasadas } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        const condicionFecha = incluirPasadas === 'true' ? '' : 'AND r.FECHA_A_RESERVAR >= CURRENT DATE';
+
+        const sql = `
+            SELECT r.*, l.EDIFICIO, ta.NOMBRE AS tipo_actividad, er.ESTADO_RESERVA AS estado
+            FROM DBA.RESERVAS r
+            JOIN DBA.LABORATORIOS l ON r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
+            JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
+            LEFT JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+            WHERE r.CEDULA_IDENTIDAD = ${cedula}
+            ${condicionFecha}
+            ORDER BY r.FECHA_A_RESERVAR, r.HORA_INICIO
+        `;
+
+        connection.query(sql, (err, result) => {
+            connection.disconnect();
+            if (err) return manejarError(err, res, 'consultar mis reservas');
+            return res.json(result);
+        });
     });
 });
 
