@@ -85,6 +85,48 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/edificios/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT ID_EDIFICIO, NOMBRE_EDIFICIO FROM DBA.EDIFICIOS ORDER BY NOMBRE_EDIFICIO',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar edificios');
+                return res.json(result);
+            }
+        );
+    });
+});
+
+router.get('/pisos/listar', (req, res) => {
+    const { usuario, clave, id_edificio } = req.query;
+    if (!usuario || !clave || !id_edificio)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales o el edificio.' });
+
+    const connection = getConnection(usuario, clave);
+
+    connection.connect((err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            `SELECT NRO_PISO FROM DBA.PISOS WHERE ID_EDIFICIO = ${id_edificio} ORDER BY NRO_PISO`,
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar pisos');
+                return res.json(result);
+            }
+        );
+    });
+});
+
 router.get('/disponibilidad/:id', (req, res) => {
     const { id } = req.params;
     const { usuario, clave, fecha, duracion } = req.query;
@@ -204,12 +246,12 @@ router.get('/:id', (req, res) => {
 
 router.post('/add', (req, res) => {
     const {
-        id_edificio, edificio, capacidad_alumnos,
+        id_edificio, nro_piso, edificio, capacidad_alumnos,
         cantidad_computadoras, velocidad_conexion_internet,
         usuario, clave
     } = req.body;
 
-    if (!usuario || !clave || !edificio || !capacidad_alumnos || !cantidad_computadoras)
+    if (!usuario || !clave || !edificio || !id_edificio || !nro_piso || !capacidad_alumnos || !cantidad_computadoras)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
     const connection = getConnection(usuario, clave);
@@ -219,10 +261,10 @@ router.post('/add', (req, res) => {
 
         const sql = `
             INSERT INTO DBA.LABORATORIOS
-                (ID_EDIFICIO, EDIFICIO, CAPACIDAD_ALUMNOS,
+                (ID_EDIFICIO, NRO_PISO, EDIFICIO, CAPACIDAD_ALUMNOS,
                  CANTIDAD_COMPUTADORAS, VELOCIDAD_CONEXION_INTERNET, ESTADO)
             VALUES
-                (${id_edificio || 'NULL'}, '${edificio}', ${capacidad_alumnos},
+                (${id_edificio}, ${nro_piso}, '${edificio}', ${capacidad_alumnos},
                  ${cantidad_computadoras}, ${velocidad_conexion_internet || 0}, 1)
         `;
 

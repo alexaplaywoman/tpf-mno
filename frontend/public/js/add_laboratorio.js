@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("add-laboratorio-form");
     const errorMessage = document.getElementById("error-message");
     const selectEdificio = document.getElementById("edificio");
+    const selectPiso = document.getElementById("piso");
 
 
     const usuario = sessionStorage.getItem("usuario");
@@ -148,6 +149,46 @@ document.addEventListener("DOMContentLoaded", function () {
     cargarEdificios();
 
 
+    // =====================================
+    // CARGAR PISOS SEGÚN EL EDIFICIO ELEGIDO
+    // =====================================
+
+    function cargarPisos(idEdificio) {
+
+        selectPiso.innerHTML = `
+            <option value="">
+                Seleccione un piso
+            </option>
+        `;
+
+        if (!idEdificio) return;
+
+        fetch(`/api/laboratorios/pisos/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}&id_edificio=${idEdificio}`)
+            .then(async response => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Error al cargar pisos");
+                }
+
+                data.forEach(piso => {
+                    const option = document.createElement("option");
+                    option.value = piso.NRO_PISO;
+                    option.textContent = "Piso " + piso.NRO_PISO;
+                    selectPiso.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                errorMessage.textContent = "No se pudieron cargar los pisos.";
+            });
+    }
+
+    selectEdificio.addEventListener("change", function () {
+        cargarPisos(selectEdificio.value);
+    });
+
+
 
 
 
@@ -199,6 +240,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             id_edificio:
                 edificioSelect.value,
+
+            nro_piso:
+                selectPiso.value,
 
 
 
