@@ -1,7 +1,7 @@
 const express = require('express');
-const Sybase = require('sybase');
-const router = express.Router();
 const { conectar } = require('./conexion');
+const router = express.Router();
+
 const manejarError = (err, res, action) => {
     let errorMessage;
     if (err && typeof err === 'object') {
@@ -37,9 +37,7 @@ router.get('/', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -67,9 +65,7 @@ router.get('/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -93,9 +89,7 @@ router.post('/add', (req, res) => {
     if (!usuario || !clave || !numero_laboratorio || !fecha_inicio)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -163,9 +157,7 @@ router.post('/estado/:id', (req, res) => {
     if (!usuario || !clave || !id_estado_mantenimiento)
         return res.status(400).json({ success: false, error: 'Faltan datos.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -234,9 +226,7 @@ router.delete('/delete/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar para eliminar mantenimiento');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {

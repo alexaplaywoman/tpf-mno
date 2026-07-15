@@ -68,6 +68,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
+    const btnRecursos = document.getElementById("recursos");
+
+
+    if (btnRecursos) {
+
+        btnRecursos.addEventListener("click", function(e) {
+
+            e.preventDefault();
+
+            window.location.href = "./list_recursos.html";
+
+        });
+
+    }
+
+
 
 
 

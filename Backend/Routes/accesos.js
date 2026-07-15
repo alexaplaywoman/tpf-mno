@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { conectar } = require('./conexion');   // misma carpeta: Backend/Routes/conexion.js
+const { conectar } = require('./conexion');
 
 // Ruta: POST /api/login
 router.post('/', (req, res) => {

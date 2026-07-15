@@ -1,8 +1,7 @@
 const express = require('express');
-const Sybase = require('sybase');
+const { conectar } = require('./conexion');
 const router = express.Router();
 
-const { conectar } = require('./conexion');
 const manejarError = (err, res, action) => {
     let errorMessage;
     if (err && typeof err === 'object') {
@@ -57,9 +56,7 @@ router.get('/', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -87,9 +84,7 @@ router.get('/edificios/listar', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -108,9 +103,7 @@ router.get('/pisos/listar', (req, res) => {
     if (!usuario || !clave || !id_edificio)
         return res.status(400).json({ success: false, error: 'Faltan credenciales o el edificio.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -133,9 +126,7 @@ router.get('/disponibilidad/:id', (req, res) => {
 
     const duracionHoras = duracion ? parseInt(duracion) : 1;
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -170,9 +161,7 @@ router.get('/disponibilidad-horario', (req, res) => {
 
     const nombresRecursos = recursos ? recursos.split(',').map(r => r.trim()).filter(r => r.length > 0) : [];
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const condicionRecursos = nombresRecursos.length > 0
@@ -215,15 +204,13 @@ router.get('/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
             SELECT l.NUMERO_LABORATORIO, l.EDIFICIO, l.CAPACIDAD_ALUMNOS,
                    l.CANTIDAD_COMPUTADORAS, l.VELOCIDAD_CONEXION_INTERNET,
-                   l.ID_EDIFICIO, l.ESTADO,
+                   l.ID_EDIFICIO, l.NRO_PISO, l.ESTADO,
                    e.NOMBRE_EDIFICIO,
                    eo.TIPO AS estado_tipo
             FROM DBA.LABORATORIOS l
@@ -251,9 +238,9 @@ router.post('/add', (req, res) => {
     if (!usuario || !clave || !edificio || !id_edificio || !nro_piso || !capacidad_alumnos || !cantidad_computadoras)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const connection = getConnection(usuario, clave);
+    const velocidadNum = parseInt(velocidad_conexion_internet, 10) || 0;
 
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -262,13 +249,20 @@ router.post('/add', (req, res) => {
                  CANTIDAD_COMPUTADORAS, VELOCIDAD_CONEXION_INTERNET, ESTADO)
             VALUES
                 (${id_edificio}, ${nro_piso}, '${edificio}', ${capacidad_alumnos},
-                 ${cantidad_computadoras}, ${velocidad_conexion_internet || 0}, 1)
+                 ${cantidad_computadoras}, ${velocidadNum}, 1)
         `;
 
         connection.query(sql, (err) => {
-            connection.disconnect();
-            if (err) return manejarError(err, res, 'agregar laboratorio');
-            return res.json({ success: true });
+            if (err) {
+                connection.disconnect();
+                return manejarError(err, res, 'agregar laboratorio');
+            }
+
+            connection.query('SELECT @@IDENTITY AS NUMERO_LABORATORIO', (err, idResult) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'obtener id del laboratorio creado');
+                return res.json({ success: true, numero_laboratorio: idResult[0].NUMERO_LABORATORIO });
+            });
         });
     });
 });
@@ -276,26 +270,27 @@ router.post('/add', (req, res) => {
 router.post('/update/:id', (req, res) => {
     const { id } = req.params;
     const {
-        id_edificio, edificio, capacidad_alumnos,
+        id_edificio, nro_piso, edificio, capacidad_alumnos,
         cantidad_computadoras, velocidad_conexion_internet,
         usuario, clave
     } = req.body;
 
-    if (!usuario || !clave || !edificio || !capacidad_alumnos)
+    if (!usuario || !clave || !edificio || !id_edificio || !nro_piso || !capacidad_alumnos)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const connection = getConnection(usuario, clave);
+    const velocidadNum = parseInt(velocidad_conexion_internet, 10) || 0;
 
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
             UPDATE DBA.LABORATORIOS
-            SET ID_EDIFICIO                = ${id_edificio || 'NULL'},
+            SET ID_EDIFICIO                = ${id_edificio},
+                NRO_PISO                   = ${nro_piso},
                 EDIFICIO                   = '${edificio}',
                 CAPACIDAD_ALUMNOS          = ${capacidad_alumnos},
                 CANTIDAD_COMPUTADORAS      = ${cantidad_computadoras},
-                VELOCIDAD_CONEXION_INTERNET = ${velocidad_conexion_internet || 0}
+                VELOCIDAD_CONEXION_INTERNET = ${velocidadNum}
             WHERE NUMERO_LABORATORIO = ${id}
         `;
 
@@ -314,9 +309,7 @@ router.post('/estado/:id', (req, res) => {
     if (!usuario || !clave || !estado)
         return res.status(400).json({ success: false, error: 'Faltan datos.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
@@ -361,9 +354,7 @@ router.delete('/delete/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar para eliminar laboratorio');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {

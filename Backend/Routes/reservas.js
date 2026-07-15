@@ -1,8 +1,6 @@
 const express = require('express');
-const Sybase = require('sybase');
-const router = express.Router();
-
 const { conectar } = require('./conexion');
+const router = express.Router();
 
 const manejarError = (err, res, action) => {
     let errorMessage;
@@ -495,7 +493,7 @@ router.delete('/delete/:id', (req, res) => {
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
     conectar(usuario, clave, (err, connection) => {
-        if (err) return manejarError(err, res, 'conectar a la base de datos');
+        if (err) return manejarError(err, res, 'conectar para eliminar reserva');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
             if (err) {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actualizar Laboratorio</title>
+    <title>Actualizar Recurso</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
 </head>
@@ -23,75 +23,56 @@
             <div class="card-body">
 
                 <h2 class="text-center mb-4">
-                    Actualizar Laboratorio
+                    Actualizar Recurso
                 </h2>
 
-                <form id="update-laboratorio-form">
+                <form id="update-recurso-form">
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Edificio
-                        </label>
-                        <select 
-                            id="edificio"
-                            class="form-control"
-                            required>
-                            <option value="">
-                                Seleccione un edificio
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">
-                            Piso
+                            Laboratorio
                         </label>
                         <select
-                            id="piso"
+                            id="laboratorio"
                             class="form-control"
                             required>
                             <option value="">
-                                Seleccione un edificio primero
+                                Seleccione un laboratorio
                             </option>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Capacidad de Alumnos
+                            Nombre
                         </label>
-                        <input type="number" id="capacidad_alumnos" class="form-control" required>
+                        <input type="text" id="nombre" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Recursos
+                            Descripción
                         </label>
-                        <div id="listaRecursos" class="border rounded p-2">
-                        </div>
+                        <input type="text" id="descripcion" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Cantidad de computadoras
+                            Disponibilidad
                         </label>
-                        <input type="number" id="cantidad_computadoras" class="form-control" required>
+                        <select id="disponibilidad" class="form-control" required>
+                            <option value="S">Disponible</option>
+                            <option value="N">No disponible</option>
+                        </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">
-                            Velocidad de la conexión a internet
-                        </label>
-                        <input type="text" id="velocidad_internet" class="form-control" required>
-                    </div>
-
-                    <button 
+                    <button
                         type="submit"
                         class="btn btn-dark w-100">
-                        Actualizar Laboratorio
+                        Actualizar Recurso
                     </button>
 
-                    <div 
+                    <div
                         id="error-message"
                         class="text-danger text-center mt-3">
                     </div>
@@ -104,7 +85,7 @@
 
     </div>
 
-    <script src="./js/upd_laboratorio.js"></script>
+    <script src="./js/upd_recurso.js"></script>
 
 </body>
 </html>

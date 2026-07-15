@@ -1,8 +1,6 @@
 const express = require('express');
-const Sybase = require('sybase');
-const router = express.Router();
-
 const { conectar } = require('./conexion');
+const router = express.Router();
 
 const manejarError = (err, res, action) => {
     let errorMessage;
@@ -35,9 +33,7 @@ router.get('/tipos', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -56,9 +52,7 @@ router.get('/', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const condicionLab = laboratorio ? `WHERE NUMERO_LABORATORIO = ${laboratorio}` : '';
@@ -80,9 +74,7 @@ router.get('/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
@@ -103,9 +95,7 @@ router.post('/add', (req, res) => {
     if (!usuario || !clave || !numero_laboratorio || !nombre || !descripcion)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
@@ -154,9 +144,7 @@ router.post('/update/:id', (req, res) => {
     if (!usuario || !clave || !numero_laboratorio || !nombre || !descripcion || !disponibilidad)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
@@ -192,9 +180,7 @@ router.delete('/delete/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
+    conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar para eliminar recurso');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {

@@ -79,6 +79,9 @@ app.use('/api/actividades', actividadesRoute);
 const reportesRoute = require('./Backend/Routes/reportes');
 app.use('/api/reportes', reportesRoute);
 
+const recursosRoute = require('./Backend/Routes/recursos');
+app.use('/api/recursos', recursosRoute);
+
 //const reservas_pruebasRoute = require('./Backend/Routes/reservas_pruebas');
 //app.use('/api/reservas_pruebas', reservas_pruebasRoute);
 

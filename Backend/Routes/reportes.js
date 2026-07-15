@@ -1,8 +1,7 @@
 const express = require('express');
-const Sybase = require('sybase');
+const { conectar } = require('./conexion');
 const router = express.Router();
 
-const { conectar } = require('./conexion');
 const manejarError = (err, res, action) => {
     let errorMessage;
     if (err && typeof err === 'object') {
@@ -34,9 +33,7 @@ router.get('/laboratorios-mas-utilizados', (req, res) => {
     const params = validarRango(req, res);
     if (!params) return;
 
-    const connection = getConnection(params.usuario, params.clave);
-
-    connection.connect((err) => {
+    conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -60,9 +57,7 @@ router.get('/horarios-mas-ocupados', (req, res) => {
     const params = validarRango(req, res);
     if (!params) return;
 
-    const connection = getConnection(params.usuario, params.clave);
-
-    connection.connect((err) => {
+    conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -85,9 +80,7 @@ router.get('/solicitantes-top', (req, res) => {
     const params = validarRango(req, res);
     if (!params) return;
 
-    const connection = getConnection(params.usuario, params.clave);
-
-    connection.connect((err) => {
+    conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
@@ -111,9 +104,7 @@ router.get('/cancelaciones-inasistencias', (req, res) => {
     const params = validarRango(req, res);
     if (!params) return;
 
-    const connection = getConnection(params.usuario, params.clave);
-
-    connection.connect((err) => {
+    conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `

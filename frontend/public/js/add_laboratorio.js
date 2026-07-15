@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const errorMessage = document.getElementById("error-message");
     const selectEdificio = document.getElementById("edificio");
     const selectPiso = document.getElementById("piso");
+    const contenedorRecursos = document.getElementById("listaRecursos");
 
 
     const usuario = sessionStorage.getItem("usuario");
@@ -189,6 +190,69 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
+    // =====================================
+    // CARGAR RECURSOS (CHECKBOXES)
+    // =====================================
+
+    function cargarRecursos() {
+
+        fetch(`/api/recursos/tipos?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+            .then(res => res.json())
+            .then(tipos => {
+
+                contenedorRecursos.innerHTML = '';
+
+                if (!tipos || tipos.length === 0) {
+                    contenedorRecursos.innerHTML = "<p class='text-muted mb-0'>No hay recursos disponibles.</p>";
+                    return;
+                }
+
+                tipos.forEach(tipo => {
+                    const nombre = tipo.NOMBRE;
+                    const id = "recurso" + nombre.replace(/\s+/g, '');
+
+                    const div = document.createElement('div');
+                    div.className = 'form-check';
+                    div.innerHTML = `
+                        <input class="form-check-input" type="checkbox" id="${id}" value="${nombre}">
+                        <label class="form-check-label" for="${id}">${nombre}</label>
+                    `;
+                    contenedorRecursos.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar recursos:', error);
+                contenedorRecursos.innerHTML = "<p class='text-muted mb-0'>No se pudieron cargar los recursos.</p>";
+            });
+    }
+
+    cargarRecursos();
+
+
+    // Crea un recurso por cada checkbox tildado, para el laboratorio
+    // recién creado.
+    function crearRecursosElegidos(numeroLaboratorio) {
+
+        const checkboxes = Array.from(contenedorRecursos.querySelectorAll('input[type="checkbox"]:checked'));
+
+        const pedidos = checkboxes.map(checkbox =>
+            fetch('/api/recursos/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuario, clave,
+                    numero_laboratorio: numeroLaboratorio,
+                    nombre: checkbox.value,
+                    descripcion: checkbox.value,
+                    disponibilidad: 'S'
+                })
+            })
+        );
+
+        return Promise.all(pedidos);
+    }
+
+
 
 
 
@@ -323,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 throw new Error(
-                    data.error || 
+                    data.error ||
                     "Error al agregar laboratorio"
                 );
 
@@ -331,13 +395,16 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
+            return crearRecursosElegidos(data.numero_laboratorio);
 
 
+        })
+
+
+        .then(() => {
 
             window.location.href =
                 "/list_laboratorios.html";
-
-
 
         })
 
