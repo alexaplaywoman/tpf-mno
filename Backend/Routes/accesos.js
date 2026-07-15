@@ -6,14 +6,9 @@ const { conectar } = require('./conexion');   // misma carpeta: Backend/Routes/c
 router.post('/', (req, res) => {
   const { usuario, clave } = req.body;
 
-<<<<<<< HEAD
   if (!usuario || !clave) {
     return res.status(400).json({ exito: false, mensaje: 'Faltan usuario o clave.' });
   }
-=======
-  // Crear nueva instancia de conexión
-  const db = new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
->>>>>>> 6d8136055d594a7f0273ba8e99b3313f54281ddb
 
   conectar(usuario, clave, (err, db) => {
     if (err) {
