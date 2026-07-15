@@ -171,3 +171,12 @@
     color: var(--accent);
     font-size: 0.85rem;
 }
+
+/* Estilo para los días que ya tienen reservas asignadas */
+.day.fecha-ocupada {
+    background-color: #845b7e !important; /* El color morado idéntico al tema de tu app */
+    color: #ffffff !important;
+    border-radius: 50%; /* Lo vuelve un círculo perfecto como el '9' de tu imagen */
+    cursor: not-allowed; /* Muestra el cursor de bloqueo */
+    opacity: 0.65; /* Le da el toque translúcido */
+}

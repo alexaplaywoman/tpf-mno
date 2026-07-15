@@ -110,3 +110,17 @@ body {
 .form-check-input:focus {
     box-shadow: 0 0 0 0.2rem rgba(139, 89, 123, 0.25);
 }
+
+.lab-check {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #8b597b;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #8b597b;
+}

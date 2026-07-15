@@ -1,63 +1,96 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="css/estilos.css">
 
     <title>Reservas</title>
+
 </head>
+
 
 <body>
 
+
 <nav class="navbar navbar-dark bg-dark px-3">
 
-    <a id="inicio" class="navbar-brand btn btn-danger btn-sm" href="#">
+    <a id="inicio" class="navbar-brand btn btn-danger btn-sm"href="#">
         Inicio
     </a>
 
 </nav>
 
+
+
 <div class="container py-5">
+
 
     <div class="text-center mb-5">
 
-        <h1 class="fw-bold">LAB KONTROL</h1>
+
+        <h1 class="fw-bold">
+            LAB KONTROL
+        </h1>
+
 
         <h2>
             Reserve un laboratorio para sus actividades académicas
         </h2>
 
+
         <h4 class="text-muted">
             Ingrese sus datos para confirmar la reserva
         </h4>
 
+
     </div>
 
-    <!-- Línea de tiempo -->
+
     <div class="d-flex justify-content-center flex-wrap gap-3 mb-5">
 
+
         <div class="rounded-pill d-flex justify-content-center align-items-center"
-             style="width:220px; height:45px; background:#e5e5e5; color:#999;">
+             style="width:220px;height:45px;background:#e5e5e5;color:#999;">
+
             1. Elegir Edificio
+
         </div>
 
-        <div class="rounded-pill d-flex justify-content-center align-items-center"
-             style="width:220px; height:45px; background:#e5e5e5; color:#999;">
-            2. Elegir Tipo de Actividad
-        </div>
+
 
         <div class="rounded-pill d-flex justify-content-center align-items-center"
-             style="width:220px; height:45px; background:#e5e5e5; color:#999;">
-            3. Elegir Laboratorio
+             style="width:220px;height:45px;background:#e5e5e5;color:#999;">
+
+            2. Elegir Laboratorio
+
         </div>
+
+
+
+        <div class="rounded-pill d-flex justify-content-center align-items-center"
+             style="width:220px;height:45px;background:#e5e5e5;color:#999;">
+
+            3. Elegir Tipo de Actividad
+
+        </div>
+
+
 
         <div class="rounded-pill d-flex justify-content-center align-items-center text-white"
-             style="width:220px; height:45px; background:#6c6480;">
+             style="width:220px;height:45px;background:#6c6480;">
+
             4. Confirmar Reserva
+
         </div>
+
 
     </div>
 
@@ -65,41 +98,72 @@
 
         <div class="col-lg-6">
 
+
             <form id="form">
+
 
                 <div class="card shadow-sm border-0">
 
+
                     <div class="card-body p-4">
 
+
+
                         <div class="mb-3">
+
 
                             <label class="form-label">
                                 Documento de Identidad
                             </label>
 
+
                             <div class="row">
+
 
                                 <div class="col-md-5 mb-2">
 
-                                    <select id="tipoDocumento" name="tipoDocumento" class="form-select">
 
-                                        <option value="">Tipo</option>
-                                        <option>Cédula de Identidad</option>
-                                        <option>Pasaporte</option>
-                                        <option>Documento Extranjero</option>
+                                    <select id="tipoDocumento"
+                                            name="tipoDocumento"
+                                            class="form-select">
+
+
+                                        <option value="">
+                                            Tipo
+                                        </option>
+
+
+                                        <option>
+                                            Cédula de Identidad
+                                        </option>
+
+
+                                        <option>
+                                            Pasaporte
+                                        </option>
+
+
+                                        <option>
+                                            Documento Extranjero
+                                        </option>
+
 
                                     </select>
 
+
                                 </div>
+
+
+
 
                                 <div class="col-md-7">
 
-                                    <input
-                                        type="text"
-                                        id="numeroDocumento"
-                                        name="numeroDocumento"
-                                        class="form-control"
-                                        placeholder="Número de documento">
+
+                                    <input type="text"
+                                           id="numeroDocumento"
+                                           name="numeroDocumento"
+                                           class="form-control"
+                                           placeholder="Número de documento">
 
                                 </div>
 
@@ -111,29 +175,16 @@
 
                             <div class="col-md-6 mb-3">
 
-                                <label class="form-label">
-                                    Nombre
-                                </label>
+                                <label class="form-label">Nombre</label>
 
-                                <input
-                                    type="text"
-                                    id="nombre"
-                                    name="nombre"
-                                    class="form-control">
-
+                                <input type="text" id="nombre" name="nombre"class="form-control">
                             </div>
 
                             <div class="col-md-6 mb-3">
 
-                                <label class="form-label">
-                                    Apellido
-                                </label>
+                                <label class="form-label">Apellido</label>
 
-                                <input
-                                    type="text"
-                                    id="apellido"
-                                    name="apellido"
-                                    class="form-control">
+                                <input type="text" id="apellido" name="apellido" class="form-control">
 
                             </div>
 
@@ -145,79 +196,59 @@
                                 Correo Institucional
                             </label>
 
-                            <input
-                                type="email"
-                                id="correo"
-                                name="correo"
-                                class="form-control">
+                            <input type="email" id="correo" name="correo" class="form-control">
 
                         </div>
 
                         <div class="mb-3">
 
-                            <label class="form-label">
-                                Teléfono
-                            </label>
+                            <label class="form-label">Teléfono</label>
 
-                            <input
-                                type="number"
-                                id="telefono"
-                                name="telefono"
-                                class="form-control">
+                            <input type="number" id="telefono" name="telefono" class="form-control">
 
                         </div>
+                            <div class="mb-3">
 
-                        <div class="mb-3">
-
-                            <label class="form-label">
-                                Departamento
-                            </label>
+                            <label class="form-label">Departamento</label>
 
                             <select id="departamento" name="departamento" class="form-select">
-
                                 <option value="">Seleccionar</option>
                                 <option>DA - Arquitectura</option>
                                 <option>DAS - Análisis de Sistemas</option>
                                 <option>DEI - Ing. Informática y Electrónica</option>
                                 <option>DICIA - Ing. Civil, Industrial y Ambiental</option>
                                 <option>DIS - Diseño Gráfico e Industrial</option>
-
                             </select>
 
                         </div>
 
                         <div class="mb-4">
 
-                            <label class="form-label">
-                                Solicitante
-                            </label>
+                            <label class="form-label">Solicitante</label>
 
                             <select id="solicitante" name="solicitante" class="form-select">
-
                                 <option value="">Seleccionar</option>
                                 <option>Docente</option>
                                 <option>Estudiante</option>
                                 <option>Personal Administrativo</option>
-
                             </select>
 
                         </div>
 
                         <div class="d-flex justify-content-between">
 
-                            <button
-                                id="botonAtras"
-                                type="button"
-                                class="btn btn-outline-secondary px-4">
+                            <button id="botonAtras"
+                                    type="button"
+                                    class="btn btn-outline-secondary px-4">
 
                                 Atrás
 
                             </button>
 
-                            <button
-                                id="botonConfirmar"
-                                type="button"
-                                class="btn btn-primary px-4">
+                            <button id="botonConfirmar"
+                                    type="button"
+                                    class="btn text-white px-4"
+                                    style="background:#6c6480;">
 
                                 Confirmar
 
@@ -240,9 +271,11 @@
                 <div class="card-header text-white"
                      style="background:#6c6480;">
 
+
                     <h5 class="mb-0">
                         Datos de la Reserva
                     </h5>
+
 
                 </div>
 
@@ -298,7 +331,152 @@
 
 </div>
 
+<div class="modal fade"
+     id="modalConfirmar"
+     tabindex="-1">
+
+
+    <div class="modal-dialog modal-dialog-centered">
+
+
+        <div class="modal-content shadow border-0"
+             style="border-radius:20px; overflow:hidden;">
+
+
+
+            <div class="modal-header text-white"
+                 style="background:#6c6480;">
+
+
+                <h5 class="modal-title fw-bold">
+
+                    Confirmar Reserva
+
+                </h5>
+
+
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+
+                </button>
+
+
+            </div>
+
+
+
+
+
+            <div class="modal-body text-center p-4">
+
+
+                <div class="mb-4">
+
+
+                    <div style="
+                        width:70px;
+                        height:70px;
+                        border-radius:50%;
+                        background:#F1D9DA;
+                        display:flex;
+                        justify-content:center;
+                        align-items:center;
+                        margin:auto;
+                        font-size:35px;
+                        color:#6c6480;
+                        font-weight:bold;">
+
+
+                        ✓
+
+
+                    </div>
+
+
+                </div>
+
+
+
+
+                <h5 class="fw-bold">
+
+                    ¿Está seguro que desea confirmar la reserva?
+
+                </h5>
+
+
+
+
+                <p class="text-muted">
+
+                    Los datos serán enviados al sistema.
+
+                </p>
+
+
+
+            </div>
+
+
+
+
+
+            <div class="modal-footer justify-content-center border-0 pb-4">
+
+
+
+                <button type="button"
+                        class="btn text-white px-4"
+                        data-bs-dismiss="modal"
+                        style="
+                        background:#b07a7a;
+                        border-radius:20px;">
+
+                    Cancelar
+
+                </button>
+
+
+
+
+
+                <button type="button"
+                        id="confirmarReservaFinal"
+                        class="btn text-white px-4"
+                        style="
+                        background:#6c6480;
+                        border-radius:20px;">
+
+                    Confirmar Reserva
+
+                </button>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="./js/confirmar.js"></script>
 
+
+
 </body>
+
 </html>

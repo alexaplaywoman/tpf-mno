@@ -1,0 +1,19 @@
+I. 07/14 16:25:06. SQL Anywhere Personal Server Version 11.0.1.2044
+I. 07/14 16:25:06. Developer edition, not licensed for deployment.
+I. 07/14 16:25:06. 
+I. 07/14 16:25:06. Copyright © 2001-2009, iAnywhere Solutions, Inc.
+I. 07/14 16:25:06. Portions copyright © 1988-2009, Sybase, Inc. All rights reserved.
+I. 07/14 16:25:06. Use of this software is governed by the Sybase License Agreement. Refer to http://www.sybase.com/softwarelicenses
+I. 07/14 16:25:06. 
+I. 07/14 16:25:06. 12 logical processor(s) on 1 physical processor(s) detected.
+I. 07/14 16:25:06. This server is licensed to:
+I. 07/14 16:25:06.     Developer Edition
+I. 07/14 16:25:06.     Restricted Use
+I. 07/14 16:25:06. Running Unrecognized Windows version Build 9200  on X86_64
+I. 07/14 16:25:06. Server built for X86_64 processor architecture
+I. 07/14 16:25:06. 2048K of memory used for caching
+I. 07/14 16:25:06. Minimum cache size: 2048K, maximum cache size: 14767432K
+I. 07/14 16:25:06. Using a maximum page size of 2048 bytes
+E. 07/14 16:25:06. Cannot access ".\db\tpf_reservas.db": another process may be using the file
+I. 07/14 16:25:10. Database server shutdown due to startup error
+I. 07/14 16:25:10. Database server stopped at Tue Jul 14 2026 16:25

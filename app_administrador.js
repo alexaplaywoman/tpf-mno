@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = 4000;
 
 // Middleware para analizar datos en formato JSON
 app.use(express.json());
@@ -16,12 +16,12 @@ app.use(express.static(path.join(__dirname, 'frontend/public')));
 
 // Página principal (login.html)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/login.html'));
+    res.sendFile(path.join(__dirname, 'frontend/public/login_administrador.html'));
 });
 
 // Páginas del sistema para que en el url se escriba un valor y lo busque en el sitema
 app.get('/menu', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/menu.html'));
+    res.sendFile(path.join(__dirname, 'frontend/public/laboratorios_administrador.html'));
 });
 
 app.get('/edificio', (req, res) => {
@@ -63,11 +63,9 @@ app.use('/api/actividades', actividadesRoute);
 const reportesRoute = require('./Backend/Routes/reportes');
 app.use('/api/reportes', reportesRoute);
 
-const recursosRoute = require('./Backend/Routes/recursos');
-app.use('/api/recursos', recursosRoute);
-
 //const reservas_pruebasRoute = require('./Backend/Routes/reservas_pruebas');
 //app.use('/api/reservas_pruebas', reservas_pruebasRoute);
+
 
 // Iniciar servidor
 app.listen(PORT, () => {

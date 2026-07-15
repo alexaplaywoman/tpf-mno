@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <title>Menú</title>
+
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+
+
+    <style>
+
+
+        body {
+
+            overflow-x: hidden;
+
+        }
+
+
+
+        .sidebar {
+
+            min-height: 100vh;
+
+        }
+
+
+
+        .nav-link {
+
+            border-radius: 8px;
+            transition: .3s;
+
+        }
+
+
+
+        .nav-link:hover {
+
+            background: rgba(255,255,255,0.15);
+
+        }
+
+
+
+        .card {
+
+            transition: .3s;
+
+        }
+
+
+
+        .card:hover {
+
+            transform: translateY(-5px);
+
+        }
+
+
+
+        /* Navbar móvil */
+
+        .navbar {
+
+            background: #343a40;
+
+        }
+
+
+
+        @media(max-width:768px){
+
+
+            .sidebar {
+
+                display:none;
+
+            }
+
+
+            h1 {
+
+                font-size:2rem;
+
+            }
+
+
+            .card {
+
+                margin-bottom:15px;
+
+            }
+
+
+        }
+
+
+
+        @media(max-width:576px){
+
+
+            h1 {
+
+                font-size:1.7rem;
+
+            }
+
+
+        }
+
+
+
+    </style>
+
+
+</head>
+
+
+
+<body>
+
+
+
+<!-- NAVBAR PARA CELULAR Y TABLET -->
+
+
+<nav class="navbar navbar-dark d-md-none">
+
+
+    <div class="container-fluid">
+
+
+        <a class="navbar-brand">
+
+            LAB KONTROL
+
+        </a>
+
+
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#menuMovil">
+
+
+            <span class="navbar-toggler-icon"></span>
+
+
+        </button>
+
+
+
+    </div>
+
+
+</nav>
+
+
+
+
+
+<!-- MENU MOVIL -->
+
+
+<div class="offcanvas offcanvas-start bg-dark text-white"
+     tabindex="-1"
+     id="menuMovil">
+
+
+
+    <div class="offcanvas-header">
+
+
+        <h5 class="offcanvas-title">
+
+            LAB KONTROL
+
+        </h5>
+
+
+
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="offcanvas">
+
+        </button>
+
+
+
+    </div>
+
+
+
+
+
+    <div class="offcanvas-body">
+
+
+        <ul class="nav flex-column">
+
+
+            <li class="mb-2">
+
+                <a href="/list_laboratorios.html"
+                   class="nav-link text-white">
+
+                    <i class="bi bi-building me-3"></i>
+
+                    Laboratorios
+
+                </a>
+
+            </li>
+
+
+
+            <li class="mb-2">
+
+                <a href="./list_paises.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-people me-3"></i>
+
+
+                    Solicitantes
+
+
+                </a>
+
+
+            </li>
+
+
+
+            <li class="mb-2">
+
+                <a href="./list_categorias.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-calendar-check me-3"></i>
+
+
+                    Reservas
+
+
+                </a>
+
+
+            </li>
+
+
+
+            <li class="mb-2">
+
+                <a href="./list_productos.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-tools me-3"></i>
+
+
+                    Mantenimientos
+
+
+                </a>
+
+
+            </li>
+
+
+            <li class="mb-2">
+
+                <a href="./list_productos.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-journal me-3"></i>
+
+
+                    Actividades
+
+
+                </a>
+
+
+            </li>
+
+
+            <li class="mb-2">
+
+                <a href="./list_productos.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-bar-chart me-3"></i>
+
+
+                    Reportes
+
+
+                </a>
+
+
+            </li>
+
+            <li class="mb-2">
+
+                <a href="./list_productos.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-check-circle me-3"></i>
+
+
+                    Estados
+
+
+                </a>
+
+
+            </li>
+
+
+            <li class="mb-2">
+
+                <a href="./login.html"
+                   class="nav-link text-white">
+
+
+                    <i class="bi bi-box-arrow-right me-3"></i>
+
+
+                    Salir
+
+
+                </a>
+
+
+            </li>
+
+
+
+        </ul>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<div class="container-fluid">
+
+
+    <div class="row">
+
+
+
+        <!-- MENU PC -->
+
+
+        <div class="col-md-3 col-xl-2 px-0 bg-dark sidebar d-none d-md-block">
+
+
+            <div class="d-flex flex-column text-white min-vh-100 px-3 pt-3">
+
+
+                <a class="text-white text-decoration-none pb-3 fs-5 fw-bold">
+
+                    Inicio
+
+                </a>
+
+                                <ul class="nav flex-column w-100">
+
+
+                    <li class="mb-2">
+
+                        <a href="/list_laboratorios.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-building me-3"></i>
+
+                            <span>
+                                Laboratorios
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+
+                    <li class="mb-2">
+
+                        <a href="./list_paises.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-people me-3"></i>
+
+                            <span>
+                                Solicitantes
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+
+                    <li class="mb-2">
+
+                        <a href="./list_categorias.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-calendar-check me-3"></i>
+
+                            <span>
+                                Reservas
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+
+                    <li class="mb-2">
+
+                        <a href="./list_marcas.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-tools me-3"></i>
+
+                            <span>
+                                Mantenimientos
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+
+                    <li class="mb-2">
+
+                        <a href="./list_proveedores.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-journal me-3"></i>
+
+                            <span>
+                                Actividades
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+
+                    <li class="mb-2">
+
+                        <a href="./list_productos.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-bar-chart me-3"></i>
+
+                            <span>
+                                Resportes
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="mb-2">
+
+                        <a href="./login.html"
+                           class="nav-link text-white d-flex align-items-center px-3">
+
+                            <i class="bi bi-box-arrow-right me-3"></i>
+
+                            <span>
+                                Salir
+                            </span>
+
+                        </a>
+
+                    </li>
+
+
+                </ul>
+
+
+
+
+                <!-- PERFIL -->
+
+
+                <div class="mt-auto pb-4">
+
+
+                    <a class="d-flex align-items-center text-white text-decoration-none">
+
+
+                        <img src="image/foto_perfil.avif"
+                             width="35"
+                             height="35"
+                             class="rounded-circle">
+
+
+                        <span class="ms-2">
+
+                            Perfil
+
+                        </span>
+
+
+                    </a>
+
+
+                </div>
+
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+        <!-- CONTENIDO PRINCIPAL -->
+
+
+        <div class="col-12 col-md-9 col-xl-10 py-4">
+
+
+            <div class="container">
+
+
+                <div class="text-center mb-5">
+
+
+                    <h1 class="fw-bold text-primary">
+
+                        ¡Bienvenido al Sistema de Control de laboratorios de la Universidad Católica!
+
+                    </h1>
+
+
+
+                    <p class="text-muted fs-5">
+
+                        Administra la disponibilidad de laboratorios, solicitudes de reserva y recursos necesarios para cada actividad académica.
+
+                    </p>
+
+
+                </div>
+
+
+
+
+
+                <div class="row g-4">
+
+
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+
+                        <div class="card shadow text-center p-4 h-100">
+
+
+                            <i class="bi bi-building fs-1 text-primary"></i>
+
+
+
+                            <h4 class="mt-3">
+
+                                Laboratorios
+
+                            </h4>
+
+
+
+                            <p class="text-muted">
+
+                               Control y administración de laboratorios registrados.
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+
+                        <div class="card shadow text-center p-4 h-100">
+
+
+                            <i class="bi bi-people fs-1 text-success"></i>
+
+
+
+                            <h4 class="mt-3">
+
+                                Solicitantes
+
+                            </h4>
+
+
+
+                            <p class="text-muted">
+
+                                Administra la información de los solicitantes y sus solicitudes de reserva.
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+
+                        <div class="card shadow text-center p-4 h-100">
+
+
+                            <i class="bi bi-calendar-check fs-1 text-warning"></i>
+
+
+
+                            <h4 class="mt-3">
+
+                                Reservas
+
+                            </h4>
+
+
+
+                            <p class="text-muted">
+
+                                Control y seguimiento de reservas registradas.
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+                                <div class="row g-4 mt-2">
+
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+
+                        <div class="card shadow text-center p-4 h-100">
+
+
+                            <i class="bi bi-tools fs-1 text-danger"></i>
+
+
+
+                            <h4 class="mt-3">
+
+                                Mantenimientos
+
+                            </h4>
+
+
+
+                            <p class="text-muted">
+
+                                Control del estado y mantenimiento de laboratorios.
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+
+                        <div class="card shadow text-center p-4 h-100">
+
+
+                            <i class="bi bi-journal fs-1 text-info"></i>
+
+
+
+                            <h4 class="mt-3">
+
+                                Actividades
+
+                            </h4>
+
+
+
+                            <p class="text-muted">
+
+                                Control de actividades registradas en el sistema.
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+
+
+                    <div class="col-12 col-md-6 col-lg-4">
+
+
+                        <div class="card shadow text-center p-4 h-100">
+
+
+                            <i class="bi bi-bar-chart fs-1 text-secondary"></i>
+
+
+
+                            <h4 class="mt-3">
+
+                                Reportes
+
+                            </h4>
+
+
+
+                            <p class="text-muted">
+
+                                Control y análisis de datos registrados.
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                </div>
+
+
+
+
+
+
+                <!-- MENSAJE FINAL -->
+
+
+                <div class="alert alert-success mt-5 text-center">
+
+
+                    <h5>
+
+                        Sistema listo para usar
+
+                    </h5>
+
+
+
+                    <p class="mb-0">
+
+                        Utiliza el menú lateral para acceder a las diferentes secciones.
+
+                    </p>
+
+
+                </div>
+
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+</body>
+
+
+</html>

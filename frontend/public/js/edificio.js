@@ -21,8 +21,10 @@
     document.addEventListener('DOMContentLoaded', function () {
 
 
-    document.getElementById("inicio").addEventListener("click", function () {
-        window.location.href = "menu.html";
+    document.getElementById("inicio").addEventListener("click", function(e){
+        e.preventDefault();
+        window.location.href="menu.html";
+
     });
 
     document.getElementById("edif1").addEventListener("click", function () {
@@ -40,6 +42,37 @@
     document.getElementById("edif4").addEventListener("click", function () {
         seleccionarEdificio("Bloque G");
     });
+
+        let reservaEditar = JSON.parse(
+        sessionStorage.getItem("reservaEditar")
+    );
+
+
+    if(reservaEditar){
+
+        console.log("Reserva a editar:", reservaEditar);
+
+
+        if(reservaEditar.EDIFICIO === "Biblioteca Pablo VI"){
+            document.getElementById("edif1").click();
+        }
+
+
+        if(reservaEditar.EDIFICIO === "Ciencias Contables"){
+            document.getElementById("edif2").click();
+        }
+
+
+        if(reservaEditar.EDIFICIO === "Ciencias y Tecnología"){
+            document.getElementById("edif3").click();
+        }
+
+
+        if(reservaEditar.EDIFICIO === "Bloque G"){
+            document.getElementById("edif4").click();
+        }
+
+    }
 });
 
 function seleccionarEdificio(nombreEdificio) {
