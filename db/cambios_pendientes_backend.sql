@@ -6,9 +6,56 @@
 /* versionados y que la base se pueda recrear desde cero.       */
 /*==============================================================*/
 
+*==============================================================*/
+/* RESERVAS_RECURSOS - Tabla de detalle para registrar          */
+/* qué recursos solicita cada reserva.                          */
+/*                                                              */
+/* Ejecutar DESPUÉS de bdTpf.sql + objetos_bd.sql               */
+/* y DESPUÉS de datos_prueba_labcontrol_ordenado.sql             */
+/*==============================================================*/
+ 
+ROLLBACK;   -- liberar cualquier lock pendiente
+ 
+/*--------------------------------------------------------------*/
+/* 1. CREAR TABLA   RESERVAS_RECURSOS                                            */
+/*--------------------------------------------------------------*/
+ 
+if exists(
+   select 1 from sys.systable 
+   where table_name='RESERVAS_RECURSOS'
+     and table_type in ('BASE', 'GBL TEMP')
+     and creator=user_id('DBA')
+) then
+    drop table DBA.RESERVAS_RECURSOS
+end if;
+ 
+CREATE TABLE DBA.RESERVAS_RECURSOS (
+   ID_RESERVA           INT            NOT NULL,
+   ID_RECURSO           INT            NOT NULL,
+   CONSTRAINT PK_RESERVAS_RECURSOS 
+      PRIMARY KEY CLUSTERED (ID_RESERVA, ID_RECURSO),
+   CONSTRAINT FK_RR_RESERVA FOREIGN KEY (ID_RESERVA)
+      REFERENCES DBA.RESERVAS (ID_RESERVA)
+      ON UPDATE RESTRICT
+      ON DELETE CASCADE,       -- si se borra la reserva, se borran sus recursos
+   CONSTRAINT FK_RR_RECURSO FOREIGN KEY (ID_RECURSO)
+      REFERENCES DBA.RECURSOS (ID_RECURSO)
+      ON UPDATE RESTRICT
+      ON DELETE RESTRICT
+);
+ 
+COMMIT;
+ 
+/*--------------------------------------------------------------*/
+/* 2. GRANTS para el usuario solicitante                        */
+/*--------------------------------------------------------------*/
+ 
+-- Ajustá 'solicitante' al nombre exacto de tu usuario si difiere
+GRANT SELECT, INSERT, DELETE ON DBA.RESERVAS_RECURSOS TO solicitante;
+
 
 /*==============================================================*/
-/* 1. Columnas nuevas en RESERVAS (trazabilidad de cancelación) */
+/* 1.B Columnas nuevas en RESERVAS (trazabilidad de cancelación) */
 /*==============================================================*/
 
 ALTER TABLE RESERVAS ADD MOTIVO_CANCELACION VARCHAR(100) NULL;
@@ -31,25 +78,21 @@ ALTER TABLE MANTENIMIENTOS ALTER ID_MANTENIMIENTO DEFAULT AUTOINCREMENT;
 /*    van con UPDATE y los nuevos (0 y 4) con INSERT.           */
 /*==============================================================*/
 
-INSERT INTO PRIORIDADES (ID_PRIORIDAD, NOMBRE) VALUES (0, 'Directores y Decanos');
-UPDATE PRIORIDADES SET NOMBRE = 'Evento Institucional' WHERE ID_PRIORIDAD = 1;
-UPDATE PRIORIDADES SET NOMBRE = 'Examen'               WHERE ID_PRIORIDAD = 2;
-UPDATE PRIORIDADES SET NOMBRE = 'Exposicion y Tesis'   WHERE ID_PRIORIDAD = 3;
-INSERT INTO PRIORIDADES (ID_PRIORIDAD, NOMBRE) VALUES (4, 'Clase');
+-- 1. Insertar el nuevo registro con ID=5
+INSERT INTO prioridades (ID_PRIORIDAD, NOMBRE)
+VALUES (5, 'Clase');
 
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Clase Regular';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 2, PRIORIDAD = 2 WHERE NOMBRE = 'Examen';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Capacitacion';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Tutoria';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 1, PRIORIDAD = 1 WHERE NOMBRE = 'Evento';
-UPDATE TIPO_ACTIVIDAD SET ID_PRIORIDAD = 4, PRIORIDAD = 4 WHERE NOMBRE = 'Practica';
-
--- Tipos de actividad nuevos que no existían todavía
-INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
-VALUES (7, 0, 'Actividad Directiva', 0, 4);
-
-INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
-VALUES (8, 3, 'Exposicion y Tesis', 3, 3);
+-- 2. Actualizar los nombres de los registros existentes
+UPDATE prioridades
+SET NOMBRE = CASE ID_PRIORIDAD
+    WHEN 0 THEN 'Reunión Directiva'
+    WHEN 1 THEN 'Evento Institucional'
+    WHEN 2 THEN 'Examen'
+    WHEN 3 THEN 'Defensa Proyecto Final'
+    WHEN 4 THEN 'Exposicion'
+    WHEN 5 THEN 'Clase'
+    ELSE NOMBRE
+END;
 
 
 /*==============================================================*/
@@ -59,18 +102,17 @@ VALUES (8, 3, 'Exposicion y Tesis', 3, 3);
 GRANT CONNECT TO admin IDENTIFIED BY 'admin123';
 GRANT CONNECT TO solicitante IDENTIFIED BY 'soli123';
 
--- admin es personal administrativo, con privilegios amplios
 GRANT DBA TO admin;
 
--- grupo que usa el backend para validar quién puede hacer
--- acciones administrativas (cambiar estado de laboratorio,
--- reprogramar/eliminar reservas, eliminar registros, etc.)
-GRANT CONNECT TO ADMINISTRADORES IDENTIFIED BY 'unaClaveSegura123';
+-- Grupo para validar acciones administrativas desde el backend.
+-- Sin IDENTIFIED BY: el grupo no necesita poder loguearse.
+GRANT CONNECT TO ADMINISTRADORES;
 GRANT GROUP TO ADMINISTRADORES;
 GRANT MEMBERSHIP IN GROUP ADMINISTRADORES TO admin;
 
--- solicitante: permisos acotados, solo lo que necesita para
--- consultar y reservar desde el celular
+/*==============================================================*/
+/* Permisos de solicitante (perfil móvil)                       */
+/*==============================================================*/
 GRANT SELECT ON DBA.LABORATORIOS TO solicitante;
 GRANT SELECT ON DBA.RESERVAS TO solicitante;
 GRANT INSERT ON DBA.RESERVAS TO solicitante;
@@ -84,16 +126,9 @@ GRANT SELECT ON DBA.EDIFICIOS TO solicitante;
 GRANT SELECT ON DBA.PISOS TO solicitante;
 GRANT SELECT ON DBA.ESTADOS_OPERATIVOS TO solicitante;
 
-
-/*==============================================================*/
-/* 5. Permiso para que cualquier usuario (incluido solicitante) */
-/*    pueda consultar la membresía de ADMINISTRADORES sin que   */
-/*    el chequeo del backend tire "Permission denied"           */
-/*==============================================================*/
-
-GRANT SELECT ON sys.sysgroup TO PUBLIC;
-GRANT SELECT ON sys.sysuserperm TO PUBLIC;
-
+-- Procedimientos que llama la interfaz móvil (te faltaban)
+GRANT EXECUTE ON DBA.sp_laboratorios_disponibles TO solicitante;
+GRANT EXECUTE ON DBA.sp_horarios_disponibles TO solicitante
 
 /*==============================================================*/
 /* 6. Verificación rápida (opcional, para confirmar que quedó   */
@@ -108,3 +143,101 @@ FROM sys.sysgroup sg
 JOIN sys.sysuserperm g ON g.user_id = sg.group_id
 JOIN sys.sysuserperm m ON m.user_id = sg.group_member
 WHERE g.user_name = 'ADMINISTRADORES';
+
+
+/*==============================================================*/
+/* PASO 1 - Quitar la FK de LABORATORIOS hacia PISOS            */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.LABORATORIOS
+   DELETE FOREIGN KEY FK_LABORATO_REFERENCE_PISOS;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 1b - <<< NUEVO: Quitar la FK de PISOS hacia EDIFICIOS  */
+/* (su indice automatico es el que bloqueaba el ALTER)          */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.PISOS
+   DELETE FOREIGN KEY FK_PISOS_REFERENCE_EDIFICIO;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 2 - Quitar la PK actual de PISOS (solo ID_EDIFICIO)     */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.PISOS
+   DELETE PRIMARY KEY;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 3 - Quitar el autoincrement de ID_EDIFICIO en PISOS     */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.PISOS
+   ALTER ID_EDIFICIO integer NOT NULL;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 4 - NRO_PISO obligatorio                                */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.PISOS
+   ALTER NRO_PISO integer NOT NULL;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 5 - Nueva PK compuesta en PISOS                          */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.PISOS
+   ADD CONSTRAINT PK_PISOS PRIMARY KEY CLUSTERED (ID_EDIFICIO, NRO_PISO);
+COMMIT;
+
+/*==============================================================*/
+/* PASO 5b - <<< NUEVO: Reponer la FK de PISOS hacia EDIFICIOS */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.PISOS
+   ADD CONSTRAINT FK_PISOS_REFERENCE_EDIFICIO FOREIGN KEY (ID_EDIFICIO)
+      REFERENCES DBA.EDIFICIOS (ID_EDIFICIO)
+      ON UPDATE RESTRICT
+      ON DELETE RESTRICT;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 6 - Agregar NRO_PISO a LABORATORIOS (nullable primero)  */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.LABORATORIOS
+   ADD NRO_PISO integer NULL;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 7 - Poblar NRO_PISO en filas existentes                 */
+/*==============================================================*/
+ROLLBACK;
+UPDATE DBA.LABORATORIOS l
+   SET NRO_PISO = (SELECT p.NRO_PISO
+                      FROM DBA.PISOS p
+                     WHERE p.ID_EDIFICIO = l.ID_EDIFICIO);
+COMMIT;
+
+/*==============================================================*/
+/* PASO 8 - NRO_PISO obligatorio en LABORATORIOS                */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.LABORATORIOS
+   ALTER NRO_PISO integer NOT NULL;
+COMMIT;
+
+/*==============================================================*/
+/* PASO 9 - Reponer la FK compuesta LABORATORIOS -> PISOS       */
+/*==============================================================*/
+ROLLBACK;
+ALTER TABLE DBA.LABORATORIOS
+   ADD CONSTRAINT FK_LABORATO_REFERENCE_PISOS FOREIGN KEY (ID_EDIFICIO, NRO_PISO)
+      REFERENCES DBA.PISOS (ID_EDIFICIO, NRO_PISO)
+      ON UPDATE RESTRICT
+      ON DELETE RESTRICT;
+COMMIT;
