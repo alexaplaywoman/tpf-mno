@@ -63,6 +63,9 @@ app.use('/api/actividades', actividadesRoute);
 const reportesRoute = require('./Backend/Routes/reportes');
 app.use('/api/reportes', reportesRoute);
 
+const recursosRoute = require('./Backend/Routes/recursos');
+app.use('/api/recursos', recursosRoute);
+
 
 // Iniciar servidor
 app.listen(PORT, () => {
