@@ -2,14 +2,7 @@ const express = require('express');
 const Sybase = require('sybase');
 const router = express.Router();
 
-<<<<<<< HEAD
 const { conectar } = require('./conexion');
-=======
-function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
-}
-
->>>>>>> 6d8136055d594a7f0273ba8e99b3313f54281ddb
 const manejarError = (err, res, action) => {
     let errorMessage;
     if (err && typeof err === 'object') {
