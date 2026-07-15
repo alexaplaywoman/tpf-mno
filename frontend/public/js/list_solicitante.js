@@ -1,8 +1,13 @@
 function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = String(str ?? '');
+
+    const div = document.createElement("div");
+
+    div.textContent = String(str ?? "");
+
     return div.innerHTML;
+
 }
+
 
 
 async function parseJsonSafe(response) {
@@ -15,12 +20,10 @@ async function parseJsonSafe(response) {
 
     } catch (e) {
 
-        console.error("Respuesta no es JSON. Status:", response.status);
-        console.error("Contenido recibido:", text.slice(0, 300));
+        console.error("Respuesta no es JSON:", text);
 
         throw new Error(
-            `El servidor respondió con algo que no es JSON (status ${response.status}). ` +
-            `Revisá la ruta del endpoint en el backend.`
+            "El servidor respondió algo que no es JSON."
         );
 
     }
@@ -29,15 +32,18 @@ async function parseJsonSafe(response) {
 
 
 
-document.addEventListener('DOMContentLoaded', function () {
+
+
+document.addEventListener("DOMContentLoaded", function () {
 
 
 
     const btnInicio = document.getElementById("inicio");
 
-    if (btnInicio) {
 
-        btnInicio.addEventListener("click", function(e) {
+    if(btnInicio){
+
+        btnInicio.addEventListener("click", function(e){
 
             e.preventDefault();
 
@@ -51,17 +57,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
     const btnAgregar = document.getElementById("agregar");
 
 
-    if (btnAgregar) {
+    if(btnAgregar){
 
-        btnAgregar.addEventListener("click", function(e) {
+        btnAgregar.addEventListener("click", function(e){
 
             e.preventDefault();
 
-            window.location.href = "./add_solicitante.html";
+            window.location.href = "./add_solicitantes.html";
 
         });
 
@@ -73,55 +78,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    let solicitantesList = document.getElementById('solicitantes-list');
+    const solicitantesList = document.getElementById("solicitantes-list");
 
-
-
-    if (!solicitantesList) {
-
-        solicitantesList = document.querySelector('table tbody');
-
-    }
+    const errorMessage = document.getElementById("error-message");
 
 
 
 
 
+    const usuario = sessionStorage.getItem("usuario");
 
-    const errorMessage = document.getElementById('error-message');
-
-
-
-    if (!solicitantesList) {
-
-        console.error("No existe tbody para mostrar solicitantes.");
-
-        return;
-
-    }
+    const clave = sessionStorage.getItem("clave");
 
 
 
 
 
-
-    const usuario = sessionStorage.getItem('usuario');
-
-    const clave = sessionStorage.getItem('clave');
-
-
-
-
-
-    if (!usuario || !clave) {
-
+    if(!usuario || !clave){
 
         if(errorMessage){
 
-            errorMessage.textContent = "Faltan credenciales.";
+            errorMessage.textContent =
+            "Faltan credenciales.";
 
         }
-
 
         return;
 
@@ -133,16 +113,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
-    function loadSolicitantes() {
-
+    function loadSolicitantes(){
 
 
-        fetch(`/api/solicitantes?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+
+        fetch(
+            `/api/solicitantes?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+        )
 
 
         .then(async response => {
-
 
 
             const data = await parseJsonSafe(response);
@@ -151,9 +131,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if(!response.ok){
 
-                throw new Error(data.error || "Error al cargar solicitantes");
+                throw new Error(
+                    data.error || "Error al cargar solicitantes"
+                );
 
             }
+
+
 
 
 
@@ -163,10 +147,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if(!Array.isArray(solicitantes)){
 
-                solicitantes = data.solicitantes || data.rows || [];
+                solicitantes =
+                    data.solicitantes ||
+                    data.rows ||
+                    [];
 
             }
 
+
+
+            console.log("Solicitantes:", solicitantes);
 
 
 
@@ -177,20 +167,19 @@ document.addEventListener('DOMContentLoaded', function () {
         })
 
 
-        .catch(error => {
 
+        .catch(error => {
 
 
             console.error(error);
 
 
-
             if(errorMessage){
 
-                errorMessage.textContent = error.message;
+                errorMessage.textContent =
+                error.message;
 
             }
-
 
 
         });
@@ -207,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    function mostrarSolicitantes(solicitantes) {
+    function mostrarSolicitantes(solicitantes){
 
 
 
@@ -216,14 +205,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-        if(!solicitantes || solicitantes.length === 0){
+
+        if(solicitantes.length === 0){
 
 
             solicitantesList.innerHTML = `
 
                 <tr>
 
-                    <td colspan="6">
+                    <td colspan="10">
 
                         No hay solicitantes cargados.
 
@@ -235,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
             return;
-
 
         }
 
@@ -252,7 +241,6 @@ document.addEventListener('DOMContentLoaded', function () {
             solicitantesList.innerHTML += `
 
 
-
             <tr>
 
 
@@ -265,51 +253,68 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
                 <td>
 
-                    ${escapeHtml(lab.CORREO)}
+                    ${escapeHtml(soli.CORREO)}
 
                 </td>
 
 
 
-
                 <td>
 
-                    ${escapeHtml(lab.ID_CARRERA)}
+                    ${escapeHtml(soli.carrera)}
 
                 </td>
 
 
 
-
                 <td>
 
-                    ${escapeHtml(lab.ID_SOLICITANTE)}
+                    ${escapeHtml(soli.tipo_solicitante)}
 
                 </td>
 
 
 
-
                 <td>
 
-                    ${escapeHtml(lab.TIPO_DOCUMENTO )}
+                    ${escapeHtml(soli.tipo_documento)}
 
                 </td>
 
-                <td>
 
-                    ${escapeHtml(lab.TIPO_DOCUMENTO )}
-
-                </td>
 
                 <td>
 
-                    ${escapeHtml(lab.TIPO_DOCUMENTO )}
+                    ${escapeHtml(soli.NOMBRE)}
 
                 </td>
+
+
+
+                <td>
+
+                    ${escapeHtml(soli.APELLIDO)}
+
+                </td>
+
+
+
+                <td>
+
+                    ${escapeHtml(soli.TELEFONO)}
+
+                </td>
+
+
+
+                <td>
+
+                    ${escapeHtml(soli.DEPARTAMENTO)}
+
+                </td>
+
 
 
 
@@ -324,11 +329,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-                        <button 
+                        <button
 
                             class="btn btn-dark btn-sm"
 
-                            onclick="editarLaboratorio(${lab.NUMERO_LABORATORIO})">
+                            onclick="editarSolicitante('${soli.CEDULA_IDENTIDAD}')">
 
 
                             <i class="bi bi-pencil-square"></i>
@@ -344,11 +349,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-                        <button 
+                        <button
 
                             class="btn btn-dark btn-sm"
 
-                            onclick="confirmarEliminar(${lab.NUMERO_LABORATORIO})">
+                            onclick="confirmarEliminar('${soli.CEDULA_IDENTIDAD}')">
 
 
                             <i class="bi bi-trash"></i>
@@ -366,14 +371,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
                 </td>
 
 
 
 
             </tr>
-
 
 
             `;
@@ -394,10 +397,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    window.editarLaboratorio = function(id){
+    window.editarSolicitante = function(cedula){
 
 
-        window.location.href = `/upd_laboratorios.html?id=${id}`;
+
+        window.location.href =
+            `/upd_solicitante.html?id=${cedula}`;
 
 
     };
@@ -410,15 +415,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    window.confirmarEliminar = function(id){
+    window.confirmarEliminar = function(cedula){
 
 
 
-        const dialog = document.getElementById("alertaEliminar");
+        const dialog =
+            document.getElementById("alertaEliminar");
 
-        const btnSi = document.getElementById("btnConfirmarEliminarSi");
 
-        const btnNo = document.getElementById("btnConfirmarEliminarNo");
+
+        const btnSi =
+            document.getElementById("btnConfirmarEliminarSi");
+
+
+
+        const btnNo =
+            document.getElementById("btnConfirmarEliminarNo");
+
+
 
 
 
@@ -427,10 +441,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if(!dialog){
 
 
-            eliminarLaboratorio(id);
+            eliminarSolicitante(cedula);
 
             return;
-
 
         }
 
@@ -445,12 +458,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
         btnNo.onclick = function(){
 
-
             dialog.close();
-
 
         };
 
@@ -463,17 +473,13 @@ document.addEventListener('DOMContentLoaded', function () {
         btnSi.onclick = function(){
 
 
-
             dialog.close();
 
 
-
-            eliminarLaboratorio(id);
-
+            eliminarSolicitante(cedula);
 
 
         };
-
 
 
 
@@ -487,13 +493,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    function eliminarLaboratorio(id){
+    function eliminarSolicitante(cedula){
 
 
 
         fetch(
 
-            `/api/laboratorios/delete/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`,
+            `/api/solicitantes/delete/${cedula}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`,
 
             {
 
@@ -504,34 +510,28 @@ document.addEventListener('DOMContentLoaded', function () {
         )
 
 
-
         .then(parseJsonSafe)
 
 
+        .then(() => {
 
-        .then(()=>{
 
-
-            loadLaboratorios();
+            loadSolicitantes();
 
 
         })
 
 
-
-        .catch(error=>{
-
+        .catch(error => {
 
 
             console.error(error);
 
 
-
             if(errorMessage){
 
-
-                errorMessage.textContent = "Error al eliminar laboratorio";
-
+                errorMessage.textContent =
+                "Error al eliminar solicitante";
 
             }
 
@@ -548,8 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
-    loadLaboratorios();
+    loadSolicitantes();
 
 
 

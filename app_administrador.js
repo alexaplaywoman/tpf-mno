@@ -40,6 +40,18 @@ app.get('/uod_laboratorios', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_laboratorios.html'));
 });
 
+app.get('/list_solicitantes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/list_solicitantes.html'));
+});
+
+app.get('/add_solicitantes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/add_solicitantes.html'));
+});
+
+app.get('/uod_solicitantes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/upd_solicitantes.html'));
+});
+
 app.get('/confirmar', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/confirmar.html'));
 });
