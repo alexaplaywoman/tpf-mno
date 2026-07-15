@@ -69,7 +69,6 @@ app.use('/api/recursos', recursosRoute);
 //const reservas_pruebasRoute = require('./Backend/Routes/reservas_pruebas');
 //app.use('/api/reservas_pruebas', reservas_pruebasRoute);
 
-
 // Iniciar servidor
 app.listen(PORT, () => {
     console.log(`✅ Servidor iniciado en http://localhost:${PORT}`);

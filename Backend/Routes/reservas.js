@@ -239,12 +239,16 @@ router.post('/add', (req, res) => {
                                     }
 
                                     const validarRecursos = (callback) => {
-                                        if (listaRecursos.length === 0) return callback();
+                                        if (listaRecursos.length === 0) return callback([]);
 
-                                        const idsRecursos = listaRecursos.join(',');
+                                        const nombresRecursos = listaRecursos.map(n => `'${n}'`).join(',');
                                         connection.query(
-                                            `SELECT ID_RECURSO, NOMBRE, DISPONIBILIDAD FROM DBA.RECURSOS
-                                             WHERE ID_RECURSO IN (${idsRecursos}) AND NUMERO_LABORATORIO = ${numero_laboratorio}`,
+                                            `SELECT NOMBRE,
+                                                    MIN(CASE WHEN DISPONIBILIDAD = 'S' THEN ID_RECURSO END) AS ID_RECURSO,
+                                                    MAX(DISPONIBILIDAD) AS DISPONIBILIDAD
+                                             FROM DBA.RECURSOS
+                                             WHERE NOMBRE IN (${nombresRecursos}) AND NUMERO_LABORATORIO = ${numero_laboratorio}
+                                             GROUP BY NOMBRE`,
                                             (err, result) => {
                                                 if (err) {
                                                     connection.disconnect();
@@ -259,12 +263,12 @@ router.post('/add', (req, res) => {
                                                     connection.disconnect();
                                                     return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
                                                 }
-                                                callback();
+                                                callback(result.map(r => r.ID_RECURSO));
                                             }
                                         );
                                     };
 
-                                    validarRecursos(() => {
+                                    validarRecursos((idsRecursosDisponibles) => {
                                         const sql = `
                                             INSERT INTO DBA.RESERVAS
                                                 (NUMERO_LABORATORIO, CEDULA_IDENTIDAD, CORREO, ID_ESTADO_RESERVA,
@@ -277,11 +281,41 @@ router.post('/add', (req, res) => {
                                         `;
 
                                         connection.query(sql, (err) => {
-                                            connection.disconnect();
-                                            if (err) return manejarError(err, res, 'crear reserva');
-                                            return res.json({
-                                                success: true,
-                                                desplazadas: solapados.map(s => s.ID_RESERVA)
+                                            if (err) {
+                                                connection.disconnect();
+                                                return manejarError(err, res, 'crear reserva');
+                                            }
+
+                                            if (idsRecursosDisponibles.length === 0) {
+                                                connection.disconnect();
+                                                return res.json({
+                                                    success: true,
+                                                    desplazadas: solapados.map(s => s.ID_RESERVA)
+                                                });
+                                            }
+
+                                            connection.query('SELECT @@IDENTITY AS ID_RESERVA', (err, idResult) => {
+                                                if (err) {
+                                                    connection.disconnect();
+                                                    return manejarError(err, res, 'obtener id de la reserva creada');
+                                                }
+
+                                                const idReserva = idResult[0].ID_RESERVA;
+                                                const valoresRecursos = idsRecursosDisponibles
+                                                    .map(idRecurso => `(${idReserva}, ${idRecurso})`)
+                                                    .join(',');
+
+                                                connection.query(
+                                                    `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES ${valoresRecursos}`,
+                                                    (err) => {
+                                                        connection.disconnect();
+                                                        if (err) return manejarError(err, res, 'asociar recursos a la reserva');
+                                                        return res.json({
+                                                            success: true,
+                                                            desplazadas: solapados.map(s => s.ID_RESERVA)
+                                                        });
+                                                    }
+                                                );
                                             });
                                         });
                                     });
