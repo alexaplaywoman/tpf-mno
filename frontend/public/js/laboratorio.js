@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
         e.preventDefault();
-        window.location.href = "evento.html";
+        window.location.href = "edificio.html";
     });
 
     let form = document.querySelector("#form");

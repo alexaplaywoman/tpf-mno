@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Sybase = require('sybase');
 
-// Ruta: POST /api/accesos
+// Ruta: POST /api/login
 router.post('/', (req, res) => {
   const { usuario, clave } = req.body;
 
@@ -15,15 +15,20 @@ router.post('/', (req, res) => {
       return res.status(401).json({ exito: false, mensaje: "Usuario o contraseña inválidos." });
     }
 
-    // Si se conecta correctamente, desconectar
-    db.disconnect();
+    db.query(
+      `SELECT COUNT(*) AS es_admin FROM SYSGROUPS WHERE group_name = 'ADMINISTRADORES' AND member_name = '${usuario}'`,
+      (err, result) => {
+        db.disconnect();
 
-    // Determinar si el usuario es administrador
-    // (por ahora, comparamos directamente contra el nombre de usuario 'admin',
-    // que es el único que pertenece al grupo ADMINISTRADORES según el script SQL)
-    const esAdmin = usuario.toLowerCase() === 'admin';
+        if (err) {
+          console.error("❌ Error al verificar permisos:", err);
+          return res.status(500).json({ exito: false, mensaje: "Error al verificar permisos." });
+        }
 
-    return res.json({ exito: true, esAdmin: esAdmin });
+        const esAdmin = !!(result[0] && result[0].es_admin);
+        return res.json({ exito: true, esAdmin });
+      }
+    );
   });
 });
 

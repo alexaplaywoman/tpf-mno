@@ -23,10 +23,8 @@ const manejarError = (err, res, action) => {
 function verificarAdmin(connection, usuario, callback) {
     connection.query(
         `SELECT COUNT(*) AS es_admin
-         FROM sys.sysgroup sg
-         JOIN sys.sysuserperm g ON g.user_id = sg.group_id
-         JOIN sys.sysuserperm m ON m.user_id = sg.group_member
-         WHERE g.user_name = 'ADMINISTRADORES' AND m.user_name = '${usuario}'`,
+         FROM SYSGROUPS
+         WHERE group_name = 'ADMINISTRADORES' AND member_name = '${usuario}'`,
         (err, permiso) => {
             if (err) return callback(err, false);
             callback(null, !!(permiso[0] && permiso[0].es_admin));

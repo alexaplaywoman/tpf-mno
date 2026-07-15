@@ -1,38 +1,36 @@
 /*==============================================================*/
-/* Cambios aplicados en vivo contra bd/labcontrol.db durante     */
-/* el desarrollo del backend, todavía sin sumar a los scripts   */
-/* oficiales (bdTpf.sql / objetos_bd.sql / datos_prueba...sql). */
-/* Ya están probados y funcionando, esto es para dejarlos       */
-/* versionados y que la base se pueda recrear desde cero.       */
+/* Cambios aplicados en vivo durante el desarrollo del backend,  */
+/* todavía sin sumar a los scripts oficiales (bdTpf.sql /       */
+/* objetos_bd.sql / datos_prueba_labcontrol_ordenado.sql).      */
 /*==============================================================*/
 
-*==============================================================*/
+/*==============================================================*/
 /* RESERVAS_RECURSOS - Tabla de detalle para registrar          */
 /* qué recursos solicita cada reserva.                          */
 /*                                                              */
 /* Ejecutar DESPUÉS de bdTpf.sql + objetos_bd.sql               */
 /* y DESPUÉS de datos_prueba_labcontrol_ordenado.sql             */
 /*==============================================================*/
- 
+
 ROLLBACK;   -- liberar cualquier lock pendiente
- 
+
 /*--------------------------------------------------------------*/
-/* 1. CREAR TABLA   RESERVAS_RECURSOS                                            */
+/* 1. CREAR TABLA   RESERVAS_RECURSOS                            */
 /*--------------------------------------------------------------*/
- 
+
 if exists(
-   select 1 from sys.systable 
+   select 1 from sys.systable
    where table_name='RESERVAS_RECURSOS'
      and table_type in ('BASE', 'GBL TEMP')
      and creator=user_id('DBA')
 ) then
     drop table DBA.RESERVAS_RECURSOS
 end if;
- 
+
 CREATE TABLE DBA.RESERVAS_RECURSOS (
    ID_RESERVA           INT            NOT NULL,
    ID_RECURSO           INT            NOT NULL,
-   CONSTRAINT PK_RESERVAS_RECURSOS 
+   CONSTRAINT PK_RESERVAS_RECURSOS
       PRIMARY KEY CLUSTERED (ID_RESERVA, ID_RECURSO),
    CONSTRAINT FK_RR_RESERVA FOREIGN KEY (ID_RESERVA)
       REFERENCES DBA.RESERVAS (ID_RESERVA)
@@ -43,19 +41,33 @@ CREATE TABLE DBA.RESERVAS_RECURSOS (
       ON UPDATE RESTRICT
       ON DELETE RESTRICT
 );
- 
+
 COMMIT;
- 
+
 /*--------------------------------------------------------------*/
 /* 2. GRANTS para el usuario solicitante                        */
 /*--------------------------------------------------------------*/
- 
+
 -- Ajustá 'solicitante' al nombre exacto de tu usuario si difiere
 GRANT SELECT, INSERT, DELETE ON DBA.RESERVAS_RECURSOS TO solicitante;
 
 
 /*==============================================================*/
-/* 1.B Columnas nuevas en RESERVAS (trazabilidad de cancelación) */
+/* 0. Revocar permisos peligrosos, por si ya corrieron una      */
+/*    version anterior de este script (v1) que le daba a       */
+/*    PUBLIC (incluido "solicitante") acceso de lectura a       */
+/*    sys.sysuserperm, tabla que tiene la columna "password"    */
+/*    con el hash de la clave de TODOS los usuarios (incluido   */
+/*    DBA). Si nadie corrio la v1 todavia, estos REVOKE no      */
+/*    hacen nada (no hay nada que revocar).                    */
+/*==============================================================*/
+
+REVOKE SELECT ON sys.sysuserperm FROM PUBLIC;
+REVOKE SELECT ON sys.sysgroup FROM PUBLIC;
+
+
+/*==============================================================*/
+/* 1. Columnas nuevas en RESERVAS (trazabilidad de cancelación) */
 /*==============================================================*/
 
 ALTER TABLE RESERVAS ADD MOTIVO_CANCELACION VARCHAR(100) NULL;
@@ -71,28 +83,34 @@ ALTER TABLE MANTENIMIENTOS ALTER ID_MANTENIMIENTO DEFAULT AUTOINCREMENT;
 
 
 /*==============================================================*/
-/* 3. Escala de prioridades 0-4 (0 = mayor prioridad)           */
-/*    Nota: no se puede borrar e insertar de nuevo los ids      */
-/*    1, 2 y 3 porque TIPO_ACTIVIDAD ya los referencia por FK   */
-/*    (FK_TIPO_ACT_REFERENCE_PRIORIDA). Por eso los 3 primeros  */
-/*    van con UPDATE y los nuevos (0 y 4) con INSERT.           */
+/* 3. Tipo de actividad para directores/decanos                */
+/*    OJO: hay una propuesta distinta en conflicto con esto     */
+/*    (ver DECISION PENDIENTE DEL GRUPO más abajo). Por ahora   */
+/*    PRIORIDADES NO se toca (queda en 4 niveles: Alta/Media    */
+/*    Alta/Media/Baja). Solo agregamos el TIPO_ACTIVIDAD que    */
+/*    falta, con PRIORIDAD = 0 (mas prioritario que Evento      */
+/*    Institucional, que hoy es el mas alto con PRIORIDAD = 1). */
 /*==============================================================*/
 
--- 1. Insertar el nuevo registro con ID=5
-INSERT INTO prioridades (ID_PRIORIDAD, NOMBRE)
-VALUES (5, 'Clase');
+INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
+VALUES (8, 1, 'Actividad Directiva', 0, 4);
 
--- 2. Actualizar los nombres de los registros existentes
-UPDATE prioridades
-SET NOMBRE = CASE ID_PRIORIDAD
-    WHEN 0 THEN 'Reunión Directiva'
-    WHEN 1 THEN 'Evento Institucional'
-    WHEN 2 THEN 'Examen'
-    WHEN 3 THEN 'Defensa Proyecto Final'
-    WHEN 4 THEN 'Exposicion'
-    WHEN 5 THEN 'Clase'
-    ELSE NOMBRE
-END;
+/* DECISION PENDIENTE DEL GRUPO (todavia sin resolver):
+   'Defensa Proyecto Final' (ID 6) parece ser el mismo concepto
+   que 'Exposicion y Tesis'. Si el grupo confirma que es lo mismo,
+   descomentar este UPDATE (no hace falta tocar el numero de
+   PRIORIDAD, ya está en 3). Si prefieren mantenerlos separados,
+   dejar comentado y no hacer nada.
+
+   IMPORTANTE: en el merge de este script encontramos otra
+   propuesta (de otro integrante) que en vez de esto RENOMBRA
+   toda la tabla PRIORIDADES (ids 0 a 5, con nombres como "Reunión
+   Directiva", "Defensa Proyecto Final", etc.), pisando el diseño
+   de 4 niveles ya oficial (Alta/Media Alta/Media/Baja). Las dos
+   propuestas no pueden convivir — hablarlo en el grupo antes de
+   aplicar cualquiera de las dos. */
+
+-- UPDATE TIPO_ACTIVIDAD SET NOMBRE = 'Exposicion y Tesis' WHERE NOMBRE = 'Defensa Proyecto Final';
 
 
 /*==============================================================*/
@@ -126,23 +144,27 @@ GRANT SELECT ON DBA.EDIFICIOS TO solicitante;
 GRANT SELECT ON DBA.PISOS TO solicitante;
 GRANT SELECT ON DBA.ESTADOS_OPERATIVOS TO solicitante;
 
--- Procedimientos que llama la interfaz móvil (te faltaban)
+-- Procedimientos que llama la interfaz móvil
 GRANT EXECUTE ON DBA.sp_laboratorios_disponibles TO solicitante;
-GRANT EXECUTE ON DBA.sp_horarios_disponibles TO solicitante
+GRANT EXECUTE ON DBA.sp_horarios_disponibles TO solicitante;
+
+-- Nota: NO se necesita ningún GRANT sobre sys.sysgroup ni
+-- sys.sysuserperm. El backend valida membresía de admin contra
+-- la vista SYSGROUPS (group_name, member_name), que ya es
+-- legible por PUBLIC por defecto en SQL Anywhere y no expone
+-- nada sensible (a diferencia de las tablas base del catálogo).
+
+COMMIT;
+
 
 /*==============================================================*/
-/* 6. Verificación rápida (opcional, para confirmar que quedó   */
+/* 5. Verificación rápida (opcional, para confirmar que quedó   */
 /*    todo bien después de correr este script)                 */
 /*==============================================================*/
 
-SELECT * FROM PRIORIDADES ORDER BY ID_PRIORIDAD;
 SELECT ID_TIPO_ACTIVIDAD, NOMBRE, PRIORIDAD, ID_PRIORIDAD FROM TIPO_ACTIVIDAD ORDER BY PRIORIDAD;
 
-SELECT g.user_name AS grupo, m.user_name AS miembro
-FROM sys.sysgroup sg
-JOIN sys.sysuserperm g ON g.user_id = sg.group_id
-JOIN sys.sysuserperm m ON m.user_id = sg.group_member
-WHERE g.user_name = 'ADMINISTRADORES';
+SELECT * FROM SYSGROUPS WHERE group_name = 'ADMINISTRADORES';
 
 
 /*==============================================================*/
@@ -154,7 +176,7 @@ ALTER TABLE DBA.LABORATORIOS
 COMMIT;
 
 /*==============================================================*/
-/* PASO 1b - <<< NUEVO: Quitar la FK de PISOS hacia EDIFICIOS  */
+/* PASO 1b - Quitar la FK de PISOS hacia EDIFICIOS               */
 /* (su indice automatico es el que bloqueaba el ALTER)          */
 /*==============================================================*/
 ROLLBACK;
@@ -195,7 +217,7 @@ ALTER TABLE DBA.PISOS
 COMMIT;
 
 /*==============================================================*/
-/* PASO 5b - <<< NUEVO: Reponer la FK de PISOS hacia EDIFICIOS */
+/* PASO 5b - Reponer la FK de PISOS hacia EDIFICIOS              */
 /*==============================================================*/
 ROLLBACK;
 ALTER TABLE DBA.PISOS
