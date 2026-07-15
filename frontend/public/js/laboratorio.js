@@ -112,8 +112,8 @@ function validarLaboratorio(laboratorio, reservaEvento) {
         return false;
     }
 
-    // Recursos: pendiente hasta que exista /api/recursos
-    // (por ahora no se filtra por esto acá)
+    // Recursos: se filtran en actualizarDisponibilidadPorHorario(), junto
+    // con el horario, porque recién ahí se sabe fecha/hora a chequear.
 
     return true;
 
@@ -132,8 +132,11 @@ function actualizarDisponibilidadPorHorario() {
     const clave = sessionStorage.getItem('clave');
     const reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
     const fecha = reservaEvento.fecha.split('T')[0];
+    const recursos = reservaEvento.recursos && reservaEvento.recursos.length > 0
+        ? `&recursos=${encodeURIComponent(reservaEvento.recursos.join(','))}`
+        : '';
 
-    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}`)
+    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}${recursos}`)
         .then(res => res.json())
         .then(data => {
             data.laboratorios.forEach(lab => {
