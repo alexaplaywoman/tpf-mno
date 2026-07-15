@@ -80,7 +80,7 @@ function seleccionarEdificio(nombreEdificio) {
 
     notificarEdificioAlBackend(nombreEdificio)
         .then(() => {
-            window.location.href = "evento.html";
+            window.location.href = `evento.html?edificio=${id}`;
         })
         .catch(error => {
             console.error('❌ No se pudo notificar el edificio al backend:', error);

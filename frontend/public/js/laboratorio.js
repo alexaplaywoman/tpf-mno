@@ -48,36 +48,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     cargarLaboratorios(reservaEvento);
 
-    // Si se viene del flujo de edición, precarga el laboratorio y el
-    // horario que ya tenía la reserva.
-    let reservaEditar = JSON.parse(
-        sessionStorage.getItem("reservaEditar")
-    );
-
-    if (reservaEditar) {
-
-        console.log("Precargando laboratorio y horario a editar:", reservaEditar);
-
-        const radioLab = document.querySelector(
-            `input[name="laboratorio"][value="${reservaEditar.NUMERO_LABORATORIO}"]`
-        );
-        if (radioLab) radioLab.checked = true;
-
-        // HORA_INICIO/HORA_FIN llegan como "HH:MM:SS", los <option> del
-        // select usan "HH:MM", por eso el slice.
-        if (reservaEditar.HORA_INICIO) {
-            document.getElementById("horaInicio").value =
-                String(reservaEditar.HORA_INICIO).slice(0, 5);
-        }
-        if (reservaEditar.HORA_FIN) {
-            document.getElementById("horaFin").value =
-                String(reservaEditar.HORA_FIN).slice(0, 5);
-        }
-
-        // Los .value seteados por código no disparan "input"/"change".
-        validar();
-    }
-
     // Vuelve a chequear disponibilidad (solapamiento) cada vez que
     // el usuario termina de elegir horaInicio u horaFin
     document.getElementById("horaInicio").addEventListener("change", actualizarDisponibilidadPorHorario);
@@ -142,8 +112,8 @@ function validarLaboratorio(laboratorio, reservaEvento) {
         return false;
     }
 
-    // Recursos: se filtran en actualizarDisponibilidadPorHorario(), junto
-    // con el horario, porque recién ahí se sabe fecha/hora a chequear.
+    // Recursos: pendiente hasta que exista /api/recursos
+    // (por ahora no se filtra por esto acá)
 
     return true;
 
@@ -162,11 +132,8 @@ function actualizarDisponibilidadPorHorario() {
     const clave = sessionStorage.getItem('clave');
     const reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
     const fecha = reservaEvento.fecha.split('T')[0];
-    const recursos = reservaEvento.recursos && reservaEvento.recursos.length > 0
-        ? `&recursos=${encodeURIComponent(reservaEvento.recursos.join(','))}`
-        : '';
 
-    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}${recursos}`)
+    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}`)
         .then(res => res.json())
         .then(data => {
             data.laboratorios.forEach(lab => {
