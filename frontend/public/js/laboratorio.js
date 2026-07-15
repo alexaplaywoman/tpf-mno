@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
         e.preventDefault();
-        window.location.href = "edificio.html";
+        window.location.href = "evento.html";
     });
 
     let form = document.querySelector("#form");
@@ -47,6 +47,36 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
     cargarLaboratorios(reservaEvento);
+
+    // Si se viene del flujo de edición, precarga el laboratorio y el
+    // horario que ya tenía la reserva.
+    let reservaEditar = JSON.parse(
+        sessionStorage.getItem("reservaEditar")
+    );
+
+    if (reservaEditar) {
+
+        console.log("Precargando laboratorio y horario a editar:", reservaEditar);
+
+        const radioLab = document.querySelector(
+            `input[name="laboratorio"][value="${reservaEditar.NUMERO_LABORATORIO}"]`
+        );
+        if (radioLab) radioLab.checked = true;
+
+        // HORA_INICIO/HORA_FIN llegan como "HH:MM:SS", los <option> del
+        // select usan "HH:MM", por eso el slice.
+        if (reservaEditar.HORA_INICIO) {
+            document.getElementById("horaInicio").value =
+                String(reservaEditar.HORA_INICIO).slice(0, 5);
+        }
+        if (reservaEditar.HORA_FIN) {
+            document.getElementById("horaFin").value =
+                String(reservaEditar.HORA_FIN).slice(0, 5);
+        }
+
+        // Los .value seteados por código no disparan "input"/"change".
+        validar();
+    }
 
     // Vuelve a chequear disponibilidad (solapamiento) cada vez que
     // el usuario termina de elegir horaInicio u horaFin

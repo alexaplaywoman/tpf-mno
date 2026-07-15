@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const Sybase = require('sybase');
+const { conectar } = require('./conexion');   // misma carpeta: Backend/Routes/conexion.js
 
 // Ruta: POST /api/login
 router.post('/', (req, res) => {
   const { usuario, clave } = req.body;
 
-  // Crear nueva instancia de conexión
-  const db = new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
+  if (!usuario || !clave) {
+    return res.status(400).json({ exito: false, mensaje: 'Faltan usuario o clave.' });
+  }
 
-  db.connect(err => {
+  conectar(usuario, clave, (err, db) => {
     if (err) {
-      console.error("❌ Error de conexión:", err);
-      return res.status(401).json({ exito: false, mensaje: "Usuario o contraseña inválidos." });
+      // conectar ya loguea el error real con console.error internamente
+      return res.status(401).json({ exito: false, mensaje: 'Usuario o contraseña inválidos.' });
     }
 
     db.query(

@@ -1,11 +1,7 @@
 const express = require('express');
 const Sybase = require('sybase');
 const router = express.Router();
-
-function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
-}
-
+const { conectar } = require('./conexion');
 const manejarError = (err, res, action) => {
     let errorMessage;
     if (err && typeof err === 'object') {

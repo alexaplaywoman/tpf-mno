@@ -14,64 +14,134 @@ document.addEventListener("DOMContentLoaded", function () {
     const correo = sessionStorage.getItem("correo");
 
     console.log("Usuario:", usuario);
+    console.log("Clave presente:", !!clave); // no logueamos la clave en texto plano
     console.log("Número de cédula:", numeroCedula);
     console.log("Correo:", correo);
 
-    // Consulta todas las reservas
-    fetch(`/api/reservas?usuario=${usuario}&clave=${clave}`)
+    const contenedor = document.getElementById("contenedorReservas");
+
+    // ESTADO_RESERVA guarda un código de una letra (P/U/C/A); acá lo
+    // traducimos al nombre completo para mostrarlo al usuario.
+    const NOMBRES_ESTADO_RESERVA = {
+        P: "Pendiente",
+        U: "Utilizada",
+        C: "Cancelada",
+        A: "Ausente"
+    };
+
+    // HORA_INICIO/HORA_FIN llegan como "HH:MM:SS" (o a veces como Date,
+    // según el driver). Esta función los pasa a formato 12hs "h:mm a. m.".
+    function formatearHora(hora) {
+        if (hora === null || hora === undefined) return "-";
+
+        let horas, minutos;
+
+        if (hora instanceof Date) {
+            horas = hora.getHours();
+            minutos = hora.getMinutes();
+        } else {
+            const partes = String(hora).split(":");
+            horas = parseInt(partes[0], 10);
+            minutos = parseInt(partes[1], 10);
+        }
+
+        if (Number.isNaN(horas) || Number.isNaN(minutos)) return String(hora);
+
+        const periodo = horas < 12 ? "a. m." : "p. m.";
+        let horas12 = horas % 12;
+        if (horas12 === 0) horas12 = 12;
+        const minutosStr = String(minutos).padStart(2, "0");
+
+        return `${horas12}:${minutosStr} ${periodo}`;
+    }
+
+    // FECHA_A_RESERVAR llega como "YYYY-MM-DD" (a veces con una hora
+    // pegada tipo "...T00:00:00", o como Date si el driver la convierte
+    // solo). OJO: hacer directamente `new Date("2026-07-16")` la
+    // interpreta como UTC medianoche, y al mostrarla en un huso horario
+    // negativo (como Paraguay) puede aparecer un día antes. Por eso acá
+    // se arma la fecha a mano con los componentes en hora LOCAL.
+    function formatearFecha(fecha) {
+        if (!fecha) return "-";
+
+        let anio, mes, dia;
+
+        if (fecha instanceof Date) {
+            anio = fecha.getFullYear();
+            mes = fecha.getMonth();
+            dia = fecha.getDate();
+        } else {
+            const soloFecha = String(fecha).split("T")[0];
+            const partes = soloFecha.split("-");
+            if (partes.length !== 3) return String(fecha);
+            anio = parseInt(partes[0], 10);
+            mes = parseInt(partes[1], 10) - 1;
+            dia = parseInt(partes[2], 10);
+        }
+
+        const fechaLocal = new Date(anio, mes, dia);
+        if (Number.isNaN(fechaLocal.getTime())) return String(fecha);
+
+        return fechaLocal.toLocaleDateString("es-PY", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+    }
+
+    if (!usuario || !clave) {
+        contenedor.innerHTML = `
+            <div class="alert alert-warning text-center">
+                No hay una sesión activa. Volvé a iniciar sesión.
+            </div>
+        `;
+        return;
+    }
+
+    // Guardamos las reservas actuales en memoria para poder ubicar
+    // la reserva exacta que se editó/canceló sin depender de IDs
+    // de botones repetidos en el HTML.
+    let reservasActuales = [];
+
+    // Filtramos directamente en el servidor: por cédula (en la URL),
+    // por correo y excluyendo el pasado (comportamiento default del
+    // endpoint, así evitamos comparar fechas en JS).
+    const url = `/api/reservas/mis-reservas/${encodeURIComponent(numeroCedula)}`
+        + `?usuario=${encodeURIComponent(usuario)}`
+        + `&clave=${encodeURIComponent(clave)}`
+        + `&correo=${encodeURIComponent(correo)}`;
+
+    fetch(url)
         .then(response => {
-
             if (!response.ok) {
-                throw new Error("Error al consultar las reservas.");
+                return response.json()
+                    .then(body => { throw new Error(body.error || "Error al consultar las reservas."); })
+                    .catch(() => { throw new Error("Error al consultar las reservas."); });
             }
-
             return response.json();
-
         })
         .then(reservas => {
 
-            console.log("Todas las reservas:", reservas);
+            console.log("Reservas futuras del usuario:", reservas);
 
-            // Filtrar únicamente las reservas del usuario
-            const reservasUsuario = reservas.filter(reserva =>
-
-                reserva.CEDULA_IDENTIDAD == numeroCedula &&
-                reserva.CORREO == correo
-
-            );
-
-            console.log("Reservas del usuario:", reservasUsuario);
-
-            // Filtrar solamente las reservas futuras
-            const hoy = new Date();
-
-            const reservasFuturas = reservasUsuario.filter(reserva =>
-
-                new Date(reserva.FECHA_A_RESERVAR) >= hoy
-
-            );
-
-            console.log("Reservas futuras:", reservasFuturas);
-
-            // Contenedor donde se mostrarán las tarjetas
-            const contenedor = document.getElementById("contenedorReservas");
-
+            reservasActuales = reservas;
             contenedor.innerHTML = "";
 
-            // Si no existen reservas futuras
-            if (reservasFuturas.length === 0) {
-
+            if (reservas.length === 0) {
                 contenedor.innerHTML = `
                     <div class="alert alert-info text-center">
                         No posee reservas futuras.
                     </div>
                 `;
-
                 return;
             }
 
-            // Crear una tarjeta por cada reserva
-            reservasFuturas.forEach(reserva => {
+            reservas.forEach(reserva => {
+
+                const recursos = reserva.recursos && reserva.recursos.trim() !== ""
+                    ? reserva.recursos
+                    : "Sin recursos asociados";
 
                 contenedor.innerHTML += `
 
@@ -81,40 +151,38 @@ document.addEventListener("DOMContentLoaded", function () {
                              style="background:#6c6480;">
 
                             <h5 class="mb-0">
-                                Datos de la Reserva
+                                Datos de la Reserva 
                             </h5>
 
                         </div>
 
                         <div class="card-body">
 
-                            <p><strong>Fecha:</strong> ${reserva.FECHA_A_RESERVAR}</p>
-
+                            <p><strong>Fecha:</strong> ${formatearFecha(reserva.FECHA_A_RESERVAR)}</p>
                             <hr>
-
+                            <p><strong>Horario:</strong> ${formatearHora(reserva.HORA_INICIO)} a ${formatearHora(reserva.HORA_FIN)}</p>
+                            <hr>
                             <p><strong>Cantidad de alumnos:</strong> ${reserva.CANTIDAD_ALUMNOS}</p>
-
                             <hr>
-
                             <p><strong>Tipo de actividad:</strong> ${reserva.tipo_actividad}</p>
-
                             <hr>
-
+                            <p><strong>Estado:</strong> ${NOMBRES_ESTADO_RESERVA[reserva.estado] ?? reserva.estado ?? "-"}</p>
+                            <hr>
                             <p><strong>Edificio:</strong> ${reserva.EDIFICIO}</p>
-
                             <hr>
-
                             <p><strong>Laboratorio:</strong> ${reserva.NUMERO_LABORATORIO}</p>
+                            <hr>
+                            <p><strong>Recursos:</strong> ${recursos}</p>
 
                             <br>
 
                             <div class="d-flex justify-content-center gap-3">
 
-                                <button id="botonEditar" class="btn btn-outline-secondary px-4">
+                                <button class="btn btn-outline-secondary px-4 btn-editar">
                                     Editar
                                 </button>
 
-                                <button id="botonCancelar" class="btn px-4 text-white"
+                                <button class="btn px-4 text-white btn-cancelar"
                                         style="background:#6c6480; border-color:#6c6480;"
                                         data-bs-toggle="modal"
                                         data-bs-target="#modalCancelar">
@@ -130,39 +198,40 @@ document.addEventListener("DOMContentLoaded", function () {
                 `;
 
             });
-
-            document.getElementById("botonEditar").addEventListener("click", function(e){
-
-                e.preventDefault();
-
-                let reserva = reservasFuturas[0];
-
-
-                sessionStorage.setItem(
-                    "reservaEditar",
-                    JSON.stringify(reserva)
-                );
-
-
-                window.location.href = "edificio.html";
-
-            });
-
         })
-
-        
-
         .catch(error => {
-
             console.error(error);
-
-            document.getElementById("contenedorReservas").innerHTML = `
+            contenedor.innerHTML = `
                 <div class="alert alert-danger text-center">
-                    Error al consultar las reservas.
+                    ${error.message || "Error al consultar las reservas."}
                 </div>
             `;
-
         });
 
-});
+    // Delegación de eventos: un solo listener en el contenedor, en vez de
+    // un listener por tarjeta con un id repetido. Así cada botón "Editar"
+    // actúa sobre la reserva de SU propia tarjeta, no siempre la primera.
+    contenedor.addEventListener("click", function (e) {
 
+        const card = e.target.closest("[data-id]");
+        if (!card) return;
+
+        const idReserva = Number(card.dataset.id);
+        // Comparación tolerante: el driver de Sybase a veces devuelve
+        // los numéricos como string, y con === nunca matcheaba.
+        const reserva = reservasActuales.find(r => Number(r.ID_RESERVA) === idReserva);
+        if (!reserva) return;
+
+        if (e.target.classList.contains("btn-editar")) {
+            sessionStorage.setItem("reservaEditar", JSON.stringify(reserva));
+            window.location.href = "edificio.html";
+        }
+
+        if (e.target.classList.contains("btn-cancelar")) {
+            // Guardamos cuál reserva se quiere cancelar para que el botón
+            // "Sí, cancelar" del modal sepa a qué ID_RESERVA aplicar.
+            sessionStorage.setItem("reservaCancelar", idReserva);
+        }
+    });
+
+});

@@ -1,10 +1,8 @@
-const express = require('express');  //cambie este backend por el de Gise
+const express = require('express');
 const Sybase = require('sybase');
 const router = express.Router();
 
-function getConnection(usuario, clave) {
-    return new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
-}
+const { conectar } = require('./conexion');
 
 const manejarError = (err, res, action) => {
     let errorMessage;
@@ -39,10 +37,8 @@ router.get('/', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         const sql = `
             SELECT r.*, l.EDIFICIO, s.NOMBRE, s.APELLIDO, ta.NOMBRE AS tipo_actividad
@@ -67,10 +63,8 @@ router.get('/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         connection.query(
             `SELECT * FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
@@ -90,10 +84,8 @@ router.get('/mis-reservas/:cedula', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         const condicionFecha = incluirPasadas === 'true' ? '' : 'AND r.FECHA_A_RESERVAR >= CURRENT DATE';
 
@@ -134,10 +126,8 @@ router.post('/add', (req, res) => {
 
     const listaRecursos = recursos || [];
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         connection.query(
             `SELECT ESTADO FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
@@ -338,10 +328,8 @@ router.post('/cancelar/:id', (req, res) => {
     if (!MOTIVOS_CANCELACION_VALIDOS.includes(motivo))
         return res.status(400).json({ success: false, error: `Motivo inválido. Opciones: ${MOTIVOS_CANCELACION_VALIDOS.join(', ')}` });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         connection.query(
             `SELECT CEDULA_IDENTIDAD FROM DBA.SOLICITANTES WHERE CEDULA_IDENTIDAD = ${cedula_responsable}`,
@@ -382,10 +370,8 @@ router.post('/marcar/:id', (req, res) => {
     if (id_estado_reserva != 2 && id_estado_reserva != 4)
         return res.status(400).json({ success: false, error: 'Solo se puede marcar como Utilizada (2) o No presentado (4). Para cancelar, usá /cancelar/:id.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         connection.query(
             `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
@@ -409,10 +395,8 @@ router.post('/reprogramar/:id', (req, res) => {
     if (diaSemana === 0 || diaSemana === 6)
         return res.status(400).json({ success: false, error: 'No se puede reprogramar a un fin de semana.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
             if (err) {
@@ -510,10 +494,8 @@ router.delete('/delete/:id', (req, res) => {
     if (!usuario || !clave)
         return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
 
-    const connection = getConnection(usuario, clave);
-
-    connection.connect((err) => {
-        if (err) return manejarError(err, res, 'conectar para eliminar reserva');
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         verificarAdmin(connection, usuario, (err, esAdmin) => {
             if (err) {

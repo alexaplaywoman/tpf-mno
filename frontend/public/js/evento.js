@@ -107,26 +107,36 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
 
-            // Recursos (si existen)
+            // Recursos (llegan del backend como un string separado por
+            // comas, ej: "Proyector, Aire acondicionado". Acá matcheamos
+            // por el texto del label de cada checkbox, no por ID, porque
+            // el ID_RECURSO real depende del laboratorio y en este paso
+            // todavía no se eligió laboratorio.)
             if(reservaEditar.recursos){
 
-                reservaEditar.recursos.forEach(id => {
+                const nombresRecursos = String(reservaEditar.recursos)
+                    .split(",")
+                    .map(n => n.trim())
+                    .filter(n => n !== "");
 
-                    let checkbox =
-                        document.getElementById(
-                            "recurso" + id
-                        );
+                document
+                    .querySelectorAll('#listaRecursos input[type="checkbox"]')
+                    .forEach(checkbox => {
 
+                        const label = document.querySelector(`label[for="${checkbox.id}"]`);
 
-                    if(checkbox){
+                        if(label && nombresRecursos.includes(label.textContent.trim())){
+                            checkbox.checked = true;
+                        }
 
-                        checkbox.checked = true;
-
-                    }
-
-                });
+                    });
 
             }
+
+            // Los .value seteados por código no disparan "input"/"change",
+            // así que sin este llamado el botón "Siguiente" quedaría
+            // deshabilitado aunque los datos ya estén completos.
+            validar();
 
         }
 
