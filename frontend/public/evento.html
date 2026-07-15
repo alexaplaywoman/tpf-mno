@@ -43,7 +43,7 @@
                 2. Elegir Tipo de Actividad
             </div>
 
-            <div class="rounded-pill py-2 px-4 ms-2" style="background-color:#e5e5e5; color:#999; min-width:220px;">
+            <div class="rounded-pill py-2 px-4 ms-2" style="background-color:#e5e5e5; color:#999;  min-width:220px;">
                 3. Elegir Laboratorio
             </div>
 
@@ -79,12 +79,13 @@
                     <select class="form-select" id="evento" name="evento" required>
 
                         <option value="">Seleccionar</option>
-                        <option value="Clase Regular">Clase regular</option>
-                        <option value="Examen">Examen</option>
-                        <option value="Capacitacion">Capacitación</option>
-                        <option value="Tutoria">Tutoría</option>
-                        <option value="Evento Institucional">Evento institucional</option>
-                        <option value="Practica Especial">Práctica especial</option>
+                        <option value="1">Evento Institucional</option>
+                        <option value="2">Examen</option>
+                        <option value="3">Defensa de Proyecto</option>
+                        <option value="4">Exposición</option>
+                        <option value="5">Directores y Decanos</option>
+                        <option value="6">Clase</option>
+
 
                     </select>
 
@@ -133,7 +134,6 @@
 
         </div>
 
-        <!-- DERECHA -->
         <div class="col-derecha">
 
             <div id="recursos" class="card shadow-sm">
@@ -142,39 +142,10 @@
                     <h5 class="mb-0">Recursos a utilizar</h5>
                 </div>
 
-                <div class="card-body">
-
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="internet" value="internet">
-                        <label class="form-check-label" for="internet">Conexión a internet</label>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="proyector" value="proyector">
-                        <label class="form-check-label" for="proyector">Proyector</label>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="aireAcondicionado" value="aireAcondicionado">
-                        <label class="form-check-label" for="aireAcondicionado">Aire acondicionado</label>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="impresora" value="impresora">
-                        <label class="form-check-label" for="impresora">Impresora 3D</label>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="pizarraDigital" value="pizarraDigital">
-                        <label class="form-check-label" for="pizarraDigital">Pizarra digital</label>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" id="pizarraAcrilica" value="pizarraAcrilica">
-                        <label class="form-check-label" for="pizarraAcrilica">Pizarra acrílica</label>
-                    </div>
-
+                <div class="card-body" id="listaRecursos">
+                    <!-- Los checkboxes se generan dinámicamente según el laboratorio elegido -->
                 </div>
+
             </div>
 
             <!-- BOTONES ABAJO DE CHECKBOX -->

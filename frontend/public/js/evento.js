@@ -1,168 +1,607 @@
-document.addEventListener('DOMContentLoaded', function () {
+let selectedDate = null;
+let reservasOcupadas = [];
 
-    // BOTONES DE NAVEGACIÓN
-    document.getElementById("botonSiguiente").addEventListener("click", function (e) {
-        e.preventDefault();
-        window.location.href = "laboratorios.html";
+// Recursos reales según el laboratorio (tal como están en la base de datos)
+const recursosPorLaboratorio = {
+    1: [
+        { id: 1, nombre: "Proyector" },
+        { id: 2, nombre: "Aire acondicionado" }
+    ],
+    2: [
+        { id: 3, nombre: "Proyector" },
+        { id: 4, nombre: "Pizarra digital" }
+    ],
+    3: [
+        { id: 5, nombre: "Impresora 3D" },
+        { id: 6, nombre: "Proyector" }
+    ],
+    4: [
+        { id: 7, nombre: "Aire acondicionado" }
+    ],
+    5: [
+        { id: 8, nombre: "Proyector" }
+    ]
+};
+
+function renderRecursos() {
+    const contenedor = document.getElementById("listaRecursos");
+    contenedor.innerHTML = "";
+
+    const recursosUnicos = obtenerTodosLosRecursos();
+
+    if (recursosUnicos.length === 0) {
+        contenedor.innerHTML = "<p class='text-muted'>No hay recursos disponibles.</p>";
+        return;
+    }
+
+    recursosUnicos.forEach(function (recurso) {
+        const div = document.createElement("div");
+        div.className = "form-check mb-2";
+
+        div.innerHTML = `
+            <input class="form-check-input" type="checkbox" id="recurso${recurso.id}" value="${recurso.id}">
+            <label class="form-check-label" for="recurso${recurso.id}">${recurso.nombre}</label>
+        `;
+
+        contenedor.appendChild(div);
     });
+}
+
+function obtenerTodosLosRecursos() {
+    const vistos = new Set();
+    const resultado = [];
+
+    Object.values(recursosPorLaboratorio).forEach(function (listaDeUnLab) {
+        listaDeUnLab.forEach(function (recurso) {
+            if (!vistos.has(recurso.nombre)) {
+                vistos.add(recurso.nombre);
+                resultado.push(recurso);
+            }
+        });
+    });
+
+    return resultado;
+}
+
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+    // Generar los checkboxes de recursos según el laboratorio elegido
+    renderRecursos();
+
+
+    // =========================
+    // CARGAR DATOS DE EDICIÓN
+    // =========================
+
+    setTimeout(() => {
+
+        let reservaEditar = JSON.parse(
+            sessionStorage.getItem("reservaEditar")
+        );
+
+
+        if(reservaEditar){
+
+            console.log(
+                "Reserva cargada para editar:",
+                reservaEditar
+            );
+
+
+            // Cantidad de alumnos
+            document.getElementById("alumnos").value =
+                reservaEditar.CANTIDAD_ALUMNOS;
+
+
+
+            // Tipo de actividad
+            document.getElementById("evento").value =
+                reservaEditar.ID_TIPO_ACTIVIDAD;
+
+
+
+            // Fecha seleccionada
+            selectedDate =
+                new Date(reservaEditar.FECHA_A_RESERVAR);
+
+
+
+            // Recursos (si existen)
+            if(reservaEditar.recursos){
+
+                reservaEditar.recursos.forEach(id => {
+
+                    let checkbox =
+                        document.getElementById(
+                            "recurso" + id
+                        );
+
+
+                    if(checkbox){
+
+                        checkbox.checked = true;
+
+                    }
+
+                });
+
+            }
+
+        }
+
+
+    },100);
+
+    // =========================
+    // BOTONES DE NAVEGACIÓN
+    // =========================
+
+    document.getElementById("botonSiguiente").addEventListener("click", function (e) {
+
+        e.preventDefault();
+
+        let reservaEvento = {
+            alumnos: document.querySelector("#alumnos").value,
+            actividad: document.querySelector("#evento").value,
+            fecha: selectedDate,
+            recursos: obtenerRecursos()
+        };
+
+        console.log(reservaEvento);
+
+        sessionStorage.setItem(
+            "reservaEvento",
+            JSON.stringify(reservaEvento)
+        );
+
+
+        window.location.href = "laboratorios.html";
+
+    });
+
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
+
         e.preventDefault();
+
         window.location.href = "edificio.html";
+
     });
 
-    document.getElementById("inicio").addEventListener("click", function (e) {
+
+    document.getElementById("inicio").addEventListener("click", function(e){
         e.preventDefault();
-        window.location.href = "menu.html";
+        window.location.href="menu.html";
+
     });
+
+
+
+    // =========================
+    // VALIDACIÓN FORMULARIO
+    // =========================
+
 
     let form = document.querySelector("#form");
     let btn = document.querySelector("#botonSiguiente");
 
+
     function validar() {
+
+
         let deshabilitar = false;
 
-        if (form.alumnos.value === "") deshabilitar = true;
-        if (form.evento.value === "") deshabilitar = true;
-        if (selectedDate === null) deshabilitar = true;
 
-        let recursosSeleccionados = document.querySelectorAll('input[type="checkbox"]:checked');
+        if (form.alumnos.value === "") {
+            deshabilitar = true;
+        }
 
-        if (recursosSeleccionados.length === 0) deshabilitar = true;
+
+        if (form.evento.value === "") {
+            deshabilitar = true;
+        }
+
+
+        if (selectedDate === null) {
+            deshabilitar = true;
+        }
+
+
+
+        let recursosSeleccionados =
+            document.querySelectorAll('input[type="checkbox"]:checked');
+
+
+
+        if (recursosSeleccionados.length === 0) {
+            deshabilitar = true;
+        }
+
+
 
         btn.disabled = deshabilitar;
+
     }
 
+
+
     form.addEventListener("input", validar);
+
     document.addEventListener("change", validar);
 
-    //ejecuta la validación inicial por si ya hay datos 
-    validar();
-});
 
-let selectedDate = null;
 
-document.addEventListener('DOMContentLoaded', function () {
+    // =========================
+    // CALENDARIO
+    // =========================
 
-    const monthYearEl = document.getElementById('month-year');
-    const daysEl = document.getElementById('days');
-    const prevMonthBtn = document.getElementById('prev-month');
-    const nextMonthBtn = document.getElementById('next-month');
-    const todayBtn = document.getElementById('today-btn');
+
+    const monthYearEl = document.getElementById("month-year");
+    const daysEl = document.getElementById("days");
+
+    const prevMonthBtn = document.getElementById("prev-month");
+    const nextMonthBtn = document.getElementById("next-month");
+    const todayBtn = document.getElementById("today-btn");
+
 
     let currentDate = new Date();
 
+    // Traer fechas reservadas del backend
+
+   async function cargarFechasOcupadas(){
+
+
+    try{
+
+
+        const usuario =
+        sessionStorage.getItem("usuario");
+
+
+        const clave =
+        sessionStorage.getItem("clave");
+
+
+
+        const respuesta =
+        await fetch(
+            `/api/reservas/fechas-ocupadas?usuario=${usuario}&clave=${clave}`
+        );
+
+
+
+        if(respuesta.ok){
+
+
+            reservasOcupadas =
+            await respuesta.json();
+
+
+            console.log(
+                "Reservas:",
+                reservasOcupadas
+            );
+
+
+        }else{
+
+
+            reservasOcupadas=[];
+
+
+        }
+
+
+
+    }catch(error){
+
+
+        console.error(error);
+
+        reservasOcupadas=[];
+
+
+    }
+
+
+}
+
+
+
     function renderCalendar() {
+
 
         daysEl.innerHTML = "";
 
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
 
-        const firstDayIndex = new Date(year, month, 1).getDay();
-        const lastDate = new Date(year, month + 1, 0).getDate();
 
-        const months = [
-            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        let year = currentDate.getFullYear();
+
+        let month = currentDate.getMonth();
+
+
+
+        const meses = [
+
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+
         ];
 
-        monthYearEl.textContent = months[month] + " " + year;
 
-        //Espacios vacíos antes del día 1
-        for (let i = 0; i < firstDayIndex; i++) {
-            daysEl.appendChild(document.createElement("div"));
+
+        monthYearEl.textContent =
+            meses[month] + " " + year;
+
+
+
+        let primerDia =
+            new Date(year, month, 1).getDay();
+
+
+
+        let ultimoDia =
+            new Date(year, month + 1, 0).getDate();
+
+
+
+        // espacios vacíos
+
+        for(let i = 0; i < primerDia; i++){
+
+            daysEl.appendChild(
+                document.createElement("div")
+            );
+
         }
 
-        const today = new Date();
 
-        //crear los días del mes
-        for (let i = 1; i <= lastDate; i++) {
 
-            const day = document.createElement("div");
+        let hoy = new Date();
+
+
+
+        for(let i = 1; i <= ultimoDia; i++){
+
+
+
+            let day =
+                document.createElement("div");
+
+
+
             day.classList.add("day");
+
+
             day.textContent = i;
 
-            const thisDate = new Date(year, month, i);
 
-            //marca el día de hoy
-            if (
-                i === today.getDate() &&
-                month === today.getMonth() &&
-                year === today.getFullYear()
-            ) {
+
+            let fecha =
+                new Date(year, month, i);
+
+
+
+            let fechaString =
+                `${year}-${String(month+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+
+
+
+            // =========================
+            // FECHAS OCUPADAS
+            // =========================
+
+
+            let reservaEseDia =
+reservasOcupadas.find(r =>
+    r.fecha === fechaString
+);
+
+
+
+if(reservaEseDia){
+
+
+    day.classList.add(
+        "fecha-ocupada"
+    );
+
+
+
+    day.title =
+    "Reservado: "
+    +
+    reservaEseDia.inicio
+    +
+    " - "
+    +
+    reservaEseDia.fin;
+
+
+
+}else{
+
+
+    day.addEventListener(
+        "click",
+        function(){
+
+
+            selectedDate = fecha;
+
+
+            renderCalendar();
+
+
+            validar();
+
+
+        }
+    );
+
+
+}
+
+
+
+
+
+            // Día actual
+
+            if(
+
+                hoy.getDate() === i &&
+                hoy.getMonth() === month &&
+                hoy.getFullYear() === year
+
+            ){
+
                 day.classList.add("today");
+
             }
 
-            //si habia un día seleccionado, vuelve a marcar la fecha de hoy
-            if (
+
+
+
+            // Día seleccionado
+
+            if(
+
                 selectedDate &&
-                i === selectedDate.getDate() &&
-                month === selectedDate.getMonth() &&
-                year === selectedDate.getFullYear()
-            ) {
+                selectedDate.getDate() === i &&
+                selectedDate.getMonth() === month &&
+                selectedDate.getFullYear() === year
+
+            ){
+
                 day.classList.add("selected");
+
             }
 
-            day.addEventListener("click", function () {
-                selectedDate = thisDate;
-                renderCalendar();
-            });
+
 
             daysEl.appendChild(day);
+
+
+
         }
+
+
     }
 
-    //mes anterior
-    prevMonthBtn.addEventListener("click", function () {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
-    });
 
-    //mes siguiente
-    nextMonthBtn.addEventListener("click", function () {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
-    });
 
-    //ir al mes actual
-    todayBtn.addEventListener("click", function () {
-        currentDate = new Date();
-        selectedDate = new Date();
-        renderCalendar();
-    });
+
+
+    // Cambiar mes anterior
+
+    prevMonthBtn.addEventListener(
+        "click",
+        function(){
+
+
+            currentDate.setMonth(
+                currentDate.getMonth()-1
+            );
+
+
+            renderCalendar();
+
+
+        }
+    );
+
+
+
+
+    // Cambiar mes siguiente
+
+    nextMonthBtn.addEventListener(
+        "click",
+        function(){
+
+
+            currentDate.setMonth(
+                currentDate.getMonth()+1
+            );
+
+
+            renderCalendar();
+
+
+        }
+    );
+
+
+
+
+
+    // Volver a hoy
+
+    todayBtn.addEventListener(
+        "click",
+        function(){
+
+
+            currentDate = new Date();
+
+            renderCalendar();
+
+
+        }
+    );
+
+
+
+
+    // cargar una sola vez
+
+    await cargarFechasOcupadas();
+
 
     renderCalendar();
+
+
+    validar();
+
+
+
 });
 
 
-//aca lo que hace es recorrer los datos de los checkboxs, 
-// guarda los nombres en un array de los que estan seleccioandos
-function obtenerRecursos() {
+
+
+// =========================
+// OBTENER RECURSOS
+// =========================
+
+
+function obtenerRecursos(){
+
     let recursos = [];
 
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(r => {
-        recursos.push(r.parentElement.textContent.trim());
+    document
+    .querySelectorAll(
+        'input[type="checkbox"]:checked'
+    )
+    .forEach(r => {
+
+        recursos.push(
+            r.value
+        );
+
     });
 
     return recursos;
 }
-
-
-// esto es como un "paquete" que guarda las reservas que se hacen, cuando se da click en sgte
-//se inicializa con cada reserva
-
-document.getElementById("botonSiguiente").addEventListener("click", function () {
-
-    let reservaEvento = {
-        alumnos: document.querySelector("#alumnos").value,
-        actividad: document.querySelector("#evento").value,
-        fecha: selectedDate,
-        recursos: obtenerRecursos()
-    };
-
-    console.log(reservaEvento);
-
-    sessionStorage.setItem("reservaEvento", JSON.stringify(reservaEvento)
-    );
-});

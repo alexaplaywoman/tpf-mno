@@ -1,0 +1,33 @@
+I. 07/14 16:28:17. SQL Anywhere Personal Server Version 11.0.1.2044
+I. 07/14 16:28:17. Developer edition, not licensed for deployment.
+I. 07/14 16:28:17. 
+I. 07/14 16:28:17. Copyright © 2001-2009, iAnywhere Solutions, Inc.
+I. 07/14 16:28:17. Portions copyright © 1988-2009, Sybase, Inc. All rights reserved.
+I. 07/14 16:28:17. Use of this software is governed by the Sybase License Agreement. Refer to http://www.sybase.com/softwarelicenses
+I. 07/14 16:28:17. 
+I. 07/14 16:28:17. 12 logical processor(s) on 1 physical processor(s) detected.
+I. 07/14 16:28:17. This server is licensed to:
+I. 07/14 16:28:17.     Developer Edition
+I. 07/14 16:28:17.     Restricted Use
+I. 07/14 16:28:17. Running Unrecognized Windows version Build 9200  on X86_64
+I. 07/14 16:28:17. Server built for X86_64 processor architecture
+I. 07/14 16:28:17. 2380K of memory used for caching
+I. 07/14 16:28:17. Minimum cache size: 2048K, maximum cache size: 14767432K
+I. 07/14 16:28:17. Using a maximum page size of 4096 bytes
+I. 07/14 16:28:17. Starting database "tpf_reservas" (C:\Users\HP\Documents\UCA\4to_semestre\tpf-mno\db\tpf_reservas.db) at Tue Jul 14 2026 16:28
+I. 07/14 16:28:17. Performance warning: Database file "C:\Users\HP\Documents\UCA\4to_semestre\tpf-mno\db\tpf_reservas.db" consists of 7 disk fragments
+I. 07/14 16:28:17. Database recovery in progress
+I. 07/14 16:28:17.     Last checkpoint at Tue Jul 14 2026 16:24
+I. 07/14 16:28:17.     Transaction log: tpf_reservas.log...
+I. 07/14 16:28:17.     Checkpointing...
+I. 07/14 16:28:17. Starting checkpoint of "tpf_reservas" (tpf_reservas.db) at Tue Jul 14 2026 16:28
+I. 07/14 16:28:17. Finished checkpoint of "tpf_reservas" (tpf_reservas.db) at Tue Jul 14 2026 16:28
+I. 07/14 16:28:17. Recovery complete
+I. 07/14 16:28:17. Database "tpf_reservas" (tpf_reservas.db) started at Tue Jul 14 2026 16:28
+I. 07/14 16:28:17. Database server started at Tue Jul 14 2026 16:28
+I. 07/14 16:28:17. Trying to start SharedMemory link ...
+I. 07/14 16:28:17.     SharedMemory link started successfully
+I. 07/14 16:28:17. Trying to start TDS (TCPIP) link ...
+I. 07/14 16:28:17. Starting on port 2638
+I. 07/14 16:28:17.     TDS (TCPIP) link started successfully
+I. 07/14 16:28:17. Now accepting requests

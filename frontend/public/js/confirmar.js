@@ -1,63 +1,220 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-document.getElementById("inicio").addEventListener("click", function () {
-    window.location.href = "menu.html";
-});
+    document.getElementById("inicio").addEventListener("click", function(e){
+        e.preventDefault();
+        window.location.href="menu.html";
 
-document.getElementById("botonAtras").addEventListener("click", function () {
-    window.location.href = "laboratorios.html";
-});
+    });
 
-document.getElementById("botonConfirmar").addEventListener("click", function () {
-    window.location.href = "menu.html";
-});
+    document.getElementById("botonAtras").addEventListener("click", function(){
+        window.location.href="laboratorios.html";
+    });
 
-// FORMULARIO - Desahabilitar siguiente si el campo está en blanco
-    let form = document.querySelector("#form");
-    let btn = document.querySelector("#botonConfirmar");
+    let form = document.getElementById("form");
+    let botonConfirmar = document.getElementById("botonConfirmar");
 
-    function validar() {
-        let desabilitar = false;
-        if (form.tipoDocumento.value === "") desabilitar = true;
-        if (form.numeroDocumento.value === "") desabilitar = true;
-        if (form.nombre.value === "") desabilitar = true;
-        if (form.apellido.value === "") desabilitar = true;
-        if (form.correo.value === "") desabilitar = true;
-        if (form.telefono.value === "") desabilitar = true;
-        if (form.departamento.value === "") desabilitar = true;
-        if (form.solicitante.value === "") desabilitar = true;
 
-        btn.disabled = desabilitar;
+    function validar(){
+
+        let deshabilitar = false;
+        if(form.tipoDocumento.value==="")
+            deshabilitar=true;
+        if(form.numeroDocumento.value==="")
+            deshabilitar=true;
+        if(form.nombre.value==="")
+            deshabilitar=true;
+        if(form.apellido.value==="")
+            deshabilitar=true;
+        if(form.correo.value==="")
+            deshabilitar=true;
+        if(form.telefono.value==="")
+            deshabilitar=true;
+        if(form.departamento.value==="")
+            deshabilitar=true;
+        if(form.solicitante.value==="")
+            deshabilitar=true;
+        botonConfirmar.disabled=deshabilitar;
 
     }
 
     form.addEventListener("input", validar);
 
-    // ejecutar validación inicial por si ya hay datos
     validar();
+    // Recuperar datos anteriores
 
-    //recupera los datos guadados anteriormente
+    let edificio = sessionStorage.getItem(
+        "edificioSeleccionado"
+    );
 
-    let edificio = sessionStorage.getItem("edificioSeleccionado");
+    let reservaEvento = JSON.parse(
+        sessionStorage.getItem("reservaEvento")
+    );
 
-    let reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
+    let reservaLaboratorio = JSON.parse(
+        sessionStorage.getItem("reservaLaboratorio")
+    );
 
-    let reservaLaboratorio = JSON.parse(sessionStorage.getItem("reservaLaboratorio"));
+    // Mostrar resumen reserva
 
-    //muestra los datos de la reserva
+    if(reservaEvento && reservaLaboratorio){
+        let fecha = new Date(reservaEvento.fecha);
 
-    let fecha = new Date(reservaEvento.fecha);
+        document.getElementById("fechaReserva").textContent = fecha.toLocaleDateString("es-PY");
 
-    document.getElementById("fechaReserva").textContent = fecha.toLocaleDateString("es-PY");
+        document.getElementById("cantidadReserva").textContent = reservaEvento.alumnos;
 
-    document.getElementById("cantidadReserva").textContent = reservaEvento.alumnos;
+        document.getElementById("actividadReserva").textContent = reservaEvento.actividad;
 
-    document.getElementById("actividadReserva").textContent = reservaEvento.actividad;
+        document.getElementById("edificioReserva").textContent = edificio;
 
-    document.getElementById("edificioReserva").textContent = edificio;
+        document.getElementById("laboratorioReserva").textContent = reservaLaboratorio.laboratorio;
 
-    document.getElementById("laboratorioReserva").textContent = reservaLaboratorio.laboratorio;
+        document.getElementById("horarioReserva")
+        .textContent =
+        reservaLaboratorio.horaInicio + " - " + reservaLaboratorio.horaFin;
 
-    document.getElementById("horarioReserva").textContent = reservaLaboratorio.horaInicio + " - " + reservaLaboratorio.horaFin;
+    }
+    // Primer botón confirmar (abre modal)
+
+    botonConfirmar.addEventListener("click", function(){
+        let datosSolicitante = {
+
+            tipoDocumento:
+            document.getElementById("tipoDocumento").value,
+
+            numeroDocumento:
+            document.getElementById("numeroDocumento").value,
+
+            nombre:
+            document.getElementById("nombre").value,
+
+            apellido:
+            document.getElementById("apellido").value,
+
+            correo:
+            document.getElementById("correo").value,
+
+            telefono:
+            document.getElementById("telefono").value,
+
+            departamento:
+            document.getElementById("departamento").value,
+
+            solicitante:
+            document.getElementById("solicitante").value
+
+        };
+
+        sessionStorage.setItem(
+            "datosSolicitante",
+            JSON.stringify(datosSolicitante)
+        );
+
+        let modal = new bootstrap.Modal(
+            document.getElementById("modalConfirmar")
+        );
+
+        modal.show();
+    });
+
+    // Confirmación definitiva
+
+    document.getElementById("confirmarReservaFinal").addEventListener("click", async function () {
+
+        let datosSolicitante = JSON.parse(
+            sessionStorage.getItem("datosSolicitante")
+        );
+
+        let reservaEvento = JSON.parse(
+            sessionStorage.getItem("reservaEvento")
+        );
+
+        let reservaLaboratorio = JSON.parse(
+            sessionStorage.getItem("reservaLaboratorio")
+        );
+
+        const usuario = sessionStorage.getItem("usuario");
+        const clave = sessionStorage.getItem("clave");
+
+        try {
+
+            // 1. Verificar si el solicitante ya existe
+            const respuestaCheck = await fetch(
+                `/api/solicitantes/${datosSolicitante.numeroDocumento}?usuario=${usuario}&clave=${clave}`
+            );
+            const dataCheck = await respuestaCheck.json();
+
+            // 2. Si no existe, lo creamos
+            if (!dataCheck.success) {
+
+                const nuevoSolicitante = {
+                    cedula_identidad: datosSolicitante.numeroDocumento,
+                    correo: datosSolicitante.correo,
+                    nombre: datosSolicitante.nombre,
+                    apellido: datosSolicitante.apellido,
+                    telefono: datosSolicitante.telefono,
+                    departamento: datosSolicitante.departamento,
+                    usuario: usuario,
+                    clave: clave
+                };
+
+                const respuestaSolicitante = await fetch("/api/solicitantes/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(nuevoSolicitante)
+                });
+
+                const dataSolicitante = await respuestaSolicitante.json();
+
+                if (!dataSolicitante.success) {
+                    alert(dataSolicitante.error || "No se pudo registrar el solicitante.");
+                    return;
+                }
+            }
+
+            // 3. Ahora sí, creamos la reserva
+            let reservaCompleta = {
+                numero_laboratorio: Number(reservaLaboratorio.laboratorio),
+                cedula_identidad: datosSolicitante.numeroDocumento,
+                correo: datosSolicitante.correo,
+                id_estado_reserva: 1,
+                id_tipo_actividad: reservaEvento.actividad,
+                fecha_a_reservar: reservaEvento.fecha.split("T")[0],
+                hora_inicio: reservaLaboratorio.horaInicio,
+                hora_fin: reservaLaboratorio.horaFin,
+                cantidad_alumnos: Number(reservaEvento.alumnos),
+                recursos: reservaEvento.recursos,
+                usuario: usuario,
+                clave: clave
+            };
+
+            console.log("Datos preparados para backend:");
+            console.log(reservaCompleta);
+
+            const respuestaReserva = await fetch("/api/reservas/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(reservaCompleta)
+            });
+
+            const dataReserva = await respuestaReserva.json();
+
+            console.log("Respuesta backend:");
+            console.log(dataReserva);
+
+            if (dataReserva.success) {
+                alert("Reserva creada correctamente");
+                window.location.href = "menu.html";
+            } else {
+                alert(dataReserva.error);
+            }
+
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Error al enviar la reserva");
+        }
+
+    });
+
 });
-
+ 

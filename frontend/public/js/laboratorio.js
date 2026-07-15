@@ -4,9 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById("inicio").addEventListener("click", function (e) {
         e.preventDefault();
+        console.log("Hice clic en Inicio");
         window.location.href = "menu.html";
     });
-
 
     document.getElementById("botonSiguiente").addEventListener("click", function (e) {
         e.preventDefault();
@@ -19,16 +19,13 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
 
-        sessionStorage.setItem(
-            "reservaLaboratorio",
-            JSON.stringify(reservaLaboratorio)
+        sessionStorage.setItem("reservaLaboratorio", JSON.stringify(reservaLaboratorio)
         );
 
 
         window.location.href = "confirmar.html";
 
     });
-
 
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
