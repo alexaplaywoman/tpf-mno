@@ -1,66 +1,42 @@
 let selectedDate = null;
 let reservasOcupadas = [];
 
-// Recursos reales según el laboratorio (tal como están en la base de datos)
-const recursosPorLaboratorio = {
-    1: [
-        { id: 1, nombre: "Proyector" },
-        { id: 2, nombre: "Aire acondicionado" }
-    ],
-    2: [
-        { id: 3, nombre: "Proyector" },
-        { id: 4, nombre: "Pizarra digital" }
-    ],
-    3: [
-        { id: 5, nombre: "Impresora 3D" },
-        { id: 6, nombre: "Proyector" }
-    ],
-    4: [
-        { id: 7, nombre: "Aire acondicionado" }
-    ],
-    5: [
-        { id: 8, nombre: "Proyector" }
-    ]
-};
-
+// Los recursos se traen del backend (DBA.RECURSOS), no se hardcodean acá,
+// porque los tipos y su disponibilidad por laboratorio los administra el admin.
 function renderRecursos() {
+    const usuario = sessionStorage.getItem('usuario');
+    const clave = sessionStorage.getItem('clave');
     const contenedor = document.getElementById("listaRecursos");
-    contenedor.innerHTML = "";
 
-    const recursosUnicos = obtenerTodosLosRecursos();
+    fetch(`/api/recursos/tipos?usuario=${usuario}&clave=${clave}`)
+        .then(res => res.json())
+        .then(tipos => {
+            contenedor.innerHTML = "";
 
-    if (recursosUnicos.length === 0) {
-        contenedor.innerHTML = "<p class='text-muted'>No hay recursos disponibles.</p>";
-        return;
-    }
-
-    recursosUnicos.forEach(function (recurso) {
-        const div = document.createElement("div");
-        div.className = "form-check mb-2";
-
-        div.innerHTML = `
-            <input class="form-check-input" type="checkbox" id="recurso${recurso.id}" value="${recurso.id}">
-            <label class="form-check-label" for="recurso${recurso.id}">${recurso.nombre}</label>
-        `;
-
-        contenedor.appendChild(div);
-    });
-}
-
-function obtenerTodosLosRecursos() {
-    const vistos = new Set();
-    const resultado = [];
-
-    Object.values(recursosPorLaboratorio).forEach(function (listaDeUnLab) {
-        listaDeUnLab.forEach(function (recurso) {
-            if (!vistos.has(recurso.nombre)) {
-                vistos.add(recurso.nombre);
-                resultado.push(recurso);
+            if (!tipos || tipos.length === 0) {
+                contenedor.innerHTML = "<p class='text-muted'>No hay recursos disponibles.</p>";
+                return;
             }
-        });
-    });
 
-    return resultado;
+            tipos.forEach(function (tipo) {
+                const nombre = tipo.NOMBRE;
+                const id = "recurso" + nombre.replace(/\s+/g, '');
+
+                const div = document.createElement("div");
+                div.className = "form-check mb-2";
+
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" id="${id}" value="${nombre}">
+                    <label class="form-check-label" for="${id}">${nombre}</label>
+                `;
+
+                contenedor.appendChild(div);
+            });
+        })
+        .catch(err => {
+            console.error('Error al cargar recursos:', err);
+            contenedor.innerHTML = "<p class='text-muted'>No se pudieron cargar los recursos.</p>";
+        });
 }
 
 
@@ -114,6 +90,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             // todavía no se eligió laboratorio.)
             if(reservaEditar.recursos){
 
+<<<<<<< HEAD
                 const nombresRecursos = String(reservaEditar.recursos)
                     .split(",")
                     .map(n => n.trim())
@@ -122,6 +99,14 @@ document.addEventListener("DOMContentLoaded", async function () {
                 document
                     .querySelectorAll('#listaRecursos input[type="checkbox"]')
                     .forEach(checkbox => {
+=======
+                reservaEditar.recursos.forEach(nombre => {
+
+                    let checkbox =
+                        document.getElementById(
+                            "recurso" + nombre.replace(/\s+/g, '')
+                        );
+>>>>>>> 6d8136055d594a7f0273ba8e99b3313f54281ddb
 
                         const label = document.querySelector(`label[for="${checkbox.id}"]`);
 

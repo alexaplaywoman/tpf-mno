@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Agregar Laboratorio</title>
+
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+</head>
+
+
+<body class="bg-light">
+
+
+
+<nav class="navbar navbar-dark bg-secondary px-3">
+
+
+    <a id="inicio"
+       class="btn btn-dark btn-sm"
+       href="#">
+
+        Atrás
+
+    </a>
+
+
+</nav>
+
+
+
+
+
+
+
+<div class="container mt-5">
+
+
+    <div class="card shadow mx-auto"
+         style="max-width:600px;">
+
+
+        <div class="card-body">
+
+
+            <h2 class="text-center mb-4">
+
+                Agregar Nuevo Laboratorio
+
+            </h2>
+
+
+
+
+
+
+            <form id="add-laboratorio-form">
+
+
+
+
+
+                <!-- NUMERO -->
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Número laboratorio
+
+                    </label>
+
+
+                    <input type="number"
+                           id="numeroLaboratorio"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+
+
+
+
+
+                <!-- EDIFICIO -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Edificio
+
+                    </label>
+
+
+
+                    <select 
+                        id="edificio"
+                        class="form-control"
+                        required>
+
+
+                        <option value="">
+
+                            Seleccione un edificio
+
+                        </option>
+
+
+                    </select>
+
+
+
+                </div>
+
+
+
+                <!-- PISO -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Piso
+
+                    </label>
+
+
+
+                    <select
+                        id="piso"
+                        class="form-control"
+                        required>
+
+
+                        <option value="">
+
+                            Seleccione un edificio primero
+
+                        </option>
+
+
+                    </select>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+                <!-- CAPACIDAD -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Capacidad de alumnos
+
+                    </label>
+
+
+
+                    <input type="number"
+                           id="capacidad"
+                           class="form-control"
+                           required>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+                <!-- COMPUTADORAS -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Cantidad de computadoras
+
+                    </label>
+
+
+
+                    <input type="number"
+                           id="computadoras"
+                           class="form-control"
+                           required>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+                <!-- INTERNET -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Velocidad conexión Internet
+
+                    </label>
+
+
+
+                    <input type="text"
+                           id="internet"
+                           class="form-control"
+                           placeholder="Ej: 500 Mbps"
+                           required>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+                <button type="submit"
+                        class="btn btn-dark w-100">
+
+
+                    Agregar Laboratorio
+
+
+                </button>
+
+
+
+
+
+
+                <div id="error-message"
+                     class="text-danger text-center mt-3">
+
+
+                </div>
+
+
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+
+
+<script src="./js/add_laboratorio.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+</body>
+
+</html>
