@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <td>
 
-                    ${escapeHtml(lab.EDIFICIO)}
+                    ${escapeHtml(lab.CORREO)}
 
                 </td>
 
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <td>
 
-                    ${escapeHtml(lab.CAPACIDAD_ALUMNOS)}
+                    ${escapeHtml(lab.ID_CARRERA)}
 
                 </td>
 
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <td>
 
-                    ${escapeHtml(lab.CANTIDAD_COMPUTADORAS)}
+                    ${escapeHtml(lab.ID_SOLICITANTE)}
 
                 </td>
 
@@ -295,10 +295,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <td>
 
-                    ${escapeHtml(lab.VELOCIDAD_CONEXION_INTERNET)}
+                    ${escapeHtml(lab.TIPO_DOCUMENTO )}
 
                 </td>
 
+                <td>
+
+                    ${escapeHtml(lab.TIPO_DOCUMENTO )}
+
+                </td>
+
+                <td>
+
+                    ${escapeHtml(lab.TIPO_DOCUMENTO )}
+
+                </td>
 
 
 
