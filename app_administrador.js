@@ -20,20 +20,24 @@ app.get('/', (req, res) => {
 });
 
 // Páginas del sistema para que en el url se escriba un valor y lo busque en el sitema
-app.get('/menu', (req, res) => {
+app.get('/menú_administrador', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/menú_administrador.html'));
+});
+
+app.get('/laboratorios_administrador', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/laboratorios_administrador.html'));
 });
 
-app.get('/edificio', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/edificio.html'));
+app.get('/list_laboratorios', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/list_laboratorios.html'));
 });
 
-app.get('/evento', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/evento.html'));
+app.get('/add_laboratorios', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/add_laboratorios.html'));
 });
 
-app.get('/laboratorios', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/laboratorios.html'));
+app.get('/uod_laboratorios', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/upd_laboratorios.html'));
 });
 
 app.get('/confirmar', (req, res) => {
