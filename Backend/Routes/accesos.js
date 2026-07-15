@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Sybase = require('sybase');
 
-// Ruta: POST /api/login
+// Ruta: POST /api/accesos
 router.post('/', (req, res) => {
   const { usuario, clave } = req.body;
 
@@ -15,9 +15,15 @@ router.post('/', (req, res) => {
       return res.status(401).json({ exito: false, mensaje: "Usuario o contraseña inválidos." });
     }
 
-    // Si se conecta correctamente, desconectar y retornar éxito
+    // Si se conecta correctamente, desconectar
     db.disconnect();
-    return res.json({ exito: true });
+
+    // Determinar si el usuario es administrador
+    // (por ahora, comparamos directamente contra el nombre de usuario 'admin',
+    // que es el único que pertenece al grupo ADMINISTRADORES según el script SQL)
+    const esAdmin = usuario.toLowerCase() === 'admin';
+
+    return res.json({ exito: true, esAdmin: esAdmin });
   });
 });
 

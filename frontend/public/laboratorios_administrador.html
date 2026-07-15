@@ -13,163 +13,155 @@
 
 <body>
 
-<nav class="navbar w-100">
-    <a id="inicio" class="navbar-brand btn btn-sm" href="login.html">
-        Inicio
-    </a> 
-</nav>
+    <nav class="navbar w-100">
+        <a id="inicio" class="navbar-brand btn btn-sm" href="login.html">
+            Inicio
+        </a>
+    </nav>
 
+    <div class="contenido py-5">
 
-<div class="contenido d-flex justify-content-center vh-100 pt-5">
+        <div class="container">
 
-    <div class="container">
+            <h1 class="text-center mt-3 mb-3"><b>LAB KONTROL</b></h1>
 
-        <h1 class="text-center mt-3 mb-3"><b>LAB KONTROL</b></h1>
+            <h4 class="text-center mb-4">
+                Administración de laboratorios y recursos
+            </h4>
 
-        <h4 class="text-center mb-4">
-            Habilitar o deshabilitar los laboratorios y sus recursos
-        </h4>
+            <!-- Tarjeta de información -->
+            <div class="card shadow-sm border-0 mb-4 mx-auto" style="max-width: 900px;">
 
+                <div class="card-header text-white text-center" style="background: var(--purple);">
+                    <strong>Información</strong>
+                </div>
 
-        <div class="mx-auto" style="width: 70%;">
+                <div class="card-body" style="background: var(--cards);">
 
+                    <p class="mb-0">
+                        ✔ Los <strong>checkboxes de la tabla</strong> indican los recursos habilitados para cada
+                        laboratorio.
+                    </p>
 
-            <table class="table table-bordered table-hover text-center">
+                </div>
 
+            </div>
 
-                <thead>
-                    <tr>
+            <div class="mx-auto" style="width: 90%;">
 
-                        <th>Recursos</th>
+                <h5 class="text-center mb-3">
+                    <b>Habilitar o deshabilitar laboratorios por mantenimiento</b>
+                </h5>
 
+                <table class="table table-bordered table-hover text-center align-middle">
 
-                        <th>
-                            Laboratorio 1
-                            <br>
-                            <input class="lab-check" type="checkbox" id="lab1">
-                        </th>
+                    <thead class="table-light">
 
+                        <tr>
 
-                        <th>
-                            Laboratorio 2
-                            <br>
-                            <input class="lab-check" type="checkbox" id="lab2">
-                        </th>
+                            <th>Recursos</th>
 
+                            <th>
+                                Laboratorio 1
+                            </th>
 
-                        <th>
-                            Laboratorio 3
-                            <br>
-                            <input class="lab-check" type="checkbox" id="lab3">
-                        </th>
+                            <th>
+                                Laboratorio 2
 
+                            </th>
 
-                        <th>
-                            Laboratorio 4
-                            <br>
-                            <input class="lab-check" type="checkbox" id="lab4">
-                        </th>
+                            <th>
+                                Laboratorio 3
+                                
+                            </th>
 
+                            <th>
+                                Laboratorio 4
+                                
+                            </th>
 
-                        <th>
-                            Laboratorio 5
-                            <br>
-                            <input class="lab-check" type="checkbox" id="lab5">
-                        </th>
+                            <th>
+                                Laboratorio 5
+                                
+                            </th>
 
-                    </tr>
-                </thead>
+                        </tr>
 
+                    </thead>
 
+                    <tbody id="laboratorios-list">
 
-                <tbody id="laboratorios-list">
+                        <tr>
+                            <td>Conexión a Internet</td>
 
+                            <td><input class="form-check-input" type="checkbox" id="internet1"></td>
+                            <td><input class="form-check-input" type="checkbox" id="internet2"></td>
+                            <td><input class="form-check-input" type="checkbox" id="internet3"></td>
+                            <td><input class="form-check-input" type="checkbox" id="internet4"></td>
+                            <td><input class="form-check-input" type="checkbox" id="internet5"></td>
+                        </tr>
 
-                    <tr>
-                        <td>Conexión a Internet</td>
+                        <tr>
+                            <td>Proyector</td>
 
-                        <td><input class="form-check-input" type="checkbox" id="internet1"></td>
-                        <td><input class="form-check-input" type="checkbox" id="internet2"></td>
-                        <td><input class="form-check-input" type="checkbox" id="internet3"></td>
-                        <td><input class="form-check-input" type="checkbox" id="internet4"></td>
-                        <td><input class="form-check-input" type="checkbox" id="internet5"></td>
-                    </tr>
+                            <td><input class="form-check-input" type="checkbox" id="proyector1"></td>
+                            <td><input class="form-check-input" type="checkbox" id="proyector2"></td>
+                            <td><input class="form-check-input" type="checkbox" id="proyector3"></td>
+                            <td><input class="form-check-input" type="checkbox" id="proyector4"></td>
+                            <td><input class="form-check-input" type="checkbox" id="proyector5"></td>
+                        </tr>
 
+                        <tr>
+                            <td>Aire acondicionado</td>
 
+                            <td><input class="form-check-input" type="checkbox" id="aire1"></td>
+                            <td><input class="form-check-input" type="checkbox" id="aire2"></td>
+                            <td><input class="form-check-input" type="checkbox" id="aire3"></td>
+                            <td><input class="form-check-input" type="checkbox" id="aire4"></td>
+                            <td><input class="form-check-input" type="checkbox" id="aire5"></td>
+                        </tr>
 
-                    <tr>
-                        <td>Proyector</td>
+                        <tr>
+                            <td>Impresora 3D</td>
 
-                        <td><input class="form-check-input" type="checkbox" id="proyector1"></td>
-                        <td><input class="form-check-input" type="checkbox" id="proyector2"></td>
-                        <td><input class="form-check-input" type="checkbox" id="proyector3"></td>
-                        <td><input class="form-check-input" type="checkbox" id="proyector4"></td>
-                        <td><input class="form-check-input" type="checkbox" id="proyector5"></td>
-                    </tr>
+                            <td><input class="form-check-input" type="checkbox" id="impresora1"></td>
+                            <td><input class="form-check-input" type="checkbox" id="impresora2"></td>
+                            <td><input class="form-check-input" type="checkbox" id="impresora3"></td>
+                            <td><input class="form-check-input" type="checkbox" id="impresora4"></td>
+                            <td><input class="form-check-input" type="checkbox" id="impresora5"></td>
+                        </tr>
 
+                        <tr>
+                            <td>Pizarra Digital</td>
 
+                            <td><input class="form-check-input" type="checkbox" id="digital1"></td>
+                            <td><input class="form-check-input" type="checkbox" id="digital2"></td>
+                            <td><input class="form-check-input" type="checkbox" id="digital3"></td>
+                            <td><input class="form-check-input" type="checkbox" id="digital4"></td>
+                            <td><input class="form-check-input" type="checkbox" id="digital5"></td>
+                        </tr>
 
-                    <tr>
-                        <td>Aire Acondicionado</td>
+                        <tr>
+                            <td>Pizarra Acrílica</td>
 
-                        <td><input class="form-check-input" type="checkbox" id="aire1"></td>
-                        <td><input class="form-check-input" type="checkbox" id="aire2"></td>
-                        <td><input class="form-check-input" type="checkbox" id="aire3"></td>
-                        <td><input class="form-check-input" type="checkbox" id="aire4"></td>
-                        <td><input class="form-check-input" type="checkbox" id="aire5"></td>
-                    </tr>
+                            <td><input class="form-check-input" type="checkbox" id="pizarra1"></td>
+                            <td><input class="form-check-input" type="checkbox" id="pizarra2"></td>
+                            <td><input class="form-check-input" type="checkbox" id="pizarra3"></td>
+                            <td><input class="form-check-input" type="checkbox" id="pizarra4"></td>
+                            <td><input class="form-check-input" type="checkbox" id="pizarra5"></td>
+                        </tr>
 
+                    </tbody>
 
+                </table>
 
-                    <tr>
-                        <td>Impresora 3D</td>
-
-                        <td><input class="form-check-input" type="checkbox" id="impresora1"></td>
-                        <td><input class="form-check-input" type="checkbox" id="impresora2"></td>
-                        <td><input class="form-check-input" type="checkbox" id="impresora3"></td>
-                        <td><input class="form-check-input" type="checkbox" id="impresora4"></td>
-                        <td><input class="form-check-input" type="checkbox" id="impresora5"></td>
-                    </tr>
-
-
-
-                    <tr>
-                        <td>Pizarra Digital</td>
-
-                        <td><input class="form-check-input" type="checkbox" id="digital1"></td>
-                        <td><input class="form-check-input" type="checkbox" id="digital2"></td>
-                        <td><input class="form-check-input" type="checkbox" id="digital3"></td>
-                        <td><input class="form-check-input" type="checkbox" id="digital4"></td>
-                        <td><input class="form-check-input" type="checkbox" id="digital5"></td>
-                    </tr>
-
-
-
-                    <tr>
-                        <td>Pizarra Acrílica</td>
-
-                        <td><input class="form-check-input" type="checkbox" id="pizarra1"></td>
-                        <td><input class="form-check-input" type="checkbox" id="pizarra2"></td>
-                        <td><input class="form-check-input" type="checkbox" id="pizarra3"></td>
-                        <td><input class="form-check-input" type="checkbox" id="pizarra4"></td>
-                        <td><input class="form-check-input" type="checkbox" id="pizarra5"></td>
-                    </tr>
-
-
-                </tbody>
-
-
-            </table>
-
+            </div>
 
         </div>
 
     </div>
 
-</div>
-
-
-<script src="./js/"></script>
+    <script src="./js/"></script>
 
 </body>
 

@@ -16,12 +16,12 @@ app.use(express.static(path.join(__dirname, 'frontend/public')));
 
 // Página principal (login.html)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/login.html'));
+    res.sendFile(path.join(__dirname, 'frontend/public/login_administrador.html'));
 });
 
 // Páginas del sistema para que en el url se escriba un valor y lo busque en el sitema
 app.get('/menu', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/menu.html'));
+    res.sendFile(path.join(__dirname, 'frontend/public/laboratorios_administrador.html'));
 });
 
 app.get('/edificio', (req, res) => {
