@@ -67,7 +67,10 @@
                     <label for="alumnos" class="form-label">
                         Cantidad de alumnos
                     </label>
-                    <input type="number" id="alumnos" name="alumnos" class="form-control" required>
+                   <input type="number" id="alumnos" name="alumnos" class="form-control" placeholder="Ej: 25" min="1" required>
+                    <small class="form-text text-muted">
+                        Debe ser mayor a 0. Los laboratorios tienen una capacidad máxima.
+                    </small>
                 </div>
 
                 <div class="mb-3 text-start">
@@ -78,17 +81,17 @@
 
                     <select class="form-select" id="evento" name="evento" required>
 
-                        <option value="">Seleccionar</option>
+                        <option value=""selected disabled class="text-muted">Seleccionar una actividad</option>
                         <option value="1">Evento Institucional</option>
                         <option value="2">Examen</option>
                         <option value="3">Defensa de Proyecto</option>
                         <option value="4">Exposición</option>
                         <option value="5">Reunión Directiva</option>
                         <option value="6">Clase</option>
-
-
                     </select>
-
+                    <small class="form-text text-muted">
+                        Cada actividad tiene una duración máxima y prioridad distinta.
+                    </small>
                 </div>
 
                 <div id="fecha" class="calendar-container">

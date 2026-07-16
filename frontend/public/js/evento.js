@@ -285,195 +285,85 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
 
-    function renderCalendar() {
-
+function renderCalendar() {
 
         daysEl.innerHTML = "";
 
-
-
-        let year = currentDate.getFullYear();
-
+        let year  = currentDate.getFullYear();
         let month = currentDate.getMonth();
 
-
-
         const meses = [
-
-            "Enero",
-            "Febrero",
-            "Marzo",
-            "Abril",
-            "Mayo",
-            "Junio",
-            "Julio",
-            "Agosto",
-            "Septiembre",
-            "Octubre",
-            "Noviembre",
-            "Diciembre"
-
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
         ];
 
+        monthYearEl.textContent = meses[month] + " " + year;
 
+        let primerDia = new Date(year, month, 1).getDay();
+        let ultimoDia = new Date(year, month + 1, 0).getDate();
 
-        monthYearEl.textContent =
-            meses[month] + " " + year;
-
-
-
-        let primerDia =
-            new Date(year, month, 1).getDay();
-
-
-
-        let ultimoDia =
-            new Date(year, month + 1, 0).getDate();
-
-
-
-        // espacios vacíos
-
-        for(let i = 0; i < primerDia; i++){
-
-            daysEl.appendChild(
-                document.createElement("div")
-            );
-
+        // espacios vacíos antes del día 1
+        for (let i = 0; i < primerDia; i++) {
+            daysEl.appendChild(document.createElement("div"));
         }
-
-
 
         let hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);   // comparar solo la fecha, sin la hora
 
+        for (let i = 1; i <= ultimoDia; i++) {
 
-
-        for(let i = 1; i <= ultimoDia; i++){
-
-
-
-            let day =
-                document.createElement("div");
-
-
-
+            let day = document.createElement("div");
             day.classList.add("day");
-
-
             day.textContent = i;
 
-
-
-            let fecha =
-                new Date(year, month, i);
-
-
-
+            let fecha = new Date(year, month, i);
             let fechaString =
-                `${year}-${String(month+1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+                `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
 
+            // Reglas que dependen SOLO de la fecha (espejo de fn_validar_fechas_y_fin_semana).
+            // SQL DOW(): 1=domingo, 7=sabado.  JS getDay(): 0=domingo, 6=sabado.
+            let dow           = fecha.getDay();
+            let esFinDeSemana = (dow === 0 || dow === 6);
+            let esPasado      = fecha < hoy;   // hoy NO es pasado (igual que "fecha < CURRENT DATE")
 
+            let reservaEseDia = reservasOcupadas.find(r => r.fecha === fechaString);
 
-            // =========================
-            // FECHAS OCUPADAS
-            // =========================
+            if (esPasado || esFinDeSemana) {
 
+                day.classList.add("deshabilitado");
+                day.title = esPasado
+                    ? "Fecha pasada"
+                    : "Fin de semana: no se permiten reservas";
 
-            let reservaEseDia =
-reservasOcupadas.find(r =>
-    r.fecha === fechaString
-);
+            } else if (reservaEseDia) {
 
+                day.classList.add("fecha-ocupada");
+                day.title = "Reservado: " + reservaEseDia.inicio + " - " + reservaEseDia.fin;
 
+            } else {
 
-if(reservaEseDia){
-
-
-    day.classList.add(
-        "fecha-ocupada"
-    );
-
-
-
-    day.title =
-    "Reservado: "
-    +
-    reservaEseDia.inicio
-    +
-    " - "
-    +
-    reservaEseDia.fin;
-
-
-
-}else{
-
-
-    day.addEventListener(
-        "click",
-        function(){
-
-
-            selectedDate = fecha;
-
-
-            renderCalendar();
-
-
-            validar();
-
-
-        }
-    );
-
-
-}
-
-
-
-
+                day.addEventListener("click", function () {
+                    selectedDate = fecha;
+                    renderCalendar();
+                    validar();
+                });
+            }
 
             // Día actual
-
-            if(
-
-                hoy.getDate() === i &&
-                hoy.getMonth() === month &&
-                hoy.getFullYear() === year
-
-            ){
-
+            if (hoy.getDate() === i && hoy.getMonth() === month && hoy.getFullYear() === year) {
                 day.classList.add("today");
-
             }
-
-
-
 
             // Día seleccionado
-
-            if(
-
-                selectedDate &&
+            if (selectedDate &&
                 selectedDate.getDate() === i &&
                 selectedDate.getMonth() === month &&
-                selectedDate.getFullYear() === year
-
-            ){
-
+                selectedDate.getFullYear() === year) {
                 day.classList.add("selected");
-
             }
 
-
-
             daysEl.appendChild(day);
-
-
-
         }
-
-
     }
 
 
