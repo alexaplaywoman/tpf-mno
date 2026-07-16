@@ -59,6 +59,25 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/estados/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT ID_ESTADO_MANTENIMIENTO, ESTADO_MANTENIMIENTO FROM DBA.ESTADOS_MANTENIMIENTOS ORDER BY ID_ESTADO_MANTENIMIENTO',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar estados de mantenimiento');
+                return res.json(result);
+            }
+        );
+    });
+});
+
 router.get('/:id', (req, res) => {
     const { id } = req.params;
     const { usuario, clave } = req.query;

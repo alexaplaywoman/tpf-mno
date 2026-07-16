@@ -4,6 +4,12 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+const ESTADOS_MANTENIMIENTO_LABELS = {
+    P: 'Pendiente',
+    E: 'En proceso',
+    R: 'Realizado',
+    C: 'Cancelado'
+};
 
 async function parseJsonSafe(response) {
 
@@ -30,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnInicio) {
         btnInicio.addEventListener("click", function (e) {
             e.preventDefault();
-            window.location.href = "./list_reservas.html";
+            window.location.href = "./menu_administrador.html";
         });
     }
 
@@ -39,15 +45,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnAgregar) {
         btnAgregar.addEventListener("click", function (e) {
             e.preventDefault();
-            window.location.href = "./add_reservas.html";
+            window.location.href = "./add_mantenimientos.html";
         });
     }
 
-    const reservasList = document.getElementById('reservas-list');
+    const mantenimientosList = document.getElementById('mantenimientos-list');
     const errorMessage = document.getElementById('error-message');
 
-    if (!reservasList) {
-        console.error("No existe tbody para mostrar reservas.");
+    if (!mantenimientosList) {
+        console.error("No existe tbody para mostrar mantenimientos.");
         return;
     }
 
@@ -59,24 +65,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    function loadReservas() {
+    function loadMantenimientos() {
 
-        fetch(`/api/reservas?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+        fetch(`/api/mantenimientos?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
             .then(async response => {
 
                 const data = await parseJsonSafe(response);
 
                 if (!response.ok) {
-                    throw new Error(data.error || "Error al cargar reservas");
+                    throw new Error(data.error || "Error al cargar mantenimientos");
                 }
 
-                let reservas = data;
+                let mantenimientos = data;
 
-                if (!Array.isArray(reservas)) {
-                    reservas = data.reservas || data.rows || [];
+                if (!Array.isArray(mantenimientos)) {
+                    mantenimientos = data.mantenimientos || data.rows || [];
                 }
 
-                mostrarReservas(reservas);
+                mostrarMantenimientos(mantenimientos);
 
             })
             .catch(error => {
@@ -86,45 +92,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function mostrarReservas(reservas) {
+    function mostrarMantenimientos(mantenimientos) {
 
-        reservasList.innerHTML = "";
+        mantenimientosList.innerHTML = "";
 
-        if (!reservas || reservas.length === 0) {
-            reservasList.innerHTML = `
+        if (!mantenimientos || mantenimientos.length === 0) {
+            mantenimientosList.innerHTML = `
                 <tr>
-                    <td colspan="8">
-                        No hay reservas cargadas.
+                    <td colspan="7">
+                        No hay mantenimientos cargados.
                     </td>
                 </tr>
             `;
             return;
         }
 
-        reservas.forEach(reserva => {
+        mantenimientos.forEach(mant => {
 
-            reservasList.innerHTML += `
+            const estadoLabel = ESTADOS_MANTENIMIENTO_LABELS[mant.estado_mantenimiento] || mant.estado_mantenimiento;
+
+            mantenimientosList.innerHTML += `
                 <tr>
-                    <td>${escapeHtml(reserva.ID_RESERVA)}</td>
-                    <td>${escapeHtml(reserva.NUMERO_LABORATORIO)}</td>
-                    <td>${escapeHtml(reserva.EDIFICIO)}</td>
-                    <td>${escapeHtml(reserva.NOMBRE + '' + reserva.APELLIDO)}</td>
-                    <td>${escapeHtml(reserva.tipo_actividad)}</td>
-                    <td>${escapeHtml(reserva.HORA_INICIO)}</td>
-                    <td>${escapeHtml(reserva.HORA_FIN)}</td>
+                    <td>${escapeHtml(mant.ID_MANTENIMIENTO)}</td>
+                    <td>${escapeHtml(mant.EDIFICIO)} (Lab ${escapeHtml(mant.NUMERO_LABORATORIO)})</td>
+                    <td>${escapeHtml(estadoLabel)}</td>
+                    <td>${escapeHtml(mant.FECHA_INICIO)}</td>
+                    <td>${escapeHtml(mant.FECHA_FIN_PREVISTA)}</td>
+                    <td>${escapeHtml(mant.OBSERVACIONES)}</td>
                     <td>
                         <div class="d-flex justify-content-center gap-2">
 
                             <button
                                 class="btn btn-dark btn-sm"
-                                onclick="editarReserva(${reserva.ID_RESERVA})">
+                                onclick="editarMantenimiento(${mant.ID_MANTENIMIENTO})">
                                 <i class="bi bi-pencil-square"></i>
                                 Editar
                             </button>
 
                             <button
                                 class="btn btn-dark btn-sm"
-                                onclick="confirmarEliminar(${reserva.ID_RESERVA})">
+                                onclick="confirmarEliminar(${mant.ID_MANTENIMIENTO})">
                                 <i class="bi bi-trash"></i>
                                 Eliminar
                             </button>
@@ -138,8 +145,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    window.editarReserva = function (id) {
-        window.location.href = `/upd_reservas.html?id=${id}`;
+    window.editarMantenimiento = function (id) {
+        window.location.href = `/upd_mantenimientos.html?id=${id}`;
     };
 
     window.confirmarEliminar = function (id) {
@@ -149,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const btnNo = document.getElementById("btnConfirmarEliminarNo");
 
         if (!dialog) {
-            eliminarReserva(id);
+            eliminarMantenimiento(id);
             return;
         }
 
@@ -161,23 +168,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         btnSi.onclick = function () {
             dialog.close();
-            eliminarReserva(id);
+            eliminarMantenimiento(id);
         };
 
     };
 
-    function eliminarReserva(id) {
+    function eliminarMantenimiento(id) {
 
         fetch(
-            `/api/reservas/delete/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`,
+            `/api/mantenimientos/delete/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`,
             { method: "DELETE" }
         )
             .then(parseJsonSafe)
             .then((data) => {
                 if (data.success === false) {
-                    throw new Error(data.error || "Error al eliminar reserva");
+                    throw new Error(data.error || "Error al eliminar mantenimiento");
                 }
-                loadReservas();
+                loadMantenimientos();
             })
             .catch(error => {
                 console.error(error);
@@ -186,6 +193,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    loadReservas();
+    loadMantenimientos();
 
 });

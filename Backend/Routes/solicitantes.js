@@ -189,8 +189,7 @@ router.post('/update/:cedula', (req, res) => {
 
         const sql = `
             UPDATE DBA.SOLICITANTES
-            SET CORREO         = '${correo}',
-                ID_CARRERA     = ${id_carrera || 'NULL'},
+            SET ID_CARRERA     = ${id_carrera || 'NULL'},
                 ID_SOLICITANTE = ${id_solicitante || 'NULL'},
                 TIPO_DOCUMENTO = ${tipo_documento || 'NULL'},
                 NOMBRE         = '${nombre}',

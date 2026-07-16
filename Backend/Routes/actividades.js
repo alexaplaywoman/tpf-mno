@@ -52,6 +52,25 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/prioridades/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT ID_PRIORIDAD, NOMBRE FROM DBA.PRIORIDADES ORDER BY ID_PRIORIDAD',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar prioridades');
+                return res.json(result);
+            }
+        );
+    });
+});
+
 router.get('/:id', (req, res) => {
     const { id } = req.params;
     const { usuario, clave } = req.query;
