@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         e.preventDefault();
 
         let reservaEvento = {
-            alumnos: document.querySelector("#alumnos").value,
+            alumnos: parseInt(document.querySelector("#alumnos").value),
             actividad: document.querySelector("#evento").value,
             fecha: selectedDate,
             recursos: obtenerRecursos()
