@@ -5,7 +5,7 @@
 const Sybase = require('sybase');
 
 function conectar(usuario, clave, callback) {
-    const connection = new Sybase('localhost', 2638, 'tpf_reservas', usuario, clave);
+    const connection = new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
 
     connection.connect((err) => {
         if (err) {
