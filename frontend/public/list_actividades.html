@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <title>Actividades</title>
+
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+
+</head>
+
+
+<body>
+
+
+<dialog
+    id="alertaEliminar"
+    style="
+        border:none;
+        border-radius:12px;
+        padding:20px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.15);
+        text-align:center;
+    ">
+
+    <p style="margin-bottom:15px;font-family:sans-serif;">
+        ¿Seguro que desea eliminar esta actividad?
+    </p>
+
+    <button
+        id="btnConfirmarEliminarSi"
+        class="btn btn-dark me-2">
+        Aceptar
+    </button>
+
+    <button
+        id="btnConfirmarEliminarNo"
+        class="btn btn-secondary">
+        Cancelar
+    </button>
+
+</dialog>
+
+
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-dark bg-secondary w-100 px-3">
+
+    <a id="inicio"
+       class="btn btn-dark btn-sm"
+       href="menu_administrador.html">
+        Inicio
+    </a>
+
+</nav>
+
+
+<div class="container">
+
+    <div class="mx-auto" style="width:90%;">
+
+        <!-- TITULO -->
+
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+            <h2 class="m-0">
+                Actividades
+            </h2>
+        </div>
+
+        <!-- BOTONES -->
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <button
+                id="agregar"
+                class="btn btn-dark btn-sm">
+                <i class="bi bi-plus-circle"></i>
+                Agregar Actividad
+            </button>
+
+        </div>
+
+        <div id="error-message" class="text-danger text-center mb-3"></div>
+
+        <table class="table table-bordered table-hover text-center">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Actividad</th>
+                    <th>Prioridad</th>
+                    <th>Nombre</th>
+                    <th>Duración máxima de horas</th>
+                    <th>Fecha fin prevista</th>
+                    <th>Observaciones</th>
+                    <th style="width:180px;">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody id="recursos-list">
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+
+                            <button id="botonEditar" class="btnModificar btn btn-dark btn-sm">
+                                <i class="bi bi-pencil-square"></i>
+                                Editar
+                            </button>
+
+                            <button id="botonEliminar" class="btnEliminar btn btn-dark btn-sm">
+                                <i class="bi bi-trash"></i>
+                                Eliminar
+                            </button>
+
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script src="./js/list_mantenimientos.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
