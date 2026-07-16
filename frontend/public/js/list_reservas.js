@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnInicio) {
         btnInicio.addEventListener("click", function (e) {
             e.preventDefault();
-            window.location.href = "./list_reservas.html";
+            window.location.href = "./menu_administrador.html";
         });
     }
 
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td>${escapeHtml(reserva.ID_RESERVA)}</td>
                     <td>${escapeHtml(reserva.NUMERO_LABORATORIO)}</td>
                     <td>${escapeHtml(reserva.EDIFICIO)}</td>
-                    <td>${escapeHtml(reserva.NOMBRE + '' + reserva.APELLIDO)}</td>
+                    <td>${escapeHtml(reserva.NOMBRE + ' ' + reserva.APELLIDO)}</td>
                     <td>${escapeHtml(reserva.tipo_actividad)}</td>
                     <td>${escapeHtml(reserva.HORA_INICIO)}</td>
                     <td>${escapeHtml(reserva.HORA_FIN)}</td>

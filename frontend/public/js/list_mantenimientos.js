@@ -114,8 +114,8 @@ document.addEventListener('DOMContentLoaded', function () {
             mantenimientosList.innerHTML += `
                 <tr>
                     <td>${escapeHtml(mant.ID_MANTENIMIENTO)}</td>
-                    <td>${escapeHtml(mant.EDIFICIO)} (Lab ${escapeHtml(mant.NUMERO_LABORATORIO)})</td>
                     <td>${escapeHtml(estadoLabel)}</td>
+                    <td>${escapeHtml(mant.NUMERO_LABORATORIO)} - ${escapeHtml(mant.EDIFICIO)}</td>
                     <td>${escapeHtml(mant.FECHA_INICIO)}</td>
                     <td>${escapeHtml(mant.FECHA_FIN_PREVISTA)}</td>
                     <td>${escapeHtml(mant.OBSERVACIONES)}</td>

@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <title>Recursos</title>
+    <title>Reservas</title>
 
 
     <link rel="stylesheet"
@@ -38,8 +38,9 @@
     ">
 
     <p style="margin-bottom:15px;font-family:sans-serif;">
-        ¿Seguro que desea eliminar este recurso?
+        ¿Seguro que desea eliminar esta reserva?
     </p>
+
 
     <button
         id="btnConfirmarEliminarSi"
@@ -47,13 +48,16 @@
         Aceptar
     </button>
 
+
     <button
         id="btnConfirmarEliminarNo"
         class="btn btn-secondary">
         Cancelar
     </button>
 
+
 </dialog>
+
 
 
 <!-- NAVBAR -->
@@ -62,106 +66,158 @@
 
     <a id="inicio"
        class="btn btn-dark btn-sm"
-       href="list_laboratorios.html">
+       href="menu_administrador.html">
        Inicio
     </a>
 
 </nav>
 
 
-<div class="container">
 
-    <div class="mx-auto" style="width:90%;">
+
+<div class="container-fluid">
+
+
+    <div class="mx-auto mt-4" style="width:95%;">
+
+
 
         <!-- TITULO -->
 
-        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
             <h2 class="m-0">
                 Reservas
             </h2>
+
         </div>
+
+
+
 
         <!-- BOTONES -->
 
         <div class="d-flex justify-content-between align-items-center mb-3">
 
+
             <button
                 id="agregar"
                 class="btn btn-dark btn-sm">
+
                 <i class="bi bi-plus-circle"></i>
+
                 Agregar Reserva
+
             </button>
+
 
         </div>
 
-        <div id="error-message" class="text-danger text-center mb-3"></div>
+
+
+
+        <div id="error-message"
+             class="text-danger text-center mb-3">
+        </div>
+
+
+
+
 
         <!-- TABLA -->
 
-        <table class="table table-bordered table-hover text-center">
+        <div class="table-responsive">
 
-            <thead class="table-light">
-                <tr>
-                    <th>Reserva</th>
-                    <th>Número laboratorio</th>
-                    <th>Cedula identidad</th>
-                    <th>Correo</th>
-                    <th>Estado reserva</th>
-                    <th>Tipo actividad</th>
-                    <th>Fecha a reservar</th>
-                    <th>Hora inicio</th>
-                    <th>Hora fin</th>
-                    <th>Cantidad alumnos</th>
-                    <th>Fecha solicitud</th>
-                    <th>Motivo cancelación</th>
-                    <th>Usuario cancelación</th>
-                    <th style="width:180px;">Acciones</th>
-                </tr>
-            </thead>
 
-            <tbody id="reservas-list">
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <div class="d-flex justify-content-center gap-2">
+            <table class="table table-bordered table-hover text-center align-middle">
 
-                            <button class="btnModificar btn btn-dark btn-sm">
-                                <i class="bi bi-pencil-square"></i>
-                                Editar
-                            </button>
 
-                            <button class="btnEliminar btn btn-dark btn-sm">
-                                <i class="bi bi-trash"></i>
-                                Eliminar
-                            </button>
+                <thead class="table-light">
 
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
 
-        </table>
+                    <tr>
+
+                        <th>Reserva</th>
+
+                        <th>Número laboratorio</th>
+
+                        <th>Cédula identidad</th>
+
+                        <th>Correo</th>
+
+                        <th>Estado reserva</th>
+
+                        <th>Tipo actividad</th>
+
+                        <th>Fecha a reservar</th>
+
+                        <th>Hora inicio</th>
+
+                        <th>Hora fin</th>
+
+                        <th>Cantidad alumnos</th>
+
+                        <th>Fecha solicitud</th>
+
+                        <th>Motivo cancelación</th>
+
+                        <th>Usuario cancelación</th>
+
+                        <th style="width:180px;">
+                            Acciones
+                        </th>
+
+                    </tr>
+
+
+                </thead>
+
+
+
+
+
+                <tbody id="reservas-list">
+
+
+                    <tr>
+
+                        <td colspan="14">
+
+                            Cargando reservas...
+
+                        </td>
+
+
+                    </tr>
+
+
+                </tbody>
+
+
+
+
+            </table>
+
+
+        </div>
+
+
+
 
     </div>
+
 
 </div>
 
 
+
+
+
 <script src="./js/list_reservas.js"></script>
 
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
 
 </body>
 

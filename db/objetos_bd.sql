@@ -130,7 +130,7 @@ BEGIN
 
     -- Si nos pasaron tipo de actividad, buscamos su prioridad real
     IF p_id_tipo_actividad IS NOT NULL THEN
-        SELECT PRIORIDAD INTO v_prioridad_nueva
+        SELECT NIVEL_PRIORIDAD INTO v_prioridad_nueva
         FROM "DBA"."TIPO_ACTIVIDAD"
         WHERE ID_TIPO_ACTIVIDAD = p_id_tipo_actividad;
     END IF;
@@ -143,7 +143,7 @@ BEGIN
       AND r.FECHA_A_RESERVAR   = p_fecha
       AND (p_id_reserva_excluir IS NULL OR r.ID_RESERVA <> p_id_reserva_excluir)
       AND er.ESTADO_RESERVA NOT IN ('C','A')          -- Cancelada y Ausente no bloquean
-      AND (v_prioridad_nueva IS NULL OR ta.PRIORIDAD <= v_prioridad_nueva)
+      AND (v_prioridad_nueva IS NULL OR ta.NIVEL_PRIORIDAD <= v_prioridad_nueva) --el nivel de prioridad cuanto mas bajo - mas importante
       AND p_hora_inicio < r.HORA_FIN
       AND p_hora_fin    > r.HORA_INICIO;
 

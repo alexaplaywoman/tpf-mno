@@ -160,6 +160,10 @@ router.get('/disponibilidad-horario', (req, res) => {
         return res.status(400).json({ success: false, error: 'Faltan credenciales, fecha u horario.' });
 
     const nombresRecursos = recursos ? recursos.split(',').map(r => r.trim()).filter(r => r.length > 0) : [];
+    // ---- LOG 1: qué llegó desde el frontend ----
+    console.log('[disp-horario] recursos raw:', recursos);
+    console.log('[disp-horario] nombresRecursos:', nombresRecursos, 'length:', nombresRecursos.length);
+
 
     conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
@@ -190,9 +194,21 @@ router.get('/disponibilidad-horario', (req, res) => {
             ORDER BY l.NUMERO_LABORATORIO
         `;
 
+
+        // ---- LOG 2: el SQL que se manda ----
+        console.log('[disp-horario] SQL:', sql);
+
         connection.query(sql, (err, result) => {
             connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar disponibilidad por horario');
+            if (err) {
+                // ---- LOG 3: si falla la query ----
+                console.log('[disp-horario] SQL ERROR:', err);
+                return manejarError(err, res, 'consultar disponibilidad por horario');
+            }
+
+            // ---- LOG 4: lo que devuelve ----
+            console.log('[disp-horario] result:', JSON.stringify(result));
+
             return res.json({ success: true, laboratorios: result });
         });
     });
