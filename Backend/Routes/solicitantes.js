@@ -57,6 +57,63 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/carreras/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT ID_CARRERA, NOMBRE FROM DBA.CARRERAS ORDER BY NOMBRE',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar carreras');
+                return res.json(result);
+            }
+        );
+    });
+});
+
+router.get('/tipos-solicitantes/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT ID_SOLICITANTE, TIPO_SOLICITANTE FROM DBA.TIPOS_SOLICITANTES ORDER BY TIPO_SOLICITANTE',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar tipos de solicitante');
+                return res.json(result);
+            }
+        );
+    });
+});
+
+router.get('/tipos-documentos/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT TIPO_DOCUMENTO, NOMBRE FROM DBA.TIPOS_DOCUMENTOS ORDER BY NOMBRE',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar tipos de documento');
+                return res.json(result);
+            }
+        );
+    });
+});
+
 router.get('/:cedula', (req, res) => {
     const { cedula } = req.params;
     const { usuario, clave } = req.query;

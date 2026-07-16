@@ -46,169 +46,78 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     // =====================================
-    // CARGAR EDIFICIOS EN EL SELECT
+    // CARGAR CARRERAS, TIPOS DE SOLICITANTE Y TIPOS DE DOCUMENTO
     // =====================================
 
+    function cargarOpciones() {
 
-    function cargarSolicitantes() {
+        fetch(`/api/solicitantes/carreras/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+            .then(res => res.json())
+            .then(carreras => {
+                selectCarrera.innerHTML = `
+                    <option value="">
+                        Seleccione una Carrera
+                    </option>
+                `;
 
-
-        fetch(`/api/solicitantes/add/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
-
-
-        .then(async response => {
-
-
-            const data = await response.json();
-
-
-            console.log("Solicitantes recibidos:", data);
-
-
-
-            if (!response.ok) {
-
-
-                throw new Error(
-                    data.error || "Error al cargar solicitantes"
-                );
-
-            }
-
-
-
-            let solicitantes = data;
-
-
-
-            if (!Array.isArray(solicitantes)) {
-
-
-                solicitantes = data.solicitantes || data.rows || [];
-
-
-            }
-
-
-
-
-
-            selectCarrera.innerHTML = `
-
-                <option value="">
-                    Seleccione una Carrera
-                </option>
-
-            `;
-
-
-
-
-
-            solicitantes.forEach(solicitante => {
-
-
-                const option = document.createElement("option");
-
-
-                option.value = solicitante.ID_CARRERA;
-
-
-                option.textContent = solicitante.NOMBRE_CARRERA;
-
-
-
-                selectCarrera.appendChild(option);
-
-
+                carreras.forEach(carrera => {
+                    const option = document.createElement("option");
+                    option.value = carrera.ID_CARRERA;
+                    option.textContent = carrera.NOMBRE;
+                    selectCarrera.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                errorMessage.textContent = "No se pudieron cargar las carreras.";
             });
 
-            selectSolicitante.innerHTML = `
+        fetch(`/api/solicitantes/tipos-solicitantes/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+            .then(res => res.json())
+            .then(tipos => {
+                selectSolicitante.innerHTML = `
+                    <option value="">
+                        Seleccione un tipo de solicitante
+                    </option>
+                `;
 
-                <option value="">
-                    Seleccione un solicitante
-                </option>
-
-            `;
-
-
-
-
-
-            solicitantes.forEach(solicitante => {
-
-
-                const option = document.createElement("option");
-
-
-                option.value = solicitante.ID_SOLICITANTE;
-
-
-                option.textContent = solicitante.NOMBRE_SOLICITANTE;
-
-
-
-                selectSolicitante.appendChild(option);
-
-
+                tipos.forEach(tipo => {
+                    const option = document.createElement("option");
+                    option.value = tipo.ID_SOLICITANTE;
+                    option.textContent = tipo.TIPO_SOLICITANTE;
+                    selectSolicitante.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                errorMessage.textContent = "No se pudieron cargar los tipos de solicitante.";
             });
 
+        fetch(`/api/solicitantes/tipos-documentos/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+            .then(res => res.json())
+            .then(tipos => {
+                selectTipoDocumento.innerHTML = `
+                    <option value="">
+                        Seleccione un tipo de documento
+                    </option>
+                `;
 
-            selectTipoDocumento.innerHTML = `
-
-                <option value="">
-                    Seleccione un tipo de documento
-                </option>
-
-            `;
-
-
-
-
-
-            solicitantes.forEach(solicitante => {
-
-
-                const option = document.createElement("option");
-
-
-                option.value = solicitante.TIPO_DOCUMENTO;
-
-
-                option.textContent = solicitante.TIPO_DOCUMENTO;
-
-
-
-                selectTipoDocumento.appendChild(option);
-
-
+                tipos.forEach(tipo => {
+                    const option = document.createElement("option");
+                    option.value = tipo.TIPO_DOCUMENTO;
+                    option.textContent = tipo.NOMBRE;
+                    selectTipoDocumento.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                errorMessage.textContent = "No se pudieron cargar los tipos de documento.";
             });
-
-
-
-        })
-
-
-        .catch(error => {
-
-
-            console.error(error);
-
-
-            errorMessage.textContent =
-                "No se pudieron cargar los solicitantes.";
-
-
-        });
-
-
 
     }
 
 
-
-
-    cargarSolicitantes();
+    cargarOpciones();
 
 
     
@@ -267,14 +176,14 @@ document.addEventListener("DOMContentLoaded", function () {
             correo:
                 document.getElementById("correo").value,
 
-            ID_CARRERA:
+            id_carrera:
                 selectCarrera.value,
 
-            ID_SOLICITANTE:
+            id_solicitante:
                 selectSolicitante.value,
 
-            TIPO_DOCUMENTO:
-                selectTipoDocumento.value,    
+            tipo_documento:
+                selectTipoDocumento.value,
 
             nombre:
                 document.getElementById("nombre").value,
