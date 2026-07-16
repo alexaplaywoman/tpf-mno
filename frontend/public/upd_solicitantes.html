@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Actualizar Solicitante</title>
+
+
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+</head>
+
+
+<body class="bg-light">
+
+
+    <nav class="navbar navbar-dark bg-secondary px-3">
+
+        <a id="inicio" class="btn btn-dark btn-sm" href="#">
+            Atrás
+        </a>
+
+    </nav>
+
+
+
+
+
+    <div class="container mt-5">
+
+
+        <div class="card shadow mx-auto" style="max-width:600px;">
+
+
+            <div class="card-body">
+
+
+                <h2 class="text-center mb-4">
+                    Actualizar Solicitante
+                </h2>
+
+
+
+
+
+                <form id="update-laboratorio-form">
+
+
+
+                    <!-- EDIFICIO -->
+
+                    <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Cedula de identidad
+
+                    </label>
+
+
+                    <input type="text"
+                           id="cedulaIdentidad"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Correo
+
+                    </label>
+
+
+                    <input type="email"
+                           id="correo"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+
+
+
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Carrera
+
+                    </label>
+
+
+
+                    <select 
+                        id="carrera"
+                        class="form-control"
+                        required>
+
+
+                        <option value="">
+
+                            Seleccione una carrera
+
+                        </option>
+
+
+                    </select>
+
+
+
+                </div>
+
+
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Solicitante
+
+                    </label>
+
+
+
+                    <select 
+                        id="solicitante"
+                        class="form-control"
+                        required>
+
+
+                        <option value="">
+
+                            Seleccione un tipo de solicitante
+
+                        </option>
+
+
+                    </select>
+
+
+
+                </div>
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Tipo documento
+
+                    </label>
+
+
+
+                    <select 
+                        id="tipoDocumento"
+                        class="form-control"
+                        required>
+
+
+                        <option value="">
+
+                            Seleccione un tipo de documento
+
+                        </option>
+
+
+                    </select>
+
+
+
+                </div>
+
+
+
+
+
+                <!-- CAPACIDAD -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Nombre
+
+                    </label>
+
+
+
+                    <input type="text"
+                           id="nombre"
+                           class="form-control"
+                           required>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+                <!-- COMPUTADORAS -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Apellido
+
+                    </label>
+
+
+
+                    <input type="text"
+                           id="apellido"
+                           class="form-control"
+                           required>
+
+
+
+                </div>
+
+
+
+
+
+
+
+
+
+                <!-- INTERNET -->
+
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Telefono
+
+                    </label>
+
+
+
+                    <input type="text"
+                           id="telefono"
+                           class="form-control"
+                           required>
+
+
+
+                </div>
+
+                <div class="mb-3">
+
+
+                    <label class="form-label">
+
+                        Departamento
+
+                    </label>
+
+
+
+                    <input type="text"
+                           id="departamento"
+                           class="form-control"
+                           required>
+
+
+
+                </div>
+
+
+
+
+
+
+                    <button 
+                        id="actualizar"
+                        type="submit"
+                        class="btn btn-dark w-100">
+
+                        Actualizar Laboratorio
+
+                    </button>
+
+
+
+
+
+                    <div 
+                        id="error-message"
+                        class="text-danger text-center mt-3">
+
+                    </div>
+
+
+
+                </form>
+
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+<script src="./js/upd_solicitante.js"></script>
+
+
+</body>
+
+</html>
