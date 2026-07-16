@@ -6,7 +6,6 @@ const Sybase = require('sybase');
 
 function conectar(usuario, clave, callback) {
     const connection = new Sybase('localhost', 2639, 'labcontrol', usuario, clave);
-
     connection.connect((err) => {
         if (err) {
             console.error('Error de conexión Sybase:', err);

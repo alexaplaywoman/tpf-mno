@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function mostrarLaboratorios(laboratorios) {
 
 
+        console.log("LABORATORIOS RECIBIDOS:", laboratorios);
 
         laboratoriosList.innerHTML = "";
 
@@ -283,9 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
                 <td>
-
-                    ${escapeHtml(lab.EDIFICIO)}
-
+                    ${escapeHtml(lab.NOMBRE_EDIFICIO ?? lab.EDIFICIO)}
                 </td>
 
 
@@ -293,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <td>
 
-                    ${escapeHtml(lab.CAPACIDAD_ALUMNOS)}
+                    ${escapeHtml(lab.CAPACIDAD_ALUMNOS ?? '')}
 
                 </td>
 
