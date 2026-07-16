@@ -36,7 +36,7 @@ app.get('/add_laboratorios', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/add_laboratorios.html'));
 });
 
-app.get('/uod_laboratorios', (req, res) => {
+app.get('/upd_laboratorios', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_laboratorios.html'));
 });
 
@@ -48,7 +48,7 @@ app.get('/add_solicitantes', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/add_solicitantes.html'));
 });
 
-app.get('/uod_solicitantes', (req, res) => {
+app.get('/upd_solicitantes', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_solicitantes.html'));
 });
 
