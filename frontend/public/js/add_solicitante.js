@@ -253,12 +253,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (!response.ok || data.success === false) {
 
+                if (data.error && data.error.includes("Primary key")) {
+
+                    throw new Error(
+                        "El solicitante ya existe en el sistema."
+                    );
+
+                }
 
                 throw new Error(
                     data.error || 
                     "Error al agregar solicitante"
                 );
-
 
             }
 

@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         window.location.href =
-            `/upd_solicitante.html?id=${cedula}`;
+            `/upd_solicitantes.html?id=${cedula}`;
 
 
     };
