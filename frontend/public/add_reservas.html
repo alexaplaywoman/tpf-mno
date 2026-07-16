@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Agregar Reserva</title>
+
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+</head>
+
+
+<body class="bg-light">
+
+
+<nav class="navbar navbar-dark bg-secondary px-3">
+
+    <a id="inicio"
+       class="btn btn-dark btn-sm"
+       href="#">
+        Atrás
+    </a>
+
+</nav>
+
+
+<div class="container mt-5">
+
+    <div class="card shadow mx-auto" style="max-width:600px;">
+
+        <div class="card-body">
+
+            <h2 class="text-center mb-4">
+                Agregar Nueva Reserva
+            </h2>
+
+            <form id="add-recurso-form">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Laboratorio
+                    </label>
+
+                    <select
+                        id="laboratorio"
+                        class="form-control"
+                        required>
+
+                        <option value="">
+                            Seleccione un laboratorio
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Cedula de Identidad
+                    </label>
+
+                    <input type="text"
+                           id="cedulaIdentidad"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Correo
+                    </label>
+
+                    <input type="email"
+                           id="correo"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Estado Reserva
+                    </label>
+
+                    <select
+                        id="estadoReserva"
+                        class="form-control"
+                        required>
+
+                        <option value="A">Ausente</option>
+                        <option value="U">Utilizado</option>
+                        <option value="C">Cancelado</option>
+                        <option value="P">Pendiente</option>
+
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Tipo Actividad
+                    </label>
+
+                    <select
+                        id="tipoActividad"
+                        class="form-control"
+                        required>
+
+                        <option value="">
+                            Seleccione un tipo de actividad
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Fecha a reservar
+                    </label>
+
+                    <input type="date"
+                           id="fechaAReservar"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Correo
+                    </label>
+
+                    <input type="email"
+                           id="correo"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Hora inicio
+                    </label>
+
+                    <input type="time"
+                           id="horaInicio"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Hora fin
+                    </label>
+
+                    <input type="time"
+                           id="horaFin"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Cantidad alumnos
+                    </label>
+
+                    <input type="text"
+                           id="cantidadAlumnos"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Fecha solicitud
+                    </label>
+
+                    <input type="date"
+                           id="fechaSolicitud"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Motivo cancelación
+                    </label>
+
+                    <input type="text"
+                           id="motivoCancelacion"
+                           class="form-control"
+                           required>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Usuario cancelación
+                    </label>
+
+                    <input type="text"
+                           id="usuarioCancelacion"
+                           class="form-control"
+                           required>
+
+                </div>
+
+
+                <button type="submit"
+                        class="btn btn-dark w-100">
+                    Agregar Reserva
+                </button>
+
+                <div id="error-message"
+                     class="text-danger text-center mt-3">
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="./js/add_reserva.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

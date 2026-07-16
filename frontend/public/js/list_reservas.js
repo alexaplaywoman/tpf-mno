@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnInicio) {
         btnInicio.addEventListener("click", function (e) {
             e.preventDefault();
-            window.location.href = "./list_reservas.html";
+            window.location.href = "./menu_administrador.html";
         });
     }
 
@@ -101,29 +101,36 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        recursos.forEach(reserva => {
+        reservas.forEach(reserva => {
 
             reservasList.innerHTML += `
                 <tr>
                     <td>${escapeHtml(reserva.ID_RESERVA)}</td>
                     <td>${escapeHtml(reserva.NUMERO_LABORATORIO)}</td>
-                    <td>${escapeHtml(reserva.CED)}</td>
-                    <td>${escapeHtml(reserva.DESCRIPCION)}</td>
-                    <td>${escapeHtml(reserva.DESCRIPCION)}</td>
-                    <td>${escapeHtml(reserva.DESCRIPCION)}</td>
+                    <td>${escapeHtml(reserva.CEDULA_IDENTIDAD)}</td>
+                    <td>${escapeHtml(reserva.CORREO)}</td>
+                    <td>${escapeHtml(reserva.ID_ESTADO_RESERVA)}</td>
+                    <td>${escapeHtml(reserva.ID_TIPO_ACTIVIDAD)}</td>
+                    <td>${escapeHtml(reserva.FECHA_A_RESERVAR)}</td>
+                    <td>${escapeHtml(reserva.HORA_INICIO)}</td>
+                    <td>${escapeHtml(reserva.HORA_FIN)}</td>
+                    <td>${escapeHtml(reserva.CANTIDAD_ALUMNOS)}</td>
+                    <td>${escapeHtml(reserva.FECHA_SOLICITUD)}</td>
+                    <td>${escapeHtml(reserva.MOTIVO_CANCELACION)}</td>
+                    <td>${escapeHtml(reserva.USUARIO_CANCELACION)}</td>
                     <td>
                         <div class="d-flex justify-content-center gap-2">
 
                             <button
                                 class="btn btn-dark btn-sm"
-                                onclick="editarRecurso(${recurso.ID_RECURSO})">
+                                onclick="editarReserva(${reserva.ID_RESERVA})">
                                 <i class="bi bi-pencil-square"></i>
                                 Editar
                             </button>
 
                             <button
                                 class="btn btn-dark btn-sm"
-                                onclick="confirmarEliminar(${recurso.ID_RECURSO})">
+                                onclick="confirmarEliminar(${reserva.ID_RESERVA})">
                                 <i class="bi bi-trash"></i>
                                 Eliminar
                             </button>
@@ -137,8 +144,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    window.editarRecurso = function (id) {
-        window.location.href = `/upd_recursos.html?id=${id}`;
+    window.editarReserva = function (id) {
+        window.location.href = `/upd_reservas.html?id=${id}`;
     };
 
     window.confirmarEliminar = function (id) {
@@ -148,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const btnNo = document.getElementById("btnConfirmarEliminarNo");
 
         if (!dialog) {
-            eliminarRecurso(id);
+            eliminarReserva(id);
             return;
         }
 
@@ -160,23 +167,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         btnSi.onclick = function () {
             dialog.close();
-            eliminarRecurso(id);
+            eliminarReserva(id);
         };
 
     };
 
-    function eliminarRecurso(id) {
+    function eliminarReserva(id) {
 
         fetch(
-            `/api/recursos/delete/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`,
+            `/api/reservas/delete/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`,
             { method: "DELETE" }
         )
             .then(parseJsonSafe)
             .then((data) => {
                 if (data.success === false) {
-                    throw new Error(data.error || "Error al eliminar recurso");
+                    throw new Error(data.error || "Error al eliminar reserva");
                 }
-                loadRecursos();
+                loadReservas();
             })
             .catch(error => {
                 console.error(error);
@@ -185,6 +192,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    loadRecursos();
+    loadReservas();
 
 });
