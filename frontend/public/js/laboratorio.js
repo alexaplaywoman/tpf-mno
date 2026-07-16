@@ -90,54 +90,50 @@ function verificarLaboratorios(laboratorios, reservaEvento) {
     laboratorios.forEach(function (laboratorio) {
         const radio = document.querySelector(`input[name="laboratorio"][value="${laboratorio.NUMERO_LABORATORIO}"]`);
         if (!radio) return;
+
         const label = radio.parentElement.querySelector('label');
         const motivo = validarLaboratorio(laboratorio, reservaEvento);
 
-            if (motivo === null) {
-                radio.disabled = false;
-                radio.dataset.bloqueadoPermanente = 'false';
-                console.log(`Laboratorio ${laboratorio.NUMERO_LABORATORIO} habilitado`);
-            } else {
-                radio.disabled = true;
-                radio.dataset.bloqueadoPermanente = 'true';
-                console.log(`Laboratorio ${laboratorio.NUMERO_LABORATORIO} deshabilitado (${motivo})`);
-            }
-        /*const disponible = validarLaboratorio(laboratorio, reservaEvento);
-
-        if (disponible) {
+        if (motivo === null) {
             radio.disabled = false;
             radio.dataset.bloqueadoPermanente = 'false';
-            console.log("Laboratorio " + laboratorio.NUMERO_LABORATORIO + " habilitado");
+            if (label) label.removeAttribute('title');
+            console.log(`Laboratorio ${laboratorio.NUMERO_LABORATORIO} habilitado`);
         } else {
             radio.disabled = true;
-            radio.dataset.bloqueadoPermanente = 'true';   // <-- marca
-            console.log("Laboratorio " + laboratorio.NUMERO_LABORATORIO + " deshabilitado (estado/capacidad)");
-        }*/
+            radio.dataset.bloqueadoPermanente = 'true';
+            if (label) label.title = descripcionMotivo(motivo);
+            console.log(`Laboratorio ${laboratorio.NUMERO_LABORATORIO} deshabilitado (${motivo})`);
+        }
     });
-    
+}
+
+function descripcionMotivo(motivo) {
+    const mensajes = {
+        estado: 'Laboratorio en mantenimiento, fuera de servicio o bloqueado',
+        capacidad: 'La capacidad del laboratorio es menor a la cantidad de alumnos',
+        recursos: 'El laboratorio no cuenta con los recursos solicitados',
+        horario: 'El laboratorio ya tiene una reserva en ese horario'
+    };
+    return mensajes[motivo] || 'No disponible';
 }
 
 function validarLaboratorio(laboratorio, reservaEvento) {
-
-    // ESTADO = 1 es "Disponible" (ver ESTADOS_OPERATIVOS)
     if (laboratorio.estado_tipo !== 'D') {
-        return false;
+        return 'estado';
     }
 
-    // Verifica cantidad de alumnos
-    if ((reservaEvento.alumnos) > laboratorio.CAPACIDAD_ALUMNOS) {
-        return false;
+    if (reservaEvento.alumnos > laboratorio.CAPACIDAD_ALUMNOS) {
+        return 'capacidad';
     }
 
-    // Recursos: el lab debe tener TODOS los recursos pedidos
     if (reservaEvento.recursos && reservaEvento.recursos.length > 0) {
         const disponibles = laboratorio.recursos_disponibles || [];
         const tieneTodos = reservaEvento.recursos.every(r => disponibles.includes(r));
-        if (!tieneTodos) return 'recursos'; // si falta alguno, no sirve 
+        if (!tieneTodos) return 'recursos';
     }
 
-    return null; // null = disponible
-
+    return null;
 }
 
 // Vuelve a consultar disponibilidad (solapamiento) apenas el usuario
@@ -164,17 +160,19 @@ function actualizarDisponibilidadPorHorario() {
                 const radio = document.querySelector(`input[name="laboratorio"][value="${lab.NUMERO_LABORATORIO}"]`);
                 if (!radio) return;
 
-                // Si esta bloqueado permanentemente (mantenimiento/fuera de servicio/
-                // bloqueado/capacidad), no lo tocamos: queda deshabilitado y punto.
                 if (radio.dataset.bloqueadoPermanente === 'true') return;
 
-                // Para el resto, la disponibilidad depende del horario+recursos actuales
+                const label = radio.parentElement.querySelector('label');
                 radio.disabled = (lab.disponible !== 'S');
 
-                // Si estaba seleccionado y ahora ya no esta disponible, deseleccionar
-                if (radio.disabled && radio.checked) {
-                    radio.checked = false;
-                    validar();   // recheckear el botón Siguiente
+                if (radio.disabled) {
+                    if (label) label.title = descripcionMotivo('horario');
+                    if (radio.checked) {
+                        radio.checked = false;
+                        validar();
+                    }
+                } else {
+                    if (label) label.removeAttribute('title');
                 }
             });
         })

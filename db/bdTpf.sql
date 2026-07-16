@@ -456,7 +456,7 @@ create table DBA.TIPO_ACTIVIDAD
    ID_TIPO_ACTIVIDAD    D_CLAVE                        not null,
    ID_PRIORIDAD         integer                        null,
    NOMBRE               D_NOMBRE                       not null,
-   PRIORIDAD            int                            not null,
+   NIVEL_PRIORIDAD      int                            not null,
    DURACION_MAX_HORAS   int                            not null,
    constraint PK_TIPO_ACTIVIDAD primary key clustered (ID_TIPO_ACTIVIDAD)
 );
