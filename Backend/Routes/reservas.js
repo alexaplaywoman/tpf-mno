@@ -52,11 +52,13 @@ router.get('/', (req, res) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         const sql = `
-            SELECT r.*, l.EDIFICIO, s.NOMBRE, s.APELLIDO, ta.NOMBRE AS tipo_actividad
+            SELECT r.*, l.EDIFICIO, s.NOMBRE, s.APELLIDO, ta.NOMBRE AS tipo_actividad,
+                   er.ESTADO_RESERVA AS estado
             FROM DBA.RESERVAS r
             JOIN DBA.LABORATORIOS l ON r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
             JOIN DBA.SOLICITANTES s ON r.CEDULA_IDENTIDAD = s.CEDULA_IDENTIDAD AND r.CORREO = s.CORREO
             JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
+            LEFT JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
             ORDER BY r.FECHA_A_RESERVAR, r.HORA_INICIO
         `;
 
