@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 contenedor.innerHTML += `
 
-                    <div class="card shadow-sm border-0 mb-4">
+                    <div class="card shadow-sm border-0 mb-4" data-id="${reserva.ID_RESERVA}">
 
                         <div class="card-header text-white"
                              style="background:#6c6480;">
@@ -178,11 +178,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                             <div class="d-flex justify-content-center gap-3">
 
-                                <button class="btn btn-outline-secondary px-4 btn-editar">
-                                    Editar
-                                </button>
-
                                 <button class="btn px-4 text-white btn-cancelar"
+                                        data-id="${reserva.ID_RESERVA}"
                                         style="background:#6c6480; border-color:#6c6480;"
                                         data-bs-toggle="modal"
                                         data-bs-target="#modalCancelar">
@@ -209,9 +206,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     // Delegación de eventos: un solo listener en el contenedor, en vez de
-    // un listener por tarjeta con un id repetido. Así cada botón "Editar"
+    // un listener por tarjeta con un id repetido. Así cada botón "Cancelar"
     // actúa sobre la reserva de SU propia tarjeta, no siempre la primera.
     contenedor.addEventListener("click", function (e) {
+
+        if (!e.target.classList.contains("btn-cancelar")) return;
 
         const card = e.target.closest("[data-id]");
         if (!card) return;
@@ -222,15 +221,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const reserva = reservasActuales.find(r => Number(r.ID_RESERVA) === idReserva);
         if (!reserva) return;
 
-        if (e.target.classList.contains("btn-editar")) {
-            sessionStorage.setItem("reservaEditar", JSON.stringify(reserva));
-            window.location.href = "edificio.html";
-        }
+        // Guardamos cuál reserva se quiere cancelar para que el botón
+        // "Sí, cancelar" del modal sepa a qué ID_RESERVA aplicar.
 
         if (e.target.classList.contains("btn-cancelar")) {
-            // Guardamos cuál reserva se quiere cancelar para que el botón
-            // "Sí, cancelar" del modal sepa a qué ID_RESERVA aplicar.
             sessionStorage.setItem("reservaCancelar", idReserva);
+            window.location.href = "cancelar.html";
         }
     });
 

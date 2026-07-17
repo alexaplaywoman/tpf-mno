@@ -40,11 +40,59 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("input", validar);
 
     validar();
+    // Departamentos por edificio. Las siglas de Ciencias y Tecnología son
+    // las que ya venían usando (DA, DAS, DEI, DICIA, DIS); las de Ciencias
+    // Contables son propuestas (no hay siglas oficiales todavía).
+    const DEPARTAMENTOS_CIENCIAS_TECNOLOGIA = [
+        "DA - Arquitectura",
+        "DAS - Análisis de Sistemas",
+        "DEI - Ing. Informática y Electrónica",
+        "DICIA - Ing. Civil, Industrial y Ambiental",
+        "DIS - Diseño Gráfico e Industrial"
+    ];
+
+    const DEPARTAMENTOS_CIENCIAS_CONTABLES = [
+        "DCC - Ciencias Contables",
+        "DECO - Economía",
+        "DMK - Marketing",
+        "DADE - Administración de Empresas",
+        "DCI - Comercio Internacional",
+        "DENF - Enfermería",
+        "DFON - Fonoaudiología",
+        "DMED - Medicina",
+        "DNUT - Nutrición"
+    ];
+
+    const DEPARTAMENTOS_POR_EDIFICIO = {
+        "Ciencias y Tecnología": DEPARTAMENTOS_CIENCIAS_TECNOLOGIA,
+        "Bloque G": DEPARTAMENTOS_CIENCIAS_TECNOLOGIA,
+        "Ciencias Contables": DEPARTAMENTOS_CIENCIAS_CONTABLES,
+        "Biblioteca Pablo VI": [
+            ...DEPARTAMENTOS_CIENCIAS_CONTABLES,
+            ...DEPARTAMENTOS_CIENCIAS_TECNOLOGIA
+        ]
+    };
+
+    function cargarDepartamentosPorEdificio(nombreEdificio) {
+        const selectDepartamento = document.getElementById("departamento");
+        const opciones = DEPARTAMENTOS_POR_EDIFICIO[nombreEdificio] || [];
+
+        selectDepartamento.innerHTML = '<option value="">Seleccionar</option>';
+
+        opciones.forEach(nombreDepartamento => {
+            const option = document.createElement("option");
+            option.textContent = nombreDepartamento;
+            selectDepartamento.appendChild(option);
+        });
+    }
+
     // Recuperar datos anteriores
 
     let edificio = sessionStorage.getItem(
         "edificioSeleccionado"
     );
+
+    cargarDepartamentosPorEdificio(edificio);
 
     let reservaEvento = JSON.parse(
         sessionStorage.getItem("reservaEvento")
@@ -63,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById("cantidadReserva").textContent = reservaEvento.alumnos;
 
-        document.getElementById("actividadReserva").textContent = reservaEvento.actividad;
+        document.getElementById("actividadReserva").textContent = reservaEvento.actividadNombre;
 
         document.getElementById("edificioReserva").textContent = edificio;
 
