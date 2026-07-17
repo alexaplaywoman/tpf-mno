@@ -4,6 +4,20 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ESTADO_RESERVA guarda un código de una letra (P/U/C/A); acá lo
+// traducimos al nombre completo para mostrarlo en la tabla.
+const NOMBRES_ESTADO_RESERVA = {
+    P: "Pendiente",
+    U: "Utilizada",
+    C: "Cancelada",
+    A: "Ausente"
+};
+
+function formatearFechaCorta(fecha) {
+    if (!fecha) return "-";
+    return String(fecha).split("T")[0];
+}
+
 
 async function parseJsonSafe(response) {
 
@@ -93,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!reservas || reservas.length === 0) {
             reservasList.innerHTML = `
                 <tr>
-                    <td colspan="8">
+                    <td colspan="14">
                         No hay reservas cargadas.
                     </td>
                 </tr>
@@ -107,11 +121,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 <tr>
                     <td>${escapeHtml(reserva.ID_RESERVA)}</td>
                     <td>${escapeHtml(reserva.NUMERO_LABORATORIO)}</td>
-                    <td>${escapeHtml(reserva.EDIFICIO)}</td>
-                    <td>${escapeHtml(reserva.NOMBRE + ' ' + reserva.APELLIDO)}</td>
+                    <td>${escapeHtml(reserva.CEDULA_IDENTIDAD)}</td>
+                    <td>${escapeHtml(reserva.CORREO)}</td>
+                    <td>${escapeHtml(NOMBRES_ESTADO_RESERVA[reserva.estado] ?? reserva.estado ?? "-")}</td>
                     <td>${escapeHtml(reserva.tipo_actividad)}</td>
+                    <td>${escapeHtml(formatearFechaCorta(reserva.FECHA_A_RESERVAR))}</td>
                     <td>${escapeHtml(reserva.HORA_INICIO)}</td>
                     <td>${escapeHtml(reserva.HORA_FIN)}</td>
+                    <td>${escapeHtml(reserva.CANTIDAD_ALUMNOS)}</td>
+                    <td>${escapeHtml(formatearFechaCorta(reserva.FECHA_SOLICITUD))}</td>
+                    <td>${escapeHtml(reserva.MOTIVO_CANCELACION ?? "-")}</td>
+                    <td>${escapeHtml(reserva.USUARIO_CANCELACION ?? "-")}</td>
                     <td>
                         <div class="d-flex justify-content-center gap-2">
 
