@@ -151,6 +151,15 @@ GRANT SELECT ON DBA.MANTENIMIENTOS TO solicitante;
 GRANT SELECT ON DBA.EDIFICIOS TO solicitante;
 GRANT SELECT ON DBA.PISOS TO solicitante;
 GRANT SELECT ON DBA.ESTADOS_OPERATIVOS TO solicitante;
+GRANT SELECT ON DBA.PRIORIDADES TO solicitante;
+GRANT INSERT ON DBA.RESERVAS_RECURSOS TO solicitante;
+GRANT SELECT ON DBA.RESERVAS_RECURSOS TO solicitante;
+
+-- En teoria GRANT DBA TO admin ya le da todos los permisos, pero en
+-- algunas bases quedo sin efecto sobre PRIORIDADES (probablemente
+-- porque la tabla se creo/renombro despues de correr el GRANT DBA).
+-- Este GRANT explicito no hace nada si admin ya tenia acceso.
+GRANT SELECT ON DBA.PRIORIDADES TO admin;
 
 -- Procedimientos que llama la interfaz móvil
 GRANT EXECUTE ON DBA.sp_laboratorios_disponibles TO solicitante;
