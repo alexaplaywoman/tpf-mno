@@ -271,3 +271,42 @@ ALTER TABLE DBA.LABORATORIOS
       ON UPDATE RESTRICT
       ON DELETE RESTRICT;
 COMMIT;
+
+/*==============================================================*/
+/* PASO 10 - Corregir ESTADO_RESERVA                            */
+/* En algunas bases la constraint no dejaba usar 'P' (Pendiente) */
+/* y los codigos habian quedado mal mapeados (ej: 1='C' en vez  */
+/* de 1='P'). El mapeo correcto es P=Pendiente, U=Utilizada,    */
+/* C=Cancelada, A=Ausente (ver datos_prueba_labcontrol_ordenado */
+/* .sql). Sin esto, list_reservas.html muestra el estado vacio  */
+/* ("-") porque el join con ESTADO_RESERVA no encuentra 'P'.    */
+/*==============================================================*/
+ROLLBACK;
+
+if exists(
+   select 1 from sys.sysconstraint
+   where constraint_name = 'CKC_ESTADO_RESERVA_ESTADO_R'
+) then
+    ALTER TABLE DBA.ESTADO_RESERVA
+       DELETE CONSTRAINT CKC_ESTADO_RESERVA_ESTADO_R
+end if;
+
+ALTER TABLE DBA.ESTADO_RESERVA
+   ADD CONSTRAINT CKC_ESTADO_RESERVA_ESTADO_R
+   CHECK (ESTADO_RESERVA in ('P','U','C','A') AND ESTADO_RESERVA = UPPER(ESTADO_RESERVA));
+
+-- Si ya existen los 4 codigos pero mal mapeados, los corrige por
+-- ID; si falta alguno, lo agrega. No cambia el ID_ESTADO_RESERVA
+-- de las reservas ya cargadas, solo el texto que le corresponde
+-- a cada ID.
+UPDATE DBA.ESTADO_RESERVA SET ESTADO_RESERVA = 'P' WHERE ID_ESTADO_RESERVA = 1;
+UPDATE DBA.ESTADO_RESERVA SET ESTADO_RESERVA = 'U' WHERE ID_ESTADO_RESERVA = 2;
+UPDATE DBA.ESTADO_RESERVA SET ESTADO_RESERVA = 'C' WHERE ID_ESTADO_RESERVA = 3;
+
+INSERT INTO DBA.ESTADO_RESERVA (ID_ESTADO_RESERVA, ESTADO_RESERVA)
+SELECT 4, 'A'
+ WHERE NOT EXISTS (SELECT 1 FROM DBA.ESTADO_RESERVA WHERE ID_ESTADO_RESERVA = 4);
+
+UPDATE DBA.ESTADO_RESERVA SET ESTADO_RESERVA = 'A' WHERE ID_ESTADO_RESERVA = 4;
+
+COMMIT;
