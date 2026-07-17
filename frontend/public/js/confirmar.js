@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById("cantidadReserva").textContent = reservaEvento.alumnos;
 
-        document.getElementById("actividadReserva").textContent = reservaEvento.actividad;
+        document.getElementById("actividadReserva").textContent = reservaEvento.actividadNombre;
 
         document.getElementById("edificioReserva").textContent = edificio;
 

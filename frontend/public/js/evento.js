@@ -116,10 +116,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("botonSiguiente").addEventListener("click", function (e) {
 
         e.preventDefault();
+        let selectActividad = document.querySelector("#evento");
 
         let reservaEvento = {
             alumnos: parseInt(document.querySelector("#alumnos").value),
-            actividad: document.querySelector("#evento").value,
+            actividad: selectActividad.value,   // el número: sigue yendo al backend como id_tipo_actividad
+            actividadNombre: selectActividad.options[selectActividad.selectedIndex].text, // el texto visible
             fecha: selectedDate,
             recursos: obtenerRecursos()
         };

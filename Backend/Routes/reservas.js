@@ -28,7 +28,20 @@ function verificarAdmin(connection, usuario, callback) {
     );
 }
 
-const MOTIVOS_CANCELACION_VALIDOS = ['Solapamiento de horarios', 'Error de fecha', 'Enfermedad', 'Otros'];
+const MOTIVOS_CANCELACION_VALIDOS = [
+    'Cambio de horario',
+    'Actividad suspendida',
+    'Error en la reserva',
+    'Laboratorio no disponible',
+    'Reprogramación',
+    'Otro'
+];
+
+// Devuelve la lista de motivos de cancelación válidos.
+// El front la usa para poblar el <select>, así no se duplica la lista.
+router.get('/motivos-cancelacion', (req, res) => {
+    return res.json(MOTIVOS_CANCELACION_VALIDOS);
+});
 
 router.get('/', (req, res) => {
     const { usuario, clave } = req.query;
@@ -163,7 +176,7 @@ router.post('/add', (req, res) => {
                             JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
                             WHERE r.NUMERO_LABORATORIO = ${numero_laboratorio}
                               AND r.FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                              AND r.ID_ESTADO_RESERVA != 3
+                              AND r.ID_ESTADO_RESERVA <> (SELECT ID_ESTADO_RESERVA FROM DBA.ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C')
                               AND r.HORA_INICIO < '${hora_fin}'
                               AND r.HORA_FIN > '${hora_inicio}'
                         `;
@@ -343,10 +356,14 @@ router.post('/cancelar/:id', (req, res) => {
 
                 connection.query(
                     `UPDATE DBA.RESERVAS
-                     SET ID_ESTADO_RESERVA = 3,
-                         MOTIVO_CANCELACION = '${motivo}',
-                         USUARIO_CANCELACION = '${cedula_responsable}'
-                     WHERE ID_RESERVA = ${id}`,
+                    SET ID_ESTADO_RESERVA = (
+                            SELECT ID_ESTADO_RESERVA
+                            FROM DBA.ESTADO_RESERVA
+                            WHERE ESTADO_RESERVA = 'C'
+                        ),
+                        MOTIVO_CANCELACION = '${motivo}',
+                        USUARIO_CANCELACION = '${cedula_responsable}'
+                    WHERE ID_RESERVA = ${id}`,
                     (err) => {
                         connection.disconnect();
                         if (err) return manejarError(err, res, 'cancelar reserva');
@@ -448,7 +465,7 @@ router.post('/reprogramar/:id', (req, res) => {
                                 SELECT ID_RESERVA FROM DBA.RESERVAS
                                 WHERE NUMERO_LABORATORIO = ${numeroLab}
                                   AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                                  AND ID_ESTADO_RESERVA != 3
+                                  AND ID_ESTADO_RESERVA <> (SELECT ID_ESTADO_RESERVA FROM DBA.ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C')
                                   AND ID_RESERVA != ${id}
                                   AND HORA_INICIO < '${hora_fin}'
                                   AND HORA_FIN > '${hora_inicio}'

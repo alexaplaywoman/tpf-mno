@@ -4,6 +4,8 @@
     --bar: #c9a6bb;
     --bg: #fbf0e4;
     --cards: #F1D9DA;
+    --rojo: #a84461;       /* rojo que combina con el vino/purpura de la paleta */
+    --rojo-dark: #7d2f46;  /* version mas oscura para el hover */
 }
 
 body {
@@ -60,7 +62,17 @@ input[type="number"] {
     border-color: var(--purple) !important;
     color: #fff !important;
 }
+#botonCerrarSesion {
+    background-color: var(--rojo) !important;
+    border-color: var(--rojo) !important;
+    color: #fff !important;
+}
 
+#botonCerrarSesion:hover {
+    background-color: var(--rojo-dark) !important;
+    border-color: var(--rojo-dark) !important;
+    color: #fff !important;
+}
 #botonReserva:hover,
 #botonConsultar:hover,
 #botonAtras:hover,

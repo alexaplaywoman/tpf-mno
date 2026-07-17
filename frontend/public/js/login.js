@@ -1,4 +1,3 @@
-console.log("JS LOGIN CARGADO");
 
 document.getElementById("formLogin").addEventListener("submit", async function (e) {
   e.preventDefault();
