@@ -36,7 +36,7 @@ app.get('/add_laboratorios', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/add_laboratorios.html'));
 });
 
-app.get('/uod_laboratorios', (req, res) => {
+app.get('/upd_laboratorios', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_laboratorios.html'));
 });
 
@@ -48,12 +48,44 @@ app.get('/add_solicitantes', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/add_solicitantes.html'));
 });
 
-app.get('/uod_solicitantes', (req, res) => {
+app.get('/upd_solicitantes', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_solicitantes.html'));
 });
 
-app.get('/confirmar', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public/confirmar.html'));
+app.get('/list_reservas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/list_reservas.html'));
+});
+
+app.get('/add_reservas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/add_reservas.html'));
+});
+
+app.get('/upd_reservas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/upd_reservas.html'));
+});
+
+app.get('/list_mantenimientos', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/list_mantenimientos.html'));
+});
+
+app.get('/add_mantenimientos', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/add_mantenimientos.html'));
+});
+
+app.get('/uod_mantenimientos', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/upd_mantenimientos.html'));
+});
+
+app.get('/list_actividades', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/list_actividades.html'));
+});
+
+app.get('/add_actividades', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/add_actividades.html'));
+});
+
+app.get('/upd_mantenimientos', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/upd_actividades.html'));
 });
 
 // Usar la ruta backend desde archivos separados

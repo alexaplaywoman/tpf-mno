@@ -7,217 +7,161 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-
     <title>Reservas</title>
-
 
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
 
-
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-
 </head>
-
 
 <body>
 
+    <!-- ALERTA ELIMINAR -->
 
-<!-- ALERTA ELIMINAR -->
+    <dialog id="alertaEliminar"
+            style="border:none;
+                   border-radius:12px;
+                   padding:20px;
+                   box-shadow:0 4px 12px rgba(0,0,0,.15);
+                   text-align:center;">
 
-<dialog
-    id="alertaEliminar"
-    style="
-        border:none;
-        border-radius:12px;
-        padding:20px;
-        box-shadow:0 4px 12px rgba(0,0,0,0.15);
-        text-align:center;
-    ">
+        <p class="mb-3">
+            ¿Seguro que desea eliminar esta reserva?
+        </p>
 
-    <p style="margin-bottom:15px;font-family:sans-serif;">
-        ¿Seguro que desea eliminar esta reserva?
-    </p>
+        <button
+            id="btnConfirmarEliminarSi"
+            class="btn btn-dark me-2">
+            Aceptar
+        </button>
 
+        <button
+            id="btnConfirmarEliminarNo"
+            class="btn btn-secondary">
+            Cancelar
+        </button>
 
-    <button
-        id="btnConfirmarEliminarSi"
-        class="btn btn-dark me-2">
-        Aceptar
-    </button>
+    </dialog>
 
+    <!-- NAVBAR -->
 
-    <button
-        id="btnConfirmarEliminarNo"
-        class="btn btn-secondary">
-        Cancelar
-    </button>
+    <nav class="navbar navbar-dark bg-secondary px-3">
 
+        <a
+            id="inicio"
+            class="btn btn-dark btn-sm"
+            href="menu_administrador.html">
 
-</dialog>
+            Inicio
 
+        </a>
 
+    </nav>
 
-<!-- NAVBAR -->
+    <div class="container-fluid">
 
-<nav class="navbar navbar-dark bg-secondary w-100 px-3">
+        <div class="mx-auto mt-4" style="width:95%;">
 
-    <a id="inicio"
-       class="btn btn-dark btn-sm"
-       href="menu_administrador.html">
-       Inicio
-    </a>
+            <!-- TÍTULO -->
 
-</nav>
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
+                <h2 class="m-0">
+                    Reservas
+                </h2>
 
+            </div>
 
+            <!-- BOTÓN -->
 
-<div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
+                <button
+                    id="agregar"
+                    class="btn btn-dark btn-sm">
 
-    <div class="mx-auto mt-4" style="width:95%;">
+                    <i class="bi bi-plus-circle"></i>
+                    Agregar Reserva
 
+                </button>
 
+            </div>
 
-        <!-- TITULO -->
+            <div
+                id="error-message"
+                class="text-danger text-center mb-3">
+            </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- TABLA -->
 
-            <h2 class="m-0">
-                Reservas
-            </h2>
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover text-center align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Reserva</th>
+
+                            <th>Número laboratorio</th>
+
+                            <th>Cédula identidad</th>
+
+                            <th>Correo</th>
+
+                            <th>Estado reserva</th>
+
+                            <th>Tipo actividad</th>
+
+                            <th>Fecha a reservar</th>
+
+                            <th>Hora inicio</th>
+
+                            <th>Hora fin</th>
+
+                            <th>Cantidad alumnos</th>
+
+                            <th>Fecha solicitud</th>
+
+                            <th>Motivo cancelación</th>
+
+                            <th>Usuario cancelación</th>
+
+                            <th style="width:180px;">
+                                Acciones
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="reservas-list">
+
+                        <tr>
+
+                            <td colspan="14">
+                                Cargando reservas...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
-
-
-
-
-        <!-- BOTONES -->
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-
-
-            <button
-                id="agregar"
-                class="btn btn-dark btn-sm">
-
-                <i class="bi bi-plus-circle"></i>
-
-                Agregar Reserva
-
-            </button>
-
-
-        </div>
-
-
-
-
-        <div id="error-message"
-             class="text-danger text-center mb-3">
-        </div>
-
-
-
-
-
-        <!-- TABLA -->
-
-        <div class="table-responsive">
-
-
-            <table class="table table-bordered table-hover text-center align-middle">
-
-
-                <thead class="table-light">
-
-
-                    <tr>
-
-                        <th>Reserva</th>
-
-                        <th>Número laboratorio</th>
-
-                        <th>Cédula identidad</th>
-
-                        <th>Correo</th>
-
-                        <th>Estado reserva</th>
-
-                        <th>Tipo actividad</th>
-
-                        <th>Fecha a reservar</th>
-
-                        <th>Hora inicio</th>
-
-                        <th>Hora fin</th>
-
-                        <th>Cantidad alumnos</th>
-
-                        <th>Fecha solicitud</th>
-
-                        <th>Motivo cancelación</th>
-
-                        <th>Usuario cancelación</th>
-
-                        <th style="width:180px;">
-                            Acciones
-                        </th>
-
-                    </tr>
-
-
-                </thead>
-
-
-
-
-
-                <tbody id="reservas-list">
-
-
-                    <tr>
-
-                        <td colspan="14">
-
-                            Cargando reservas...
-
-                        </td>
-
-
-                    </tr>
-
-
-                </tbody>
-
-
-
-
-            </table>
-
-
-        </div>
-
-
-
 
     </div>
 
+    <script src="./js/list_reservas.js"></script>
 
-</div>
-
-
-
-
-
-<script src="./js/list_reservas.js"></script>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
