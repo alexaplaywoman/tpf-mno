@@ -37,11 +37,11 @@ router.get('/', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         const sql = `
-            SELECT ta.ID_TIPO_ACTIVIDAD, ta.NOMBRE, ta.PRIORIDAD, ta.DURACION_MAX_HORAS,
+            SELECT ta.ID_TIPO_ACTIVIDAD, ta.NOMBRE, ta.NIVEL_PRIORIDAD, ta.DURACION_MAX_HORAS,
                    ta.ID_PRIORIDAD, p.NOMBRE AS prioridad_nombre
             FROM DBA.TIPO_ACTIVIDAD ta
             LEFT JOIN DBA.PRIORIDADES p ON ta.ID_PRIORIDAD = p.ID_PRIORIDAD
-            ORDER BY ta.PRIORIDAD, ta.NOMBRE
+            ORDER BY ta.NIVEL_PRIORIDAD, ta.NOMBRE
         `;
 
         connection.query(sql, (err, result) => {
@@ -106,7 +106,7 @@ router.post('/add', (req, res) => {
 
         const sql = `
             INSERT INTO DBA.TIPO_ACTIVIDAD
-                (ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
+                (ID_PRIORIDAD, NOMBRE, NIVEL_PRIORIDAD, DURACION_MAX_HORAS)
             VALUES
                 (${id_prioridad ?? 'NULL'}, '${nombre}', ${prioridad}, ${duracion_max_horas})
         `;
@@ -136,7 +136,7 @@ router.post('/update/:id', (req, res) => {
             UPDATE DBA.TIPO_ACTIVIDAD
             SET ID_PRIORIDAD       = ${id_prioridad ?? 'NULL'},
                 NOMBRE             = '${nombre}',
-                PRIORIDAD          = ${prioridad},
+                NIVEL_PRIORIDAD    = ${prioridad},
                 DURACION_MAX_HORAS = ${duracion_max_horas}
             WHERE ID_TIPO_ACTIVIDAD = ${id}
         `;

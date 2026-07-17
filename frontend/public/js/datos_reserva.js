@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 contenedor.innerHTML += `
 
-                    <div class="card shadow-sm border-0 mb-4">
+                    <div class="card shadow-sm border-0 mb-4" data-id="${reserva.ID_RESERVA}">
 
                         <div class="card-header text-white"
                              style="background:#6c6480;">
@@ -206,9 +206,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     // Delegación de eventos: un solo listener en el contenedor, en vez de
-    // un listener por tarjeta con un id repetido. Así cada botón "Editar"
+    // un listener por tarjeta con un id repetido. Así cada botón "Cancelar"
     // actúa sobre la reserva de SU propia tarjeta, no siempre la primera.
     contenedor.addEventListener("click", function (e) {
+
+        if (!e.target.classList.contains("btn-cancelar")) return;
 
         const card = e.target.closest("[data-id]");
         if (!card) return;

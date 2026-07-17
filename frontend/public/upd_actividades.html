@@ -18,7 +18,7 @@
 
     <nav class="navbar navbar-dark bg-secondary px-3">
 
-        <a id="atras"
+        <a id="inicio"
            class="btn btn-dark btn-sm"
            href="#">
             Atrás
@@ -47,7 +47,20 @@
                     Actualizar Actividad
                 </h2>
 
-                <form id="update-recurso-form">
+                <form id="update-actividad-form">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Nombre de la actividad
+                        </label>
+
+                        <input type="text"
+                               id="nombre"
+                               class="form-control"
+                               required>
+
+                    </div>
 
                     <div class="mb-3">
 
@@ -71,31 +84,12 @@
                     <div class="mb-3">
 
                         <label class="form-label">
-                            Nombre de la actividad
-                        </label>
-
-                        <select
-                            id="nombreActividad"
-                            class="form-control"
-                            required>
-
-                            <option value="">
-                                Seleccione un nombre de actividad
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-                            Nivel de prioridad
+                            Nivel de prioridad (1 a 7)
                         </label>
 
                         <input
                             type="number"
-                            id="nivelPrioridad"
+                            id="prioridad_numero"
                             class="form-control"
                             min="1"
                             max="7"
@@ -137,7 +131,7 @@
 
     </div>
 
-    <script src="./js/upd_actividad.js"></script>
+    <script src="./js/upd_actividades.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 
