@@ -55,6 +55,36 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/fechas-ocupadas', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return manejarError(err, res, 'conectar a la base de datos');
+
+        const sql = `
+            SELECT FECHA_A_RESERVAR, HORA_INICIO, HORA_FIN
+            FROM DBA.RESERVAS
+            WHERE ID_ESTADO_RESERVA != 3
+              AND FECHA_A_RESERVAR >= CURRENT DATE
+        `;
+
+        connection.query(sql, (err, result) => {
+            connection.disconnect();
+            if (err) return manejarError(err, res, 'consultar fechas ocupadas');
+
+            const fechas = result.map(r => ({
+                fecha: String(r.FECHA_A_RESERVAR).split('T')[0],
+                inicio: r.HORA_INICIO,
+                fin: r.HORA_FIN
+            }));
+
+            return res.json(fechas);
+        });
+    });
+});
+
 router.get('/:id', (req, res) => {
     const { id } = req.params;
     const { usuario, clave } = req.query;
@@ -144,7 +174,7 @@ router.post('/add', (req, res) => {
                 }
 
                 connection.query(
-                    `SELECT PRIORIDAD FROM DBA.TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
+                    `SELECT NIVEL_PRIORIDAD FROM DBA.TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
                     (err, tipos) => {
                         if (err) {
                             connection.disconnect();
@@ -155,10 +185,10 @@ router.post('/add', (req, res) => {
                             return res.status(404).json({ success: false, error: 'Tipo de actividad no encontrado.' });
                         }
 
-                        const nuevaPrioridad = tipos[0].PRIORIDAD;
+                        const nuevaPrioridad = tipos[0].NIVEL_PRIORIDAD;
 
                         const sqlSolapamiento = `
-                            SELECT r.ID_RESERVA, ta.PRIORIDAD
+                            SELECT r.ID_RESERVA, ta.NIVEL_PRIORIDAD
                             FROM DBA.RESERVAS r
                             JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
                             WHERE r.NUMERO_LABORATORIO = ${numero_laboratorio}
@@ -174,7 +204,7 @@ router.post('/add', (req, res) => {
                                 return manejarError(err, res, 'verificar solapamiento');
                             }
 
-                            const hayConflictoDeMayorOIgualPrioridad = solapados.some(s => s.PRIORIDAD <= nuevaPrioridad);
+                            const hayConflictoDeMayorOIgualPrioridad = solapados.some(s => s.NIVEL_PRIORIDAD <= nuevaPrioridad);
 
                             if (solapados.length > 0 && hayConflictoDeMayorOIgualPrioridad) {
                                 connection.disconnect();
@@ -233,7 +263,7 @@ router.post('/add', (req, res) => {
                                         connection.query(
                                             `SELECT NOMBRE,
                                                     MIN(CASE WHEN DISPONIBILIDAD = 'S' THEN ID_RECURSO END) AS ID_RECURSO,
-                                                    MAX(DISPONIBILIDAD) AS DISPONIBILIDAD
+                                                    MAX(DISPONIBILIDAD) AS DISPONIBLE
                                              FROM DBA.RECURSOS
                                              WHERE NOMBRE IN (${nombresRecursos}) AND NUMERO_LABORATORIO = ${numero_laboratorio}
                                              GROUP BY NOMBRE`,
@@ -246,7 +276,7 @@ router.post('/add', (req, res) => {
                                                     connection.disconnect();
                                                     return res.status(400).json({ success: false, error: 'Alguno de los recursos solicitados no pertenece a este laboratorio.' });
                                                 }
-                                                const noDisponible = result.find(r => r.DISPONIBILIDAD !== 'S');
+                                                const noDisponible = result.find(r => r.DISPONIBLE !== 'S');
                                                 if (noDisponible) {
                                                     connection.disconnect();
                                                     return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
@@ -289,21 +319,31 @@ router.post('/add', (req, res) => {
                                                 }
 
                                                 const idReserva = idResult[0].ID_RESERVA;
-                                                const valoresRecursos = idsRecursosDisponibles
-                                                    .map(idRecurso => `(${idReserva}, ${idRecurso})`)
-                                                    .join(',');
 
-                                                connection.query(
-                                                    `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES ${valoresRecursos}`,
-                                                    (err) => {
+                                                // SQL Anywhere 11 no soporta VALUES (a,b),(c,d) multi-fila,
+                                                // asi que insertamos un recurso a la vez.
+                                                let j = 0;
+                                                const insertarSiguienteRecurso = () => {
+                                                    if (j >= idsRecursosDisponibles.length) {
                                                         connection.disconnect();
-                                                        if (err) return manejarError(err, res, 'asociar recursos a la reserva');
                                                         return res.json({
                                                             success: true,
                                                             desplazadas: solapados.map(s => s.ID_RESERVA)
                                                         });
                                                     }
-                                                );
+                                                    const idRecurso = idsRecursosDisponibles[j++];
+                                                    connection.query(
+                                                        `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES (${idReserva}, ${idRecurso})`,
+                                                        (err) => {
+                                                            if (err) {
+                                                                connection.disconnect();
+                                                                return manejarError(err, res, 'asociar recursos a la reserva');
+                                                            }
+                                                            insertarSiguienteRecurso();
+                                                        }
+                                                    );
+                                                };
+                                                insertarSiguienteRecurso();
                                             });
                                         });
                                     });

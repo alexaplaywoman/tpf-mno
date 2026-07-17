@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 selectPrioridad.value = actividad.ID_PRIORIDAD ?? "";
 
                 document.getElementById("nombre").value = actividad.NOMBRE ?? "";
-                document.getElementById("prioridad_numero").value = actividad.PRIORIDAD ?? "";
+                document.getElementById("prioridad_numero").value = actividad.NIVEL_PRIORIDAD ?? "";
                 document.getElementById("duracionMaxHoras").value = actividad.DURACION_MAX_HORAS ?? "";
 
             })

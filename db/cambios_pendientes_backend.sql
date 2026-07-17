@@ -84,33 +84,41 @@ ALTER TABLE MANTENIMIENTOS ALTER ID_MANTENIMIENTO DEFAULT AUTOINCREMENT;
 
 /*==============================================================*/
 /* 3. Tipo de actividad para directores/decanos                */
-/*    OJO: hay una propuesta distinta en conflicto con esto     */
-/*    (ver DECISION PENDIENTE DEL GRUPO más abajo). Por ahora   */
-/*    PRIORIDADES NO se toca (queda en 4 niveles: Alta/Media    */
-/*    Alta/Media/Baja). Solo agregamos el TIPO_ACTIVIDAD que    */
-/*    falta, con PRIORIDAD = 0 (mas prioritario que Evento      */
-/*    Institucional, que hoy es el mas alto con PRIORIDAD = 1). */
+/*    RESUELTO: el grupo optó por la propuesta que renombra     */
+/*    TIPO_ACTIVIDAD (no la de agregar 'Actividad Directiva'    */
+/*    con PRIORIDAD = 0, que quedó descartada). PRIORIDADES     */
+/*    sigue en 4 niveles (Alta/Media Alta/Media/Baja) sin       */
+/*    tocarse; sólo cambian nombres y el desempate fino en      */
+/*    TIPO_ACTIVIDAD.NIVEL_PRIORIDAD/ID_PRIORIDAD.               */
+/*                                                              */
+/*    OJO: la columna TIPO_ACTIVIDAD.PRIORIDAD se renombró a    */
+/*    NIVEL_PRIORIDAD (commit b483ffe, "para mejor entendimiento")*/
+/*    Correr esto DESPUES de aplicar ese rename en la base.     */
+/*                                                              */
+/*    Matchea por NOMBRE (no por ID_TIPO_ACTIVIDAD) porque el   */
+/*    autoincrement hace que los IDs difieran entre las bases   */
+/*    locales de cada integrante.                               */
 /*==============================================================*/
 
-INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
-VALUES (8, 1, 'Actividad Directiva', 0, 4);
+UPDATE TIPO_ACTIVIDAD SET NOMBRE = 'Clase'
+ WHERE NOMBRE = 'Clase Regular';
 
-/* DECISION PENDIENTE DEL GRUPO (todavia sin resolver):
-   'Defensa Proyecto Final' (ID 6) parece ser el mismo concepto
-   que 'Exposicion y Tesis'. Si el grupo confirma que es lo mismo,
-   descomentar este UPDATE (no hace falta tocar el numero de
-   PRIORIDAD, ya está en 3). Si prefieren mantenerlos separados,
-   dejar comentado y no hacer nada.
+UPDATE TIPO_ACTIVIDAD SET NIVEL_PRIORIDAD = 4, ID_PRIORIDAD = 2
+ WHERE NOMBRE = 'Defensa Proyecto Final';
 
-   IMPORTANTE: en el merge de este script encontramos otra
-   propuesta (de otro integrante) que en vez de esto RENOMBRA
-   toda la tabla PRIORIDADES (ids 0 a 5, con nombres como "Reunión
-   Directiva", "Defensa Proyecto Final", etc.), pisando el diseño
-   de 4 niveles ya oficial (Alta/Media Alta/Media/Baja). Las dos
-   propuestas no pueden convivir — hablarlo en el grupo antes de
-   aplicar cualquiera de las dos. */
+UPDATE TIPO_ACTIVIDAD SET NIVEL_PRIORIDAD = 2
+ WHERE NOMBRE = 'Evento Institucional';
 
--- UPDATE TIPO_ACTIVIDAD SET NOMBRE = 'Exposicion y Tesis' WHERE NOMBRE = 'Defensa Proyecto Final';
+UPDATE TIPO_ACTIVIDAD SET NOMBRE = 'Examen', NIVEL_PRIORIDAD = 3
+ WHERE NOMBRE = 'Examen Institucional';
+
+UPDATE TIPO_ACTIVIDAD SET NOMBRE = 'Exposicion', NIVEL_PRIORIDAD = 5, DURACION_MAX_HORAS = 4
+ WHERE NOMBRE = 'Exposicion y Tesis';
+
+-- Sólo inserta si todavía no existe (evita duplicar al re-correr el script)
+INSERT INTO TIPO_ACTIVIDAD (ID_PRIORIDAD, NOMBRE, PRIORIDAD, DURACION_MAX_HORAS)
+SELECT 1, 'Reunion Directiva', 1, 3
+ WHERE NOT EXISTS (SELECT 1 FROM TIPO_ACTIVIDAD WHERE NOMBRE = 'Reunion Directiva');
 
 
 /*==============================================================*/
