@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Reportes</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="css/calendario.css">
+
+</head>
+
+
+<body>
+
+
+<nav class="navbar navbar-dark bg-secondary w-100 px-3">
+
+    <a id="inicio"
+       class="btn btn-dark btn-sm"
+       href="menu_administrador.html">
+        Inicio
+    </a>
+
+</nav>
+
+
+<div class="container">
+
+    <div class="mx-auto" style="width:90%;">
+
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+            <h2 class="m-0">
+                Reportes
+            </h2>
+        </div>
+
+        <div class="card p-4">
+
+            <div class="row">
+                <div class="mb-3">
+
+                    <label class="form-label">Tipo de Reporte</label>
+                    <select id="reporte" class="form-control" required>
+                        <option value="">Tipo de Reportes</option>
+                        <option>Reservas</option>
+                        <option>Laboratorios más utilizados</option>
+                        <option>Reservas por edificio</option>
+                        <option>Reservas cenceladas</option>
+                        <option>Recursos</option>
+                        <option>Mantenimientos</option>
+                        <option>solicitantes</option>
+                    </select>
+
+                </div>
+
+                    <div id="fechaDesde" class="calendar-container">
+
+                        <label class="form-label">Desde</label>
+
+                        <div class="calendar-header">
+
+                            <div class="nav-buttons">
+
+                                <button type="button" id="prev-month" class="nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+
+                                <button type="button" id="next-month" class="nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+
+                            </div>
+
+                            <div class="month-year" id="month-year">
+                                Julio 2026
+                            </div>
+
+                        </div>
+
+                        <div class="weekdays">
+                            <div>Dom</div><div>Lun</div><div>Mar</div>
+                            <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                        </div>
+
+                        <div class="days" id="days"></div>
+
+                        <div class="calendar-footer">
+
+                            <button type="button" id="today-btn" class="today-btn">
+                                <i class="fas fa-calendar-day"></i> Hoy
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div id="fechaDesde" class="calendar-container">
+
+                        <label class="form-label">Hasta</label>
+
+                        <div class="calendar-header">
+
+                            <div class="nav-buttons">
+
+                                <button type="button" id="prev-month" class="nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+
+                                <button type="button" id="next-month" class="nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+
+                            </div>
+
+                            <div class="month-year" id="month-year">
+                                Julio 2026
+                            </div>
+
+                        </div>
+
+                        <div class="weekdays">
+                            <div>Dom</div><div>Lun</div><div>Mar</div>
+                            <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                        </div>
+
+                        <div class="days" id="days"></div>
+
+                        <div class="calendar-footer">
+
+                            <button type="button" id="today-btn" class="today-btn">
+                                <i class="fas fa-calendar-day"></i> Hoy
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">Edificio</label>
+                        <select id="edificio" class="form-control" required>
+                            <option value="">Elegir Edificio</option>
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">Laboratorio</label>
+                        <select id="laboratorio" class="form-control" required>
+                            <option value="">Elegir Laboratorio</option>
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">Estado</label>
+                        <select id="reporte" class="form-control" required>
+                            <option value="">Elegir Estado/option>
+                        </select>
+
+                    </div>
+            </div>
+        
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<script src="./js/list_actividades.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>
