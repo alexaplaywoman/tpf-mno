@@ -133,7 +133,10 @@ router.get('/mis-reservas/:cedula', (req, res) => {
         const condicionFecha = incluirPasadas === 'true' ? '' : 'AND r.FECHA_A_RESERVAR >= CURRENT DATE';
 
         const sql = `
-            SELECT r.*, l.EDIFICIO, ta.NOMBRE AS tipo_actividad, er.ESTADO_RESERVA AS estado
+            SELECT r.*, l.EDIFICIO, ta.NOMBRE AS tipo_actividad, er.ESTADO_RESERVA AS estado,
+                   (SELECT LIST(rec.NOMBRE) FROM DBA.RESERVAS_RECURSOS rr
+                      JOIN DBA.RECURSOS rec ON rr.ID_RECURSO = rec.ID_RECURSO
+                     WHERE rr.ID_RESERVA = r.ID_RESERVA) AS recursos
             FROM DBA.RESERVAS r
             JOIN DBA.LABORATORIOS l ON r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
             JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
