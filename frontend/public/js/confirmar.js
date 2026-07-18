@@ -238,6 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             console.log("Datos preparados para backend:");
             console.log(reservaCompleta);
+            console.log("Fecha enviada:", reservaCompleta.fecha_a_reservar);
 
             const respuestaReserva = await fetch("/api/reservas/add", {
                 method: "POST",
@@ -251,18 +252,58 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log(dataReserva);
 
             if (dataReserva.success) {
-                alert("Reserva creada correctamente");
-                window.location.href = "menu.html";
+
+                mostrarMensaje("success", "La reserva se realizó con éxito");
+
+                document.getElementById("modalMensaje").addEventListener(
+                    "hidden.bs.modal",
+                    function () {
+                        window.location.href = "menu.html";
+                     },
+                     { once: true }
+                );
+
             } else {
-                alert(dataReserva.error);
+
+                mostrarMensaje("error", dataReserva.error);
+
             }
 
         } catch (error) {
             console.error("Error:", error);
-            alert("Error al enviar la reserva");
+            mostrarMensaje("error", "Error al realizar la reserva");
         }
 
     });
 
 });
- 
+
+function mostrarMensaje(tipo, mensaje) {
+    const tituloModal = document.getElementById("tituloMensaje");
+    const texto = document.getElementById("textoMensaje");
+
+    switch(tipo){
+        case "success":
+            tituloModal.textContent = "Éxito";
+            break;
+
+        case "error": 
+            tituloModal.textContent = "Error";
+            break;
+
+        case "warning":
+            tituloModal.textContent = "Advertencia";
+            break;
+        
+        default:
+            tituloModal.textContent = "Mensaje";
+    }
+
+    texto.textContent = mensaje;
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("modalMensaje")
+    );
+
+    modal.show();
+}

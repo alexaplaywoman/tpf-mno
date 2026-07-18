@@ -4,22 +4,21 @@
     --bar: #c9a6bb;
     --bg: #fbf0e4;
     --cards: #F1D9DA;
-    --rojo: #a84461;       /* rojo que combina con el vino/purpura de la paleta */
-    --rojo-dark: #7d2f46;  /* version mas oscura para el hover */
+    --rojo: #a84461;       
+    --rojo-dark: #7d2f46;  
 }
 
 body {
     margin: 0;
     background-color: var(--bg);
 }
-/* Chrome, Safari, Edge */
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-/* Firefox */
 input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
@@ -147,4 +146,42 @@ input[type="number"] {
     height: 18px;
     cursor: pointer;
     accent-color: #8b597b;
+}
+
+#modalMensaje .modal-content {
+    background-color: var(--bg);
+    border: 2px solid var(--purple);
+    border-radius: 15px;
+}
+
+#modalMensaje .modal-header {
+    background-color: var(--purple);
+    color: white;
+    border-bottom: none;
+    border-radius: 13px 13px 0 0;
+}
+
+#modalMensaje .modal-title {
+    font-weight: bold;
+}
+
+#modalMensaje .modal-body {
+    color: var(--dark);
+    font-size: 16px;
+}
+
+#modalMensaje .modal-footer {
+    border-top: none;
+}
+
+/* Botón aceptar */
+#modalMensaje .btn-primary {
+    background-color: var(--purple) !important;
+    border-color: var(--purple) !important;
+    color: white !important;
+}
+
+#modalMensaje .btn-primary:hover {
+    background-color: var(--dark) !important;
+    border-color: var(--dark) !important;
 }
