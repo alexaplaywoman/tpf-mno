@@ -12,6 +12,25 @@
 /*    Se borra en orden inverso a las dependencias:             */
 /*    triggers -> procedimientos -> funciones.                  */
 /*==============================================================*/
+if exists(select 1 from sys.sysevent where event_name='ev_cancelar_reservas_vencidas') then
+    drop event ev_cancelar_reservas_vencidas
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='sp_cancelar_reservas_vencidas') then
+    drop procedure sp_cancelar_reservas_vencidas
+end if;
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_validar_cambio_estado_lab') then
+    drop trigger tr_validar_cambio_estado_lab
+end if;
+
+if exists(select 1 from sys.systrigger where trigger_name='tr_no_eliminar_lab_con_reservas') then
+    drop trigger tr_no_eliminar_lab_con_reservas
+end if;
+
+if exists(select 1 from sys.sysprocedure where proc_name='sp_crear_reserva') then
+    drop procedure sp_crear_reserva
+end if;
 
 if exists(select 1 from sys.systrigger where trigger_name='tr_concide_horario_fecha_reserva') then
     drop trigger tr_concide_horario_fecha_reserva
@@ -65,10 +84,27 @@ if exists(select 1 from sys.sysprocedure where proc_name='fn_validar_fechas_y_fi
     drop function fn_validar_fechas_y_fin_semana
 end if;
 
+if exists(select 1 from sys.sysprocedure where proc_name='fn_es_administrador') then
+    drop function fn_es_administrador
+end if;
 
 /*==============================================================*/
 /* 1. FUNCIONES                                                 */
 /*==============================================================*/
+
+CREATE FUNCTION "DBA"."fn_es_administrador"(IN p_usuario VARCHAR(128))
+RETURNS INTEGER
+BEGIN
+    DECLARE v_count INTEGER;
+    
+    SELECT COUNT(*) INTO v_count
+    FROM SYSGROUPS
+    WHERE group_name = 'ADMINISTRADORES'
+      AND member_name = p_usuario;
+      
+    RETURN v_count;
+END;
+
 
 CREATE FUNCTION "DBA"."fn_validar_fechas_y_fin_semana"( IN fecha DATE )
 RETURNS INTEGER
@@ -263,6 +299,119 @@ BEGIN
 END;
 
 
+CREATE PROCEDURE "DBA"."sp_crear_reserva"(
+    IN p_numero_laboratorio INT,
+    IN p_cedula_identidad   INT,
+    IN p_correo             VARCHAR(80),
+    IN p_id_tipo_actividad  INT,
+    IN p_fecha_a_reservar   DATE,
+    IN p_hora_inicio        TIME,
+    IN p_hora_fin           TIME,
+    IN p_cantidad_alumnos   INT )
+RESULT (ID_RESERVA INT, DESPLAZADAS VARCHAR(500))
+BEGIN
+    DECLARE v_nivel_nuevo         INT;
+    DECLARE v_id_estado_pendiente INT;
+    DECLARE v_id_estado_cancelada INT;
+    DECLARE v_nuevo_id            INT;
+    DECLARE v_desplazadas         VARCHAR(500);
+
+    -- Nivel de prioridad de la nueva actividad (mas bajo = mas importante)
+    SELECT NIVEL_PRIORIDAD INTO v_nivel_nuevo
+    FROM "DBA"."TIPO_ACTIVIDAD"
+    WHERE ID_TIPO_ACTIVIDAD = p_id_tipo_actividad;
+
+    IF v_nivel_nuevo IS NULL THEN
+        RAISERROR 99999 'Tipo de actividad inexistente.';
+        RETURN;
+    END IF;
+
+    -- Estados por letra (robusto ante cambios de orden en el catalogo)
+    SELECT ID_ESTADO_RESERVA INTO v_id_estado_pendiente
+    FROM "DBA"."ESTADO_RESERVA" WHERE ESTADO_RESERVA = 'P';
+
+    SELECT ID_ESTADO_RESERVA INTO v_id_estado_cancelada
+    FROM "DBA"."ESTADO_RESERVA" WHERE ESTADO_RESERVA = 'C';
+
+    -- Lista de IDs desplazados (para devolver al backend, sirve para el mail al solicitante)
+    SELECT LIST(r.ID_RESERVA, ',') INTO v_desplazadas
+    FROM "DBA"."RESERVAS" r
+    JOIN "DBA"."TIPO_ACTIVIDAD" ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
+    JOIN "DBA"."ESTADO_RESERVA" er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
+    WHERE r.NUMERO_LABORATORIO = p_numero_laboratorio
+      AND r.FECHA_A_RESERVAR   = p_fecha_a_reservar
+      AND er.ESTADO_RESERVA NOT IN ('C','A')
+      AND ta.NIVEL_PRIORIDAD  > v_nivel_nuevo   -- ESTRICTAMENTE menor prioridad
+      AND p_hora_inicio < r.HORA_FIN
+      AND p_hora_fin    > r.HORA_INICIO;
+
+    -- Cancelar las desplazadas (si las hay)
+    IF v_desplazadas IS NOT NULL THEN
+        UPDATE "DBA"."RESERVAS"
+        SET ID_ESTADO_RESERVA   = v_id_estado_cancelada,
+            MOTIVO_CANCELACION  = 'Desplazada por reserva de mayor prioridad',
+            USUARIO_CANCELACION = CURRENT USER
+        WHERE ID_RESERVA IN (
+            SELECT r.ID_RESERVA
+            FROM "DBA"."RESERVAS" r
+            JOIN "DBA"."TIPO_ACTIVIDAD" ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
+            JOIN "DBA"."ESTADO_RESERVA" er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
+            WHERE r.NUMERO_LABORATORIO = p_numero_laboratorio
+              AND r.FECHA_A_RESERVAR   = p_fecha_a_reservar
+              AND er.ESTADO_RESERVA NOT IN ('C','A')
+              AND ta.NIVEL_PRIORIDAD  > v_nivel_nuevo
+              AND p_hora_inicio < r.HORA_FIN
+              AND p_hora_fin    > r.HORA_INICIO
+        );
+    END IF;
+
+    -- INSERT: aca disparan todos los triggers (fecha valida, mantenimiento,
+    -- estado del lab, capacidad, solapamiento de igual-o-mayor prioridad).
+    -- Si algo esta mal, el RAISERROR del trigger sube al backend intacto.
+    INSERT INTO "DBA"."RESERVAS"
+        (NUMERO_LABORATORIO, CEDULA_IDENTIDAD, CORREO,
+         ID_ESTADO_RESERVA, ID_TIPO_ACTIVIDAD,
+         FECHA_A_RESERVAR, HORA_INICIO, HORA_FIN,
+         CANTIDAD_ALUMNOS, FECHA_SOLICITUD)
+    VALUES
+        (p_numero_laboratorio, p_cedula_identidad, p_correo,
+         v_id_estado_pendiente, p_id_tipo_actividad,
+         p_fecha_a_reservar, p_hora_inicio, p_hora_fin,
+         p_cantidad_alumnos, CURRENT DATE);
+
+    SET v_nuevo_id = @@IDENTITY;
+
+    SELECT v_nuevo_id AS ID_RESERVA, v_desplazadas AS DESPLAZADAS;
+END;
+
+CREATE PROCEDURE "DBA"."sp_cancelar_reservas_vencidas"()
+BEGIN
+    DECLARE v_id_estado_cancelada INT;
+    DECLARE v_id_estado_ausente INT;
+    
+    -- Obtener IDs de estados
+    SELECT ID_ESTADO_RESERVA INTO v_id_estado_cancelada
+    FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C';
+    
+    SELECT ID_ESTADO_RESERVA INTO v_id_estado_ausente
+    FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'A';
+    
+    -- Cancelar reservas pendientes cuya fecha ya pasó
+    UPDATE RESERVAS
+    SET ID_ESTADO_RESERVA = v_id_estado_cancelada,
+        MOTIVO_CANCELACION = 'Cancelada automáticamente por fecha vencida',
+        USUARIO_CANCELACION = 'SYSTEM'
+    WHERE ID_ESTADO_RESERVA = (SELECT ID_ESTADO_RESERVA FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'P')
+      AND FECHA_A_RESERVAR < CURRENT DATE;
+      
+    -- Marcar como ausentes las reservas del día actual que ya pasaron su hora de inicio
+    UPDATE RESERVAS
+    SET ID_ESTADO_RESERVA = v_id_estado_ausente
+    WHERE ID_ESTADO_RESERVA = (SELECT ID_ESTADO_RESERVA FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'P')
+      AND FECHA_A_RESERVAR = CURRENT DATE
+      AND HORA_INICIO < CURRENT TIME;
+END;
+commit;
 /*==============================================================*/
 /* 3. TRIGGERS (sobre RESERVAS)                                 */
 /*==============================================================*/
@@ -447,5 +596,54 @@ BEGIN
            OR TRIM(new_row.USUARIO_CANCELACION) = '' THEN
             SET new_row.USUARIO_CANCELACION = CURRENT USER;
         END IF;
+    END IF;
+END;
+
+/*==============================================================*/
+/*  TRIGGERS (sobre LABORATORIOS)                                 */
+/*==============================================================*/
+
+
+CREATE TRIGGER "tr_validar_cambio_estado_lab" BEFORE UPDATE
+ORDER 1 ON "DBA"."LABORATORIOS"
+REFERENCING OLD AS old_row NEW AS new_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_tipo_nuevo CHAR(1);
+
+    -- Early-return: si el estado no cambia, no hay nada que validar.
+    -- Permite editar otras columnas del laboratorio (capacidad,
+    -- cantidad de computadoras, etc.) sin restriccion de rol.
+    IF old_row.ESTADO = new_row.ESTADO THEN
+        RETURN;
+    END IF;
+
+    SELECT TIPO INTO v_tipo_nuevo
+    FROM ESTADOS_OPERATIVOS
+    WHERE ESTADO = new_row.ESTADO;
+
+    -- Solo administradores pueden poner un laboratorio Fuera de servicio o Bloqueado.
+    -- Los estados Disponible / Reservado / Mantenimiento quedan libres para
+    -- operacion normal (p.ej. el flujo de mantenimiento marca el lab como 'M').
+    IF v_tipo_nuevo IN ('F','B') AND DBA.fn_es_administrador(CURRENT USER) = 0 THEN
+        RAISERROR 99999 'Solo usuarios administrativos pueden poner un laboratorio Fuera de servicio o Bloqueado.';
+        RETURN;
+    END IF;
+END;
+
+CREATE TRIGGER "tr_no_eliminar_lab_con_reservas" BEFORE DELETE
+ORDER 1 ON "DBA"."LABORATORIOS"
+REFERENCING OLD AS old_row
+FOR EACH ROW
+BEGIN
+    DECLARE v_count INTEGER;
+
+    SELECT COUNT(*) INTO v_count
+    FROM RESERVAS
+    WHERE NUMERO_LABORATORIO = old_row.NUMERO_LABORATORIO;
+
+    IF v_count > 0 THEN
+        RAISERROR 99999 'No se puede eliminar el laboratorio: tiene reservas historicas asociadas.';
+        RETURN;
     END IF;
 END;
