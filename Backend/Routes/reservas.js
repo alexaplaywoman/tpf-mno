@@ -399,22 +399,58 @@ router.post('/cancelar/:id', (req, res) => {
                     return res.status(400).json({ success: false, error: 'La cédula del responsable no corresponde a ningún solicitante registrado.' });
                 }
 
-                connection.query(
-                    `UPDATE DBA.RESERVAS
-                    SET ID_ESTADO_RESERVA = (
-                            SELECT ID_ESTADO_RESERVA
-                            FROM DBA.ESTADO_RESERVA
-                            WHERE ESTADO_RESERVA = 'C'
-                        ),
-                        MOTIVO_CANCELACION = '${motivo}',
-                        USUARIO_CANCELACION = '${cedula_responsable}'
-                    WHERE ID_RESERVA = ${id}`,
-                    (err) => {
+                verificarAdmin(connection, usuario, (err, esAdmin) => {
+                    if (err) {
                         connection.disconnect();
-                        if (err) return manejarError(err, res, 'cancelar reserva');
-                        return res.json({ success: true });
+                        return manejarError(err, res, 'verificar permisos de administrador');
                     }
-                );
+
+                    const continuarCancelacion = () => {
+                        connection.query(
+                            `UPDATE DBA.RESERVAS
+                            SET ID_ESTADO_RESERVA = (
+                                    SELECT ID_ESTADO_RESERVA
+                                    FROM DBA.ESTADO_RESERVA
+                                    WHERE ESTADO_RESERVA = 'C'
+                                ),
+                                MOTIVO_CANCELACION = '${motivo}',
+                                USUARIO_CANCELACION = '${cedula_responsable}'
+                            WHERE ID_RESERVA = ${id}`,
+                            (err) => {
+                                connection.disconnect();
+                                if (err) return manejarError(err, res, 'cancelar reserva');
+                                return res.json({ success: true });
+                            }
+                        );
+                    };
+
+                    // Un admin puede cancelar cualquier reserva. Un solicitante
+                    // solo puede cancelar las suyas propias (la cédula
+                    // responsable tiene que ser la dueña de la reserva).
+                    if (esAdmin) {
+                        continuarCancelacion();
+                        return;
+                    }
+
+                    connection.query(
+                        `SELECT CEDULA_IDENTIDAD FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                        (err, reservas) => {
+                            if (err) {
+                                connection.disconnect();
+                                return manejarError(err, res, 'consultar reserva');
+                            }
+                            if (reservas.length === 0) {
+                                connection.disconnect();
+                                return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+                            }
+                            if (String(reservas[0].CEDULA_IDENTIDAD) !== String(cedula_responsable)) {
+                                connection.disconnect();
+                                return res.status(403).json({ success: false, error: 'Solo podés cancelar tus propias reservas.' });
+                            }
+                            continuarCancelacion();
+                        }
+                    );
+                });
             }
         );
     });
@@ -433,14 +469,25 @@ router.post('/marcar/:id', (req, res) => {
     conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
-        connection.query(
-            `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
-            (err) => {
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
                 connection.disconnect();
-                if (err) return manejarError(err, res, 'marcar reserva');
-                return res.json({ success: true });
+                return manejarError(err, res, 'verificar permisos de administrador');
             }
-        );
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede marcar la asistencia de una reserva.' });
+            }
+
+            connection.query(
+                `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
+                (err) => {
+                    connection.disconnect();
+                    if (err) return manejarError(err, res, 'marcar reserva');
+                    return res.json({ success: true });
+                }
+            );
+        });
     });
 });
 
