@@ -1,20 +1,8 @@
 const express = require('express');
-const { conectar } = require('./conexion');
+const { conectar , manejarError } = require('./conexion');
 const router = express.Router();
 
-const manejarError = (err, res, action) => {
-    let errorMessage;
-    if (err && typeof err === 'object') {
-        errorMessage = err.message || JSON.stringify(err);
-    } else {
-        errorMessage = String(err || 'Error de Base de Datos Desconocido');
-    }
-    console.error(`Error al ${action}:`, err);
-    return res.status(500).json({
-        success: false,
-        error: `Error de base de datos al ${action}: ${errorMessage}`
-    });
-};
+
 
 function verificarAdmin(connection, usuario, callback) {
     connection.query(
@@ -157,221 +145,89 @@ router.get('/mis-reservas/:cedula', (req, res) => {
 router.post('/add', (req, res) => {
     const {
         numero_laboratorio, cedula_identidad, correo,
-        id_estado_reserva, id_tipo_actividad,
-        fecha_a_reservar, hora_inicio, hora_fin,
+        id_tipo_actividad, fecha_a_reservar, hora_inicio, hora_fin,
         cantidad_alumnos, recursos, usuario, clave
     } = req.body;
 
     if (!usuario || !clave || !numero_laboratorio || !cedula_identidad ||
-        !correo || !fecha_a_reservar || !hora_inicio || !hora_fin || !cantidad_alumnos || !id_tipo_actividad)
+        !correo || !fecha_a_reservar || !hora_inicio || !hora_fin ||
+        !cantidad_alumnos || id_tipo_actividad === null || id_tipo_actividad === undefined)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
-
-    const diaSemana = new Date(fecha_a_reservar).getDay();
-    if (diaSemana === 0 || diaSemana === 6)
-        return res.status(400).json({ success: false, error: 'No se puede reservar los fines de semana.' });
 
     const listaRecursos = recursos || [];
 
     conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
-        connection.query(
-            `SELECT ESTADO FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numero_laboratorio}`,
-            (err, labEstado) => {
+        // Recursos no tienen trigger propio, se validan aca
+        const validarRecursos = (callback) => {
+            if (listaRecursos.length === 0) return callback([]);
+            const nombresRecursos = listaRecursos.map(n => `'${n}'`).join(',');
+            connection.query(
+                `SELECT NOMBRE,
+                        MIN(CASE WHEN DISPONIBILIDAD = 'S' THEN ID_RECURSO END) AS ID_RECURSO,
+                        MAX(DISPONIBILIDAD) AS DISPONIBLE
+                 FROM DBA.RECURSOS
+                 WHERE NOMBRE IN (${nombresRecursos}) AND NUMERO_LABORATORIO = ${numero_laboratorio}
+                 GROUP BY NOMBRE`,
+                (err, result) => {
+                    if (err) { connection.disconnect(); return manejarError(err, res, 'verificar recursos'); }
+                    if (result.length !== listaRecursos.length) {
+                        connection.disconnect();
+                        return res.status(400).json({ success: false, error: 'Alguno de los recursos solicitados no pertenece a este laboratorio.' });
+                    }
+                    const noDisponible = result.find(r => r.DISPONIBLE !== 'S');
+                    if (noDisponible) {
+                        connection.disconnect();
+                        return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
+                    }
+                    callback(result.map(r => r.ID_RECURSO));
+                }
+            );
+        };
+
+        validarRecursos((idsRecursosDisponibles) => {
+            const sqlCall = `CALL DBA.sp_crear_reserva(
+                ${numero_laboratorio}, ${cedula_identidad}, '${correo}',
+                ${id_tipo_actividad}, '${fecha_a_reservar}',
+                '${hora_inicio}', '${hora_fin}', ${cantidad_alumnos})`;
+
+            connection.query(sqlCall, (err, result) => {
+                // Todo mensaje del trigger o del SP llega aca por err.message
                 if (err) {
                     connection.disconnect();
-                    return manejarError(err, res, 'consultar estado del laboratorio');
+                    return manejarError(err, res, 'crear reserva');
                 }
-                if (labEstado.length === 0) {
+
+                const fila = (result && result[0]) || {};
+                const idReserva  = fila.ID_RESERVA;
+                const desplazadas = fila.DESPLAZADAS
+                    ? fila.DESPLAZADAS.split(',').map(Number)
+                    : [];
+
+                if (idsRecursosDisponibles.length === 0) {
                     connection.disconnect();
-                    return res.status(404).json({ success: false, error: 'Laboratorio no encontrado.' });
-                }
-                if (labEstado[0].ESTADO !== 1) {
-                    connection.disconnect();
-                    return res.status(409).json({ success: false, error: 'El laboratorio no está disponible (bloqueado, en mantenimiento o fuera de servicio).' });
+                    return res.json({ success: true, id_reserva: idReserva, desplazadas });
                 }
 
-                connection.query(
-                    `SELECT NIVEL_PRIORIDAD FROM DBA.TIPO_ACTIVIDAD WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
-                    (err, tipos) => {
-                        if (err) {
-                            connection.disconnect();
-                            return manejarError(err, res, 'consultar tipo de actividad');
-                        }
-                        if (tipos.length === 0) {
-                            connection.disconnect();
-                            return res.status(404).json({ success: false, error: 'Tipo de actividad no encontrado.' });
-                        }
-
-                        const nuevaPrioridad = tipos[0].NIVEL_PRIORIDAD;
-
-                        const sqlSolapamiento = `
-                            SELECT r.ID_RESERVA, ta.NIVEL_PRIORIDAD
-                            FROM DBA.RESERVAS r
-                            JOIN DBA.TIPO_ACTIVIDAD ta ON r.ID_TIPO_ACTIVIDAD = ta.ID_TIPO_ACTIVIDAD
-                            WHERE r.NUMERO_LABORATORIO = ${numero_laboratorio}
-                              AND r.FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                              AND r.ID_ESTADO_RESERVA <> (SELECT ID_ESTADO_RESERVA FROM DBA.ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C')
-                              AND r.HORA_INICIO < '${hora_fin}'
-                              AND r.HORA_FIN > '${hora_inicio}'
-                        `;
-
-                        connection.query(sqlSolapamiento, (err, solapados) => {
-                            if (err) {
-                                connection.disconnect();
-                                return manejarError(err, res, 'verificar solapamiento');
-                            }
-
-                            const hayConflictoDeMayorOIgualPrioridad = solapados.some(s => s.NIVEL_PRIORIDAD <= nuevaPrioridad);
-
-                            if (solapados.length > 0 && hayConflictoDeMayorOIgualPrioridad) {
-                                connection.disconnect();
-                                return res.status(409).json({ success: false, error: 'Ya existe una reserva en ese horario.' });
-                            }
-
-                            const continuar = (callback) => {
-                                if (solapados.length === 0) return callback();
-
-                                const ids = solapados.map(s => s.ID_RESERVA).join(',');
-                                connection.query(
-                                    `UPDATE DBA.RESERVAS
-                                     SET ID_ESTADO_RESERVA = 3,
-                                         MOTIVO_CANCELACION = 'Desplazada automaticamente por una reserva de mayor prioridad',
-                                         USUARIO_CANCELACION = '${cedula_identidad}'
-                                     WHERE ID_RESERVA IN (${ids})`,
-                                    (err) => {
-                                        if (err) {
-                                            connection.disconnect();
-                                            return manejarError(err, res, 'desplazar reservas de menor prioridad');
-                                        }
-                                        callback();
-                                    }
-                                );
-                            };
-
-                            continuar(() => {
-                                const sqlCapacidad = `
-                                    SELECT CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS
-                                    WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
-                                `;
-
-                                connection.query(sqlCapacidad, (err, labs) => {
-                                    if (err) {
-                                        connection.disconnect();
-                                        return manejarError(err, res, 'verificar capacidad');
-                                    }
-
-                                    if (labs.length === 0) {
-                                        connection.disconnect();
-                                        return res.status(404).json({ success: false, error: 'Laboratorio no encontrado.' });
-                                    }
-
-                                    if (cantidad_alumnos > labs[0].CAPACIDAD_ALUMNOS) {
-                                        connection.disconnect();
-                                        return res.status(400).json({
-                                            success: false,
-                                            error: `Cantidad de alumnos (${cantidad_alumnos}) supera la capacidad (${labs[0].CAPACIDAD_ALUMNOS}).`
-                                        });
-                                    }
-
-                                    const validarRecursos = (callback) => {
-                                        if (listaRecursos.length === 0) return callback([]);
-
-                                        const nombresRecursos = listaRecursos.map(n => `'${n}'`).join(',');
-                                        connection.query(
-                                            `SELECT NOMBRE,
-                                                    MIN(CASE WHEN DISPONIBILIDAD = 'S' THEN ID_RECURSO END) AS ID_RECURSO,
-                                                    MAX(DISPONIBILIDAD) AS DISPONIBLE
-                                             FROM DBA.RECURSOS
-                                             WHERE NOMBRE IN (${nombresRecursos}) AND NUMERO_LABORATORIO = ${numero_laboratorio}
-                                             GROUP BY NOMBRE`,
-                                            (err, result) => {
-                                                if (err) {
-                                                    connection.disconnect();
-                                                    return manejarError(err, res, 'verificar recursos');
-                                                }
-                                                if (result.length !== listaRecursos.length) {
-                                                    connection.disconnect();
-                                                    return res.status(400).json({ success: false, error: 'Alguno de los recursos solicitados no pertenece a este laboratorio.' });
-                                                }
-                                                const noDisponible = result.find(r => r.DISPONIBLE !== 'S');
-                                                if (noDisponible) {
-                                                    connection.disconnect();
-                                                    return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
-                                                }
-                                                callback(result.map(r => r.ID_RECURSO));
-                                            }
-                                        );
-                                    };
-
-                                    validarRecursos((idsRecursosDisponibles) => {
-                                        const sql = `
-                                            INSERT INTO DBA.RESERVAS
-                                                (NUMERO_LABORATORIO, CEDULA_IDENTIDAD, CORREO, ID_ESTADO_RESERVA,
-                                                 ID_TIPO_ACTIVIDAD, FECHA_A_RESERVAR, HORA_INICIO, HORA_FIN,
-                                                 CANTIDAD_ALUMNOS, FECHA_SOLICITUD)
-                                            VALUES
-                                                (${numero_laboratorio}, ${cedula_identidad}, '${correo}', ${id_estado_reserva || 1},
-                                                 ${id_tipo_actividad}, '${fecha_a_reservar}', '${hora_inicio}', '${hora_fin}',
-                                                 ${cantidad_alumnos}, GETDATE())
-                                        `;
-
-                                        connection.query(sql, (err) => {
-                                            if (err) {
-                                                connection.disconnect();
-                                                return manejarError(err, res, 'crear reserva');
-                                            }
-
-                                            if (idsRecursosDisponibles.length === 0) {
-                                                connection.disconnect();
-                                                return res.json({
-                                                    success: true,
-                                                    desplazadas: solapados.map(s => s.ID_RESERVA)
-                                                });
-                                            }
-
-                                            connection.query('SELECT @@IDENTITY AS ID_RESERVA', (err, idResult) => {
-                                                if (err) {
-                                                    connection.disconnect();
-                                                    return manejarError(err, res, 'obtener id de la reserva creada');
-                                                }
-
-                                                const idReserva = idResult[0].ID_RESERVA;
-
-                                                // SQL Anywhere 11 no soporta VALUES (a,b),(c,d) multi-fila,
-                                                // asi que insertamos un recurso a la vez.
-                                                let j = 0;
-                                                const insertarSiguienteRecurso = () => {
-                                                    if (j >= idsRecursosDisponibles.length) {
-                                                        connection.disconnect();
-                                                        return res.json({
-                                                            success: true,
-                                                            desplazadas: solapados.map(s => s.ID_RESERVA)
-                                                        });
-                                                    }
-                                                    const idRecurso = idsRecursosDisponibles[j++];
-                                                    connection.query(
-                                                        `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES (${idReserva}, ${idRecurso})`,
-                                                        (err) => {
-                                                            if (err) {
-                                                                connection.disconnect();
-                                                                return manejarError(err, res, 'asociar recursos a la reserva');
-                                                            }
-                                                            insertarSiguienteRecurso();
-                                                        }
-                                                    );
-                                                };
-                                                insertarSiguienteRecurso();
-                                            });
-                                        });
-                                    });
-                                });
-                            });
-                        });
+                let j = 0;
+                const insertarSiguienteRecurso = () => {
+                    if (j >= idsRecursosDisponibles.length) {
+                        connection.disconnect();
+                        return res.json({ success: true, id_reserva: idReserva, desplazadas });
                     }
-                );
-            }
-        );
+                    const idRecurso = idsRecursosDisponibles[j++];
+                    connection.query(
+                        `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES (${idReserva}, ${idRecurso})`,
+                        (err) => {
+                            if (err) { connection.disconnect(); return manejarError(err, res, 'asociar recursos'); }
+                            insertarSiguienteRecurso();
+                        }
+                    );
+                };
+                insertarSiguienteRecurso();
+            });
+        });
     });
 });
 
@@ -399,22 +255,58 @@ router.post('/cancelar/:id', (req, res) => {
                     return res.status(400).json({ success: false, error: 'La cédula del responsable no corresponde a ningún solicitante registrado.' });
                 }
 
-                connection.query(
-                    `UPDATE DBA.RESERVAS
-                    SET ID_ESTADO_RESERVA = (
-                            SELECT ID_ESTADO_RESERVA
-                            FROM DBA.ESTADO_RESERVA
-                            WHERE ESTADO_RESERVA = 'C'
-                        ),
-                        MOTIVO_CANCELACION = '${motivo}',
-                        USUARIO_CANCELACION = '${cedula_responsable}'
-                    WHERE ID_RESERVA = ${id}`,
-                    (err) => {
+                verificarAdmin(connection, usuario, (err, esAdmin) => {
+                    if (err) {
                         connection.disconnect();
-                        if (err) return manejarError(err, res, 'cancelar reserva');
-                        return res.json({ success: true });
+                        return manejarError(err, res, 'verificar permisos de administrador');
                     }
-                );
+
+                    const continuarCancelacion = () => {
+                        connection.query(
+                            `UPDATE DBA.RESERVAS
+                            SET ID_ESTADO_RESERVA = (
+                                    SELECT ID_ESTADO_RESERVA
+                                    FROM DBA.ESTADO_RESERVA
+                                    WHERE ESTADO_RESERVA = 'C'
+                                ),
+                                MOTIVO_CANCELACION = '${motivo}',
+                                USUARIO_CANCELACION = '${cedula_responsable}'
+                            WHERE ID_RESERVA = ${id}`,
+                            (err) => {
+                                connection.disconnect();
+                                if (err) return manejarError(err, res, 'cancelar reserva');
+                                return res.json({ success: true });
+                            }
+                        );
+                    };
+
+                    // Un admin puede cancelar cualquier reserva. Un solicitante
+                    // solo puede cancelar las suyas propias (la cédula
+                    // responsable tiene que ser la dueña de la reserva).
+                    if (esAdmin) {
+                        continuarCancelacion();
+                        return;
+                    }
+
+                    connection.query(
+                        `SELECT CEDULA_IDENTIDAD FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                        (err, reservas) => {
+                            if (err) {
+                                connection.disconnect();
+                                return manejarError(err, res, 'consultar reserva');
+                            }
+                            if (reservas.length === 0) {
+                                connection.disconnect();
+                                return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+                            }
+                            if (String(reservas[0].CEDULA_IDENTIDAD) !== String(cedula_responsable)) {
+                                connection.disconnect();
+                                return res.status(403).json({ success: false, error: 'Solo podés cancelar tus propias reservas.' });
+                            }
+                            continuarCancelacion();
+                        }
+                    );
+                });
             }
         );
     });
@@ -433,14 +325,25 @@ router.post('/marcar/:id', (req, res) => {
     conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
-        connection.query(
-            `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
-            (err) => {
+        verificarAdmin(connection, usuario, (err, esAdmin) => {
+            if (err) {
                 connection.disconnect();
-                if (err) return manejarError(err, res, 'marcar reserva');
-                return res.json({ success: true });
+                return manejarError(err, res, 'verificar permisos de administrador');
             }
-        );
+            if (!esAdmin) {
+                connection.disconnect();
+                return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede marcar la asistencia de una reserva.' });
+            }
+
+            connection.query(
+                `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
+                (err) => {
+                    connection.disconnect();
+                    if (err) return manejarError(err, res, 'marcar reserva');
+                    return res.json({ success: true });
+                }
+            );
+        });
     });
 });
 

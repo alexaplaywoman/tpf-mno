@@ -1,20 +1,8 @@
 const express = require('express');
-const { conectar } = require('./conexion');
+const { conectar ,manejarError} = require('./conexion');
 const router = express.Router();
 
-const manejarError = (err, res, action) => {
-    let errorMessage;
-    if (err && typeof err === 'object') {
-        errorMessage = err.message || JSON.stringify(err);
-    } else {
-        errorMessage = String(err || 'Error de Base de Datos Desconocido');
-    }
-    console.error(`Error al ${action}:`, err);
-    return res.status(500).json({
-        success: false,
-        error: `Error de base de datos al ${action}: ${errorMessage}`
-    });
-};
+
 
 function esFecha(value) {
     return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
