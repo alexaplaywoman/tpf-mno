@@ -6513,8 +6513,13 @@ END</a:Text>
 <a:Code>ESTADO_MANTENIMIENTO</a:Code>
 <a:CreationDate>1780264868</a:CreationDate>
 <a:Creator>ethel</a:Creator>
+<<<<<<< HEAD
 <a:ModificationDate>1784317400</a:ModificationDate>
 <a:Modifier>ethel</a:Modifier>
+=======
+<a:ModificationDate>1784316391</a:ModificationDate>
+<a:Modifier>HP</a:Modifier>
+>>>>>>> 4216d02b58556a71d7130117ebbe3452c1dd4c0e
 <a:DefaultValue>P</a:DefaultValue>
 <a:ListOfValues>P	pendiente
 R	realizado

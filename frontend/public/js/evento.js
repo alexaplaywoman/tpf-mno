@@ -1,6 +1,35 @@
 let selectedDate = null;
 let reservasOcupadas = [];
 
+// Los tipos de actividad se traen del backend (DBA.TIPO_ACTIVIDAD), no
+// se hardcodean acá: cada base local puede tener IDs distintos para el
+// mismo nombre (autoincrement + altas/bajas propias de cada integrante),
+// así que un <option value="X"> fijo podía guardar una actividad
+// distinta a la que el usuario veía en pantalla.
+function renderActividades() {
+    const usuario = sessionStorage.getItem('usuario');
+    const clave = sessionStorage.getItem('clave');
+    const select = document.getElementById("evento");
+
+    return fetch(`/api/actividades?usuario=${usuario}&clave=${clave}`)
+        .then(res => res.json())
+        .then(actividades => {
+            select.innerHTML = `
+                <option value="" selected disabled class="text-muted">Seleccionar una actividad</option>
+            `;
+
+            (actividades || []).forEach(function (actividad) {
+                const option = document.createElement("option");
+                option.value = actividad.ID_TIPO_ACTIVIDAD;
+                option.textContent = actividad.NOMBRE;
+                select.appendChild(option);
+            });
+        })
+        .catch(err => {
+            console.error('Error al cargar tipos de actividad:', err);
+        });
+}
+
 // Los recursos se traen del backend (DBA.RECURSOS), no se hardcodean acá,
 // porque los tipos y su disponibilidad por laboratorio los administra el admin.
 function renderRecursos() {
@@ -42,7 +71,9 @@ function renderRecursos() {
 
 document.addEventListener("DOMContentLoaded", async function () {
 
-    // Generar los checkboxes de recursos según el laboratorio elegido
+    // Generar el select de tipo de actividad y los checkboxes de
+    // recursos según el laboratorio elegido
+    const actividadesListas = renderActividades();
     renderRecursos();
 
 
@@ -50,11 +81,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     // CARGAR DATOS DE EDICIÓN
     // =========================
 
-    setTimeout(() => {
+    let reservaEditar = JSON.parse(
+        sessionStorage.getItem("reservaEditar")
+    );
 
-        let reservaEditar = JSON.parse(
-            sessionStorage.getItem("reservaEditar")
-        );
+    // El <select> de actividad recién tiene sus <option> después de
+    // que renderActividades termine, así que el value se setea ahí.
+    actividadesListas.then(() => {
+        if (reservaEditar) {
+            document.getElementById("evento").value =
+                reservaEditar.ID_TIPO_ACTIVIDAD;
+        }
+    });
+
+    setTimeout(() => {
 
 
         if(reservaEditar){
@@ -68,12 +108,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             // Cantidad de alumnos
             document.getElementById("alumnos").value =
                 reservaEditar.CANTIDAD_ALUMNOS;
-
-
-
-            // Tipo de actividad
-            document.getElementById("evento").value =
-                reservaEditar.ID_TIPO_ACTIVIDAD;
 
 
 
