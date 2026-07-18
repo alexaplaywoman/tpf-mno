@@ -371,12 +371,17 @@ function renderCalendar() {
                     ? "Fecha pasada"
                     : "Fin de semana: no se permiten reservas";
 
-            } else if (reservaEseDia) {
-
-                day.classList.add("fecha-ocupada");
-                day.title = "Reservado: " + reservaEseDia.inicio + " - " + reservaEseDia.fin;
-
             } else {
+
+                // Que haya una reserva ESE DÍA no significa que el día
+                // completo esté ocupado (puede ser en otro laboratorio
+                // u otro horario) — el solapamiento real se valida por
+                // laboratorio + horario en el siguiente paso. Acá solo
+                // mostramos un indicador, sin bloquear el clic.
+                if (reservaEseDia) {
+                    day.classList.add("has-events");
+                    day.title = "Hay una reserva ese día: " + reservaEseDia.inicio + " - " + reservaEseDia.fin;
+                }
 
                 day.addEventListener("click", function () {
                     selectedDate = fecha;

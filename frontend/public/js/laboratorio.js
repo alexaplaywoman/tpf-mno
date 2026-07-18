@@ -52,7 +52,106 @@ document.addEventListener('DOMContentLoaded', function () {
     // el usuario termina de elegir horaInicio u horaFin
     document.getElementById("horaInicio").addEventListener("change", actualizarDisponibilidadPorHorario);
     document.getElementById("horaFin").addEventListener("change", actualizarDisponibilidadPorHorario);
+
+    // Al elegir laboratorio, deshabilitamos en los <select> las horas
+    // que ya están ocupadas para ESE laboratorio en la fecha elegida
+    document.getElementById("horaInicio").addEventListener("change", actualizarOpcionesHoraFin);
+    document.getElementById("listaLaboratorios").addEventListener("change", function (e) {
+        if (e.target.name !== "laboratorio") return;
+        actualizarHorariosOcupadosDelLab();
+    });
 });
+
+// Franjas ocupadas del laboratorio actualmente seleccionado, para el
+// dia elegido. Se recalcula cada vez que cambia el laboratorio.
+let horariosOcupadosLab = [];
+
+function actualizarHorariosOcupadosDelLab() {
+    const laboratorio = document.querySelector('input[name="laboratorio"]:checked');
+    const reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
+
+    if (!laboratorio || !reservaEvento) {
+        horariosOcupadosLab = [];
+        habilitarTodasLasHoras();
+        return;
+    }
+
+    const usuario = sessionStorage.getItem('usuario');
+    const clave = sessionStorage.getItem('clave');
+    const fecha = reservaEvento.fecha.split('T')[0];
+
+    fetch(`/api/laboratorios/horarios-ocupados?usuario=${usuario}&clave=${clave}&numero_laboratorio=${laboratorio.value}&fecha=${fecha}`)
+        .then(res => res.json())
+        .then(ocupados => {
+            // El backend devuelve "HH:MM:SS"; los <option> usan "HH:MM".
+            horariosOcupadosLab = (ocupados || []).map(o => ({
+                HORA_INICIO: String(o.HORA_INICIO).slice(0, 5),
+                HORA_FIN: String(o.HORA_FIN).slice(0, 5)
+            }));
+            actualizarOpcionesHoraInicio();
+            actualizarOpcionesHoraFin();
+        })
+        .catch(err => {
+            console.error('Error al consultar horarios ocupados del laboratorio:', err);
+            horariosOcupadosLab = [];
+        });
+}
+
+function habilitarTodasLasHoras() {
+    document.querySelectorAll("#horaInicio option, #horaFin option").forEach(op => {
+        op.disabled = false;
+        op.title = "";
+    });
+}
+
+// Una hora de inicio no sirve si cae DENTRO de una franja ya ocupada
+// (arrancar ahí ya se solapa, sin importar cuándo termine).
+function actualizarOpcionesHoraInicio() {
+    const select = document.getElementById("horaInicio");
+
+    Array.from(select.options).forEach(option => {
+        if (option.value === "") return;
+
+        const ocupada = horariosOcupadosLab.some(o =>
+            option.value >= o.HORA_INICIO && option.value < o.HORA_FIN
+        );
+
+        option.disabled = ocupada;
+        option.title = ocupada ? "Horario ocupado" : "";
+    });
+
+    if (select.selectedOptions[0] && select.selectedOptions[0].disabled) {
+        select.value = "";
+    }
+}
+
+// Dado el horaInicio ya elegido, una hora de fin no sirve si el rango
+// [horaInicio, horaFin) se solapa con alguna franja ya ocupada.
+function actualizarOpcionesHoraFin() {
+    const horaInicio = document.getElementById("horaInicio").value;
+    const select = document.getElementById("horaFin");
+
+    Array.from(select.options).forEach(option => {
+        if (option.value === "") return;
+
+        if (!horaInicio || option.value <= horaInicio) {
+            option.disabled = true;
+            option.title = "Debe ser posterior a la hora de inicio";
+            return;
+        }
+
+        const seSolapa = horariosOcupadosLab.some(o =>
+            horaInicio < o.HORA_FIN && option.value > o.HORA_INICIO
+        );
+
+        option.disabled = seSolapa;
+        option.title = seSolapa ? "Horario ocupado" : "";
+    });
+
+    if (select.selectedOptions[0] && select.selectedOptions[0].disabled) {
+        select.value = "";
+    }
+}
 
 // Trae los laboratorios reales del backend (capacidad y estado)
 function cargarLaboratorios(reservaEvento) {

@@ -195,6 +195,34 @@ router.get('/disponibilidad-horario', (req, res) => {
     });
 });
 
+// Franjas ya reservadas de un laboratorio en una fecha puntual, para
+// deshabilitar en el front las horas de inicio/fin que se solapan.
+router.get('/horarios-ocupados', (req, res) => {
+    const { usuario, clave, numero_laboratorio, fecha } = req.query;
+
+    if (!usuario || !clave || !numero_laboratorio || !fecha)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales, laboratorio o fecha.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        const sql = `
+            SELECT HORA_INICIO, HORA_FIN
+            FROM DBA.RESERVAS
+            WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
+              AND FECHA_A_RESERVAR = '${fecha}'
+              AND ID_ESTADO_RESERVA != 3
+            ORDER BY HORA_INICIO
+        `;
+
+        connection.query(sql, (err, result) => {
+            connection.disconnect();
+            if (err) return manejarError(err, res, 'consultar horarios ocupados');
+            return res.json(result);
+        });
+    });
+});
+
 router.get('/:id', (req, res) => {
     const { id } = req.params;
     const { usuario, clave } = req.query;
