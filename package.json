@@ -11,7 +11,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "nodemailer": "^9.0.3",
     "sybase": "^1.2.3"
   }
 }
