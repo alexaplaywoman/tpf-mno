@@ -80,7 +80,9 @@ function actualizarHorariosOcupadosDelLab() {
     const clave = sessionStorage.getItem('clave');
     const fecha = reservaEvento.fecha.split('T')[0];
 
-    fetch(`/api/laboratorios/horarios-ocupados?usuario=${usuario}&clave=${clave}&numero_laboratorio=${laboratorio.value}&fecha=${fecha}`)
+    fetch(`/api/laboratorios/horarios-ocupados?usuario=${usuario}&clave=${clave}` +
+          `&numero_laboratorio=${laboratorio.value}&fecha=${fecha}` +
+          `&id_tipo_actividad=${reservaEvento.actividad}`)
         .then(res => res.json())
         .then(ocupados => {
             // El backend devuelve "HH:MM:SS"; los <option> usan "HH:MM".
@@ -251,7 +253,9 @@ function actualizarDisponibilidadPorHorario() {
     /*const recursos = reservaEvento.recursos && reservaEvento.recursos.length > 0
         ? `&recursos=${encodeURIComponent(reservaEvento.recursos.join(','))}`
         : '';*/
-    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}`)
+    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}` +
+          `&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}` +
+          `&id_tipo_actividad=${reservaEvento.actividad}`)
     
         .then(res => res.json())
         .then(data => {

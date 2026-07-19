@@ -142,13 +142,13 @@ router.get('/disponibilidad/:id', (req, res) => {
 });
 
 router.get('/disponibilidad-horario', (req, res) => {
-    const { usuario, clave, fecha, hora_inicio, hora_fin, recursos } = req.query;
+    const { usuario, clave, fecha, hora_inicio, hora_fin, recursos, id_tipo_actividad } = req.query;
 
     if (!usuario || !clave || !fecha || !hora_inicio || !hora_fin)
         return res.status(400).json({ success: false, error: 'Faltan credenciales, fecha u horario.' });
 
     const nombresRecursos = recursos ? recursos.split(',').map(r => r.trim()).filter(r => r.length > 0) : [];
-   
+
 
 
     conectar(usuario, clave, (err, connection) => {
@@ -161,17 +161,29 @@ router.get('/disponibilidad-horario', (req, res) => {
                        AND rec.DISPONIBILIDAD = 'S') != ${nombresRecursos.length} THEN 'N'`
             : '';
 
+        // Igual criterio que sp_crear_reserva: una reserva existente solo
+        // bloquea si tiene prioridad igual o mayor (NIVEL_PRIORIDAD menor
+        // o igual) que la actividad nueva; si no, la desplazaría.
+        const condicionPrioridad = id_tipo_actividad
+            ? `AND ta.NIVEL_PRIORIDAD <= (
+                    SELECT NIVEL_PRIORIDAD FROM DBA.TIPO_ACTIVIDAD
+                    WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}
+               )`
+            : '';
+
         const sql = `
             SELECT l.NUMERO_LABORATORIO, l.EDIFICIO, l.CAPACIDAD_ALUMNOS, l.ESTADO,
                    CASE
                        WHEN l.ESTADO != 1 THEN 'N'
                        WHEN EXISTS (
                            SELECT 1 FROM DBA.RESERVAS r
+                           JOIN DBA.TIPO_ACTIVIDAD ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
                            WHERE r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
                              AND r.FECHA_A_RESERVAR = '${fecha}'
                              AND r.ID_ESTADO_RESERVA != 3
                              AND r.HORA_INICIO < '${hora_fin}'
                              AND r.HORA_FIN > '${hora_inicio}'
+                             ${condicionPrioridad}
                        ) THEN 'N'
                        ${condicionRecursos}
                        ELSE 'S'
@@ -197,8 +209,11 @@ router.get('/disponibilidad-horario', (req, res) => {
 
 // Franjas ya reservadas de un laboratorio en una fecha puntual, para
 // deshabilitar en el front las horas de inicio/fin que se solapan.
+// Si viene id_tipo_actividad, solo trae las reservas que REALMENTE
+// bloquearían la nueva (prioridad igual o mayor) — igual criterio que
+// usa sp_crear_reserva para no bloquear/desplazar según prioridad.
 router.get('/horarios-ocupados', (req, res) => {
-    const { usuario, clave, numero_laboratorio, fecha } = req.query;
+    const { usuario, clave, numero_laboratorio, fecha, id_tipo_actividad } = req.query;
 
     if (!usuario || !clave || !numero_laboratorio || !fecha)
         return res.status(400).json({ success: false, error: 'Faltan credenciales, laboratorio o fecha.' });
@@ -206,13 +221,22 @@ router.get('/horarios-ocupados', (req, res) => {
     conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
+        const condicionPrioridad = id_tipo_actividad
+            ? `AND ta.NIVEL_PRIORIDAD <= (
+                    SELECT NIVEL_PRIORIDAD FROM DBA.TIPO_ACTIVIDAD
+                    WHERE ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}
+               )`
+            : '';
+
         const sql = `
-            SELECT HORA_INICIO, HORA_FIN
-            FROM DBA.RESERVAS
-            WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
-              AND FECHA_A_RESERVAR = '${fecha}'
-              AND ID_ESTADO_RESERVA != 3
-            ORDER BY HORA_INICIO
+            SELECT r.HORA_INICIO, r.HORA_FIN
+            FROM DBA.RESERVAS r
+            JOIN DBA.TIPO_ACTIVIDAD ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
+            WHERE r.NUMERO_LABORATORIO = ${numero_laboratorio}
+              AND r.FECHA_A_RESERVAR = '${fecha}'
+              AND r.ID_ESTADO_RESERVA != 3
+              ${condicionPrioridad}
+            ORDER BY r.HORA_INICIO
         `;
 
         connection.query(sql, (err, result) => {
