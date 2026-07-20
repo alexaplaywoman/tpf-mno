@@ -206,8 +206,6 @@ router.post('/add', (req, res) => {
                     ? fila.DESPLAZADAS.split(',').map(Number)
                     : [];
 
-                // Traemos nombre del solicitante y nombre de la actividad
-                // para armar un correo mas completo (no vienen en el body).
                 connection.query(
                     `SELECT s.NOMBRE, s.APELLIDO, ta.NOMBRE AS ACTIVIDAD
                      FROM DBA.SOLICITANTES s, DBA.TIPO_ACTIVIDAD ta
@@ -325,7 +323,8 @@ router.post('/cancelar/:id', (req, res) => {
                                                 `- Fecha: ${String(r.FECHA_A_RESERVAR).split('T')[0]}\n` +
                                                 `- Horario: ${r.HORA_INICIO} a ${r.HORA_FIN}\n` +
                                                 `- Motivo de la cancelación: ${motivo}\n\n` +
-                                                `Ante cualquier duda, contactate con administración.`
+                                                `Gracias por usar Lab Kontrol.\n` +
+                                                `Ante cualquier duda, contactate con un administrador.`
                                             );
                                         }
 
@@ -337,8 +336,7 @@ router.post('/cancelar/:id', (req, res) => {
                     };
 
                     // Un admin puede cancelar cualquier reserva. Un solicitante
-                    // solo puede cancelar las suyas propias (la cédula
-                    // responsable tiene que ser la dueña de la reserva).
+                    // solo puede cancelar las suyas propias
                     if (esAdmin) {
                         continuarCancelacion();
                         return;
