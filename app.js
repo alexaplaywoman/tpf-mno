@@ -67,6 +67,9 @@ app.use('/api/reportes', reportesRoute);
 const recursosRoute = require('./Backend/Routes/recursos');
 app.use('/api/recursos', recursosRoute);
 
+const feriadosRoute = require('./Backend/Routes/feriados');
+app.use('/api/feriados', feriadosRoute);
+
 //const reservas_pruebasRoute = require('./Backend/Routes/reservas_pruebas');
 //app.use('/api/reservas_pruebas', reservas_pruebasRoute);
 

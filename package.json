@@ -13,6 +13,7 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "node-ical": "^0.27.0",
     "nodemailer": "^9.0.3",
     "sybase": "^1.2.3"
   }

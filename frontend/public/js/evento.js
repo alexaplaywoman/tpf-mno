@@ -1,5 +1,18 @@
 let selectedDate = null;
 let reservasOcupadas = [];
+let feriados = [];
+
+async function cargarFeriados() {
+    try {
+        const usuario = sessionStorage.getItem("usuario");
+        const clave = sessionStorage.getItem("clave");
+        const respuesta = await fetch(`/api/feriados?usuario=${usuario}&clave=${clave}`);
+        feriados = respuesta.ok ? await respuesta.json() : [];
+    } catch (error) {
+        console.error('Error al cargar feriados:', error);
+        feriados = [];
+    }
+}
 
 // Los tipos de actividad se traen del backend (DBA.TIPO_ACTIVIDAD), no
 // se hardcodean acá: cada base local puede tener IDs distintos para el
@@ -363,13 +376,16 @@ function renderCalendar() {
             let esPasado      = fecha < hoy;   // hoy NO es pasado (igual que "fecha < CURRENT DATE")
 
             let reservaEseDia = reservasOcupadas.find(r => r.fecha === fechaString);
+            let feriadoEseDia = feriados.find(f => String(f.FECHA).split('T')[0] === fechaString);
 
-            if (esPasado || esFinDeSemana) {
+            if (esPasado || esFinDeSemana || feriadoEseDia) {
 
                 day.classList.add("deshabilitado");
                 day.title = esPasado
                     ? "Fecha pasada"
-                    : "Fin de semana: no se permiten reservas";
+                    : esFinDeSemana
+                        ? "Fin de semana: no se permiten reservas"
+                        : `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
 
             } else {
 
@@ -475,6 +491,7 @@ function renderCalendar() {
     // cargar una sola vez
 
     await cargarFechasOcupadas();
+    await cargarFeriados();
 
 
     renderCalendar();
