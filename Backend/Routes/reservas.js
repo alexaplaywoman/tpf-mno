@@ -1,5 +1,6 @@
 const express = require('express');
 const { conectar , manejarError } = require('./conexion');
+const { enviarCorreoReserva } = require('./mail');
 const router = express.Router();
 
 
@@ -205,6 +206,30 @@ router.post('/add', (req, res) => {
                     ? fila.DESPLAZADAS.split(',').map(Number)
                     : [];
 
+                // Traemos nombre del solicitante y nombre de la actividad
+                // para armar un correo mas completo (no vienen en el body).
+                connection.query(
+                    `SELECT s.NOMBRE, s.APELLIDO, ta.NOMBRE AS ACTIVIDAD
+                     FROM DBA.SOLICITANTES s, DBA.TIPO_ACTIVIDAD ta
+                     WHERE s.CEDULA_IDENTIDAD = ${cedula_identidad} AND s.CORREO = '${correo}'
+                       AND ta.ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
+                    (err, datos) => {
+                        const d = (!err && datos && datos[0]) || {};
+                        enviarCorreoReserva(
+                            correo,
+                            'Confirmación de reserva - Lab Kontrol',
+                            `Hola ${d.NOMBRE || ''} ${d.APELLIDO || ''}!\n\n` +
+                            `Tu reserva fue confirmada con los siguientes datos:\n` +
+                            `- Actividad: ${d.ACTIVIDAD || ''}\n` +
+                            `- Laboratorio: ${numero_laboratorio}\n` +
+                            `- Fecha: ${fecha_a_reservar}\n` +
+                            `- Horario: ${hora_inicio} a ${hora_fin}\n` +
+                            `- Cantidad de alumnos: ${cantidad_alumnos}\n\n` +
+                            `Gracias por usar Lab Kontrol.`
+                        );
+                    }
+                );
+
                 if (idsRecursosDisponibles.length === 0) {
                     connection.disconnect();
                     return res.json({ success: true, id_reserva: idReserva, desplazadas });
@@ -273,9 +298,40 @@ router.post('/cancelar/:id', (req, res) => {
                                 USUARIO_CANCELACION = '${cedula_responsable}'
                             WHERE ID_RESERVA = ${id}`,
                             (err) => {
-                                connection.disconnect();
-                                if (err) return manejarError(err, res, 'cancelar reserva');
-                                return res.json({ success: true });
+                                if (err) {
+                                    connection.disconnect();
+                                    return manejarError(err, res, 'cancelar reserva');
+                                }
+
+                                connection.query(
+                                    `SELECT r.CORREO, r.NUMERO_LABORATORIO, r.FECHA_A_RESERVAR, r.HORA_INICIO, r.HORA_FIN,
+                                            s.NOMBRE, s.APELLIDO, ta.NOMBRE AS ACTIVIDAD
+                                     FROM DBA.RESERVAS r
+                                     JOIN DBA.SOLICITANTES s ON s.CEDULA_IDENTIDAD = r.CEDULA_IDENTIDAD AND s.CORREO = r.CORREO
+                                     JOIN DBA.TIPO_ACTIVIDAD ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
+                                     WHERE r.ID_RESERVA = ${id}`,
+                                    (err, reservaCancelada) => {
+                                        connection.disconnect();
+
+                                        if (!err && reservaCancelada.length > 0) {
+                                            const r = reservaCancelada[0];
+                                            enviarCorreoReserva(
+                                                r.CORREO,
+                                                'Cancelación de reserva - Lab Kontrol',
+                                                `Hola ${r.NOMBRE || ''} ${r.APELLIDO || ''}!\n\n` +
+                                                `Tu reserva fue cancelada. Detalle:\n` +
+                                                `- Actividad: ${r.ACTIVIDAD || ''}\n` +
+                                                `- Laboratorio: ${r.NUMERO_LABORATORIO}\n` +
+                                                `- Fecha: ${String(r.FECHA_A_RESERVAR).split('T')[0]}\n` +
+                                                `- Horario: ${r.HORA_INICIO} a ${r.HORA_FIN}\n` +
+                                                `- Motivo de la cancelación: ${motivo}\n\n` +
+                                                `Ante cualquier duda, contactate con administración.`
+                                            );
+                                        }
+
+                                        return res.json({ success: true });
+                                    }
+                                );
                             }
                         );
                     };
