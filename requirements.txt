@@ -1,0 +1,4 @@
+# para instalar las dependencias: pip install -r requirements.txt
+node===26.2.0
+dotenv==17.4.2
+nodemailer==9.0.3
