@@ -253,19 +253,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (dataReserva.success) {
 
-                mostrarMensaje("success", "La reserva se realizó con éxito");
+                const modalConfirmar = bootstrap.Modal.getInstance(
+                    document.getElementById("modalConfirmar")
+                );
+
+                if (modalConfirmar) {
+                    modalConfirmar.hide();
+                }
+
+
+                setTimeout(() => {
+                    mostrarMensaje(
+                        "success",
+                        "La reserva se realizó con éxito"
+                    );
+                }, 300);
+
 
                 document.getElementById("modalMensaje").addEventListener(
                     "hidden.bs.modal",
                     function () {
-                        window.location.href = "menu.html";
-                     },
-                     { once: true }
+                     window.location.href = "menu.html";
+                    },
+                    { once: true }
                 );
-
-            } else {
-
-                mostrarMensaje("error", dataReserva.error);
 
             }
 
@@ -279,6 +290,15 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function mostrarMensaje(tipo, mensaje) {
+
+    const modalConfirmar = bootstrap.Modal.getInstance(
+        document.getElementById("modalConfirmar")
+    );
+
+    if (modalConfirmar){
+        modalConfirmar.hide();
+    }
+
     const tituloModal = document.getElementById("tituloMensaje");
     const texto = document.getElementById("textoMensaje");
 
@@ -301,9 +321,11 @@ function mostrarMensaje(tipo, mensaje) {
 
     texto.textContent = mensaje;
 
-    const modal = new bootstrap.Modal(
-        document.getElementById("modalMensaje")
-    );
+    setTimeout(() => {
+        const modal = new bootstrap.Modal(
+            document.getElementById("modalMensaje")
+        );
 
-    modal.show();
+        modal.show();
+    }, 300);
 }

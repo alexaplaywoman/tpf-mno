@@ -1,223 +1,351 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" 
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+
     <link rel="stylesheet" href="css/estilos.css">
 
     <title>Reservas - Laboratorios</title>
+
 </head>
+
 
 <body>
 
-    <nav class="navbar navbar-dark bg-dark px-3">
 
-        <a id="inicio" class="navbar-brand btn btn-danger btn-sm"href="#">
-            Inicio
-        </a>
+<nav class="navbar navbar-dark bg-dark px-3">
 
-    </nav>
+    <a id="inicio"
+       class="navbar-brand btn btn-danger btn-sm"
+       href="#">
+        Inicio
+    </a>
 
-
-    <div class="d-flex flex-column justify-content-center align-items-center min-vh-100"
-        style="margin-top: -40px;">
-
-
-        <div class="text-center w-100">
+</nav>
 
 
-            <h1 class="fw-bold">LAB KONTROL</h1>
-
-            <h2>
-                Reserve un laboratorio para sus actividades académicas
-            </h2>
-
-            <h4>
-                Seleccione el laboratorio y horario de su actividad
-            </h4>
 
 
-            <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 my-4">
+
+<div class="container laboratorio-contenedor py-4">
 
 
-                <div class="rounded-pill py-2 px-4" style="background-color:#e5e5e5; color:#999; min-width:220px;">
-                    1. Elegir Edificio
-                </div>
 
-                <div class="rounded-pill py-2 px-4 ms-2" style="background-color:#e5e5e5; color:#999; min-width:220px;">
-                    2. Elegir Tipo de Actividad
-                </div>
+    <div class="text-center">
 
-                <div class="rounded-pill py-2 px-4 ms-2 text-white" style="background-color:#6c6480; min-width:220px;">
-                    3. Elegir Laboratorio
-                </div>
 
-                <div class="rounded-pill py-2 px-4 ms-2" style="background-color:#e5e5e5; color:#999; min-width:220px;">
-                    4. Confirmar Reserva
-                </div>
+        <h1 class="fw-bold titulo">
+            LAB KONTROL
+        </h1>
 
+
+        <h2 class="subtitulo">
+            Reserve un laboratorio para sus actividades académicas
+        </h2>
+
+
+        <h4 class="descripcion">
+            Seleccione el laboratorio y horario de su actividad
+        </h4>
+
+
+
+        <!-- PASOS -->
+
+        <div class="pasos-container my-4">
+
+
+            <div class="paso paso-inactivo">
+                1. Elegir Edificio
             </div>
+
+
+            <div class="paso paso-inactivo">
+                2. Elegir Tipo de Actividad
+            </div>
+
+
+            <div class="paso paso-activo">
+                3. Elegir Laboratorio
+            </div>
+
+
+            <div class="paso paso-inactivo">
+                4. Confirmar Reserva
+            </div>
+
 
         </div>
 
-        <form id="form" class="card shadow p-4" style="width:500px;">
-
-            <div id="listaLaboratorios" class="mb-3">
-
-
-                <label class="form-label fw-bold">
-                    Laboratorio
-                </label>
-
-                <div class="form-check mb-2">
-
-                    <input class="form-check-input" type="radio" name="laboratorio" id="lab1" value="1" required>
-
-                    <label class="form-check-label" for="lab1">
-                        Laboratorio 1
-                    </label>
-
-                </div>
-
-                <div class="form-check mb-2">
-
-                    <input class="form-check-input" type="radio" name="laboratorio" id="lab2" value="2">
-
-                    <label class="form-check-label" for="lab2">
-                        Laboratorio 2
-                    </label>
-
-                </div>
-
-                <div class="form-check mb-2">
-
-                    <input class="form-check-input" type="radio" name="laboratorio" id="lab3" value="3">
-
-                    <label class="form-check-label" for="lab3">
-                        Laboratorio 3
-                    </label>
-
-                </div>
-
-                <div class="form-check mb-2">
-
-                    <input class="form-check-input" type="radio" name="laboratorio" id="lab4" value="4">
-
-                    <label class="form-check-label" for="lab4">
-                        Laboratorio 4
-                    </label>
-
-                </div>
-
-                <div class="form-check mb-2">
-
-                    <input class="form-check-input" type="radio" name="laboratorio" id="lab5" value="5">
-
-                    <label class="form-check-label" for="lab5">
-                        Laboratorio 5
-                    </label>
-
-                </div>
-
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-
-                    <label for="horaInicio" class="form-label fw-bold">
-                        Hora Inicio
-                    </label>
-
-                    <select class="form-select"
-                            id="horaInicio"
-                            name="horaInicio"
-                            required>
-
-                        <option value="">
-                            Seleccionar
-                        </option>
-
-                        <option value="07:00">07:00</option>
-                        <option value="08:00">08:00</option>
-                        <option value="09:00">09:00</option>
-                        <option value="10:00">10:00</option>
-                        <option value="11:00">11:00</option>
-                        <option value="12:00">12:00</option>
-                        <option value="13:00">13:00</option>
-                        <option value="14:00">14:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="16:00">16:00</option>
-                        <option value="17:00">17:00</option>
-                        <option value="18:00">18:00</option>
-                        <option value="19:00">19:00</option>
-                        <option value="20:00">20:00</option>
-                        <option value="21:00">21:00</option>
-
-                    </select>
-
-                </div>
-
-                <div class="col-md-6 mb-3">
-
-                    <label for="horaFin" class="form-label fw-bold">
-                        Hora Fin
-                    </label>
-
-                    <select class="form-select"
-                            id="horaFin"
-                            name="horaFin"
-                            required>
-
-                        <option value="">
-                            Seleccionar
-                        </option>
-
-                        <option value="08:00">08:00</option>
-                        <option value="09:00">09:00</option>
-                        <option value="10:00">10:00</option>
-                        <option value="11:00">11:00</option>
-                        <option value="12:00">12:00</option>
-                        <option value="13:00">13:00</option>
-                        <option value="14:00">14:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="16:00">16:00</option>
-                        <option value="17:00">17:00</option>
-                        <option value="18:00">18:00</option>
-                        <option value="19:00">19:00</option>
-                        <option value="20:00">20:00</option>
-                        <option value="21:00">21:00</option>
-                        <option value="22:00">22:00</option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-        </form>
-
-        <div class="d-flex justify-content-center gap-3 mt-4">
-
-            <button id="botonAtras"
-                    type="button"
-                    class="btn btn-lg btn-secondary">
-                Atrás
-            </button>
-
-            <button id="botonSiguiente"
-                    type="button"
-                    class="btn btn-lg">
-                Siguiente
-            </button>
-
-        </div>
 
     </div>
 
-    <script src="./js/laboratorio.js"></script>
+
+
+
+
+    <form id="form" 
+          class="card shadow p-3 p-md-4 laboratorio-form mx-auto">
+
+
+        <div id="listaLaboratorios">
+
+
+            <label class="form-label fw-bold fs-5">
+                Laboratorio
+            </label>
+
+
+
+            <div class="laboratorios-lista">
+
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="laboratorio"
+                           id="lab1"
+                           value="1"
+                           required>
+
+                    <label class="form-check-label"
+                           for="lab1">
+                        Laboratorio 1
+                    </label>
+                </div>
+
+
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="laboratorio"
+                           id="lab2"
+                           value="2">
+
+                    <label class="form-check-label"
+                           for="lab2">
+                        Laboratorio 2
+                    </label>
+                </div>
+
+
+
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="laboratorio"
+                           id="lab3"
+                           value="3">
+
+                    <label class="form-check-label"
+                           for="lab3">
+                        Laboratorio 3
+                    </label>
+                </div>
+
+
+
+
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="laboratorio"
+                           id="lab4"
+                           value="4">
+
+                    <label class="form-check-label"
+                           for="lab4">
+                        Laboratorio 4
+                    </label>
+                </div>
+
+
+
+
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="laboratorio"
+                           id="lab5"
+                           value="5">
+
+                    <label class="form-check-label"
+                           for="lab5">
+                        Laboratorio 5
+                    </label>
+                </div>
+
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+
+        <div class="row">
+
+
+            <div class="col-12 col-sm-6 mb-3">
+
+
+                <label for="horaInicio"
+                       class="form-label fw-bold">
+
+                    Hora Inicio
+
+                </label>
+
+
+
+                <select class="form-select"
+                        id="horaInicio"
+                        name="horaInicio"
+                        required>
+
+
+                    <option value="">
+                        Seleccionar
+                    </option>
+
+
+                    <option>07:00</option>
+                    <option>08:00</option>
+                    <option>09:00</option>
+                    <option>10:00</option>
+                    <option>11:00</option>
+                    <option>12:00</option>
+                    <option>13:00</option>
+                    <option>14:00</option>
+                    <option>15:00</option>
+                    <option>16:00</option>
+                    <option>17:00</option>
+                    <option>18:00</option>
+                    <option>19:00</option>
+                    <option>20:00</option>
+                    <option>21:00</option>
+
+
+                </select>
+
+
+            </div>
+
+
+
+
+
+            <div class="col-12 col-sm-6 mb-3">
+
+
+                <label for="horaFin"
+                       class="form-label fw-bold">
+
+                    Hora Fin
+
+                </label>
+
+
+
+                <select class="form-select"
+                        id="horaFin"
+                        name="horaFin"
+                        required>
+
+
+                    <option value="">
+                        Seleccionar
+                    </option>
+
+
+                    <option>08:00</option>
+                    <option>09:00</option>
+                    <option>10:00</option>
+                    <option>11:00</option>
+                    <option>12:00</option>
+                    <option>13:00</option>
+                    <option>14:00</option>
+                    <option>15:00</option>
+                    <option>16:00</option>
+                    <option>17:00</option>
+                    <option>18:00</option>
+                    <option>19:00</option>
+                    <option>20:00</option>
+                    <option>21:00</option>
+                    <option>22:00</option>
+
+
+                </select>
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </form>
+
+
+
+
+
+
+
+    <div class="botones-container mt-4">
+
+
+        <button id="botonAtras"
+                type="button"
+                class="btn btn-lg btn-secondary">
+
+            Atrás
+
+        </button>
+
+
+
+
+
+        <button id="botonSiguiente"
+                type="button"
+                class="btn btn-lg">
+
+            Siguiente
+
+        </button>
+
+
+    </div>
+
+
+
+
+</div>
+
+
+
+
+
+<script src="./js/laboratorio.js"></script>
+
 
 </body>
+
 </html>

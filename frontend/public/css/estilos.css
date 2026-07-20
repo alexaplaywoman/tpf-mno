@@ -174,7 +174,6 @@ input[type="number"] {
     border-top: none;
 }
 
-/* Botón aceptar */
 #modalMensaje .btn-primary {
     background-color: var(--purple) !important;
     border-color: var(--purple) !important;
@@ -184,4 +183,297 @@ input[type="number"] {
 #modalMensaje .btn-primary:hover {
     background-color: var(--dark) !important;
     border-color: var(--dark) !important;
+}
+
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+
+.navbar {
+    width: 100% !important;
+}
+
+
+.contenido-ajustado {
+    width: 100%;
+    max-width: 100%;
+}
+
+@media(max-width:576px){
+
+    .container {
+        width:100% !important;
+        max-width:100% !important;
+        padding-left:15px;
+        padding-right:15px;
+    }
+
+
+    .navbar {
+        width:100% !important;
+    }
+
+
+    .contenido-ajustado {
+        width:100% !important;
+        height:auto !important;
+    }
+
+}
+
+.laboratorio-contenedor{
+    max-width: 1100px;
+}
+
+.titulo{
+    font-size: clamp(2rem, 5vw, 3rem);
+}
+
+
+.subtitulo{
+    font-size: clamp(1.2rem, 3vw, 2rem);
+}
+
+.descripcion{
+    font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+.pasos-container{
+
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:15px;
+
+}
+
+.paso{
+
+    padding:10px 25px;
+    border-radius:50px;
+    min-width:220px;
+    text-align:center;
+
+}
+
+.paso-inactivo{
+
+    background:#e5e5e5;
+    color:#999;
+
+}
+
+.paso-activo{
+
+    background:#6c6480;
+    color:white;
+
+}
+
+.laboratorio-form{
+
+    width:100%;
+    max-width:700px;
+
+}
+
+.form-check-input{
+
+    width:1.2rem;
+    height:1.2rem;
+
+}
+
+.form-check-label{
+
+    font-size:1.1rem;
+    cursor:pointer;
+
+}
+
+.botones-container{
+
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+
+}
+
+#botonSiguiente{
+
+    background:#8b597b;
+    color:white;
+
+}
+
+@media(max-width:576px){
+
+    .paso{
+
+        width:100%;
+        min-width:auto;
+
+    }
+
+    .botones-container button{
+
+        width:100%;
+
+    }
+
+    .laboratorio-form{
+
+        padding:20px!important;
+
+    }
+
+}
+
+.confirmar-container{
+
+    max-width:1200px;
+
+}
+
+.confirmar-form{
+
+    width:100%;
+
+}
+
+
+.confirmar-form .card-body{
+
+    padding:30px;
+
+}
+
+.datos-reserva{
+
+    height:fit-content;
+
+}
+
+.confirmar-container h1{
+
+    font-size:clamp(2rem,4vw,3rem);
+
+}
+
+.confirmar-container h2{
+
+    font-size:clamp(1.3rem,3vw,2rem);
+
+}
+
+.confirmar-container h4{
+
+    font-size:clamp(1rem,2vw,1.3rem);
+
+}
+
+.confirmar-container .rounded-pill{
+
+    width:220px;
+    height:45px !important;
+
+}
+
+@media(max-width:992px){
+
+    .confirmar-container{
+
+        padding-left:25px;
+        padding-right:25px;
+
+    }
+
+    .confirmar-container .row.justify-content-center{
+
+        gap:25px;
+
+    }
+
+
+}
+
+@media(max-width:576px){
+
+    .confirmar-container{
+
+        padding-left:15px;
+        padding-right:15px;
+
+    }
+
+    .confirmar-container h1{
+
+        font-size:2rem;
+
+    }
+
+    .confirmar-container h2{
+
+        font-size:1.25rem;
+
+    }
+
+    .confirmar-container h4{
+
+        font-size:1rem;
+
+    }
+
+    .confirmar-container .d-flex.justify-content-center.flex-wrap{
+
+        flex-direction:column;
+        align-items:center;
+
+        gap:10px !important;
+
+    }
+
+    .confirmar-container .rounded-pill{
+
+        width:100% !important;
+        max-width:300px;
+
+    }
+
+    .confirmar-form .card-body{
+
+        padding:20px !important;
+
+    }
+
+    #tipoDocumento,
+    #numeroDocumento{
+
+        width:100%;
+
+    }
+
+    .confirmar-container .d-flex.justify-content-between{
+
+        gap:10px;
+
+    }
+
+    .confirmar-container #botonAtras,
+    .confirmar-container #botonConfirmar{
+
+        flex:1;
+
+    }
+
+    .modal-dialog{
+
+        margin:15px;
+
+    }
+
 }
