@@ -9,51 +9,34 @@
 
     <title>Reservas</title>
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 </head>
 
 <body>
 
-    <!-- ALERTA ELIMINAR -->
+    <!-- modal para eliminar la reserva -->
 
-    <dialog id="alertaEliminar"
-            style="border:none;
-                   border-radius:12px;
-                   padding:20px;
-                   box-shadow:0 4px 12px rgba(0,0,0,.15);
-                   text-align:center;">
+    <dialog id="alertaEliminar" style="border:none; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,.15); text-align:center;">
 
-        <p class="mb-3">
-            ¿Seguro que desea eliminar esta reserva?
-        </p>
+        <p class="mb-3">¿Seguro que desea eliminar esta reserva?</p>
 
-        <button
-            id="btnConfirmarEliminarSi"
-            class="btn btn-dark me-2">
+        <button id="btnConfirmarEliminarSi" class="btn btn-dark me-2">
             Aceptar
         </button>
 
-        <button
-            id="btnConfirmarEliminarNo"
-            class="btn btn-secondary">
+        <button id="btnConfirmarEliminarNo" class="btn btn-secondary">
             Cancelar
         </button>
 
     </dialog>
 
-    <!-- NAVBAR -->
+    <!-- navbar donde está el botón de atrás -->
 
     <nav class="navbar navbar-dark bg-secondary px-3">
 
-        <a
-            id="inicio"
-            class="btn btn-dark btn-sm"
-            href="menu_administrador.html">
+        <a id="inicio" class="btn btn-dark btn-sm" href="menu_administrador.html">
 
             Inicio
 
@@ -65,23 +48,15 @@
 
         <div class="mx-auto mt-4" style="width:95%;">
 
-            <!-- TÍTULO -->
-
             <div class="d-flex justify-content-between align-items-center mb-3">
 
-                <h2 class="m-0">
-                    Reservas
-                </h2>
+                <h2 class="m-0">Reservas</h2>
 
             </div>
 
-            <!-- BOTÓN -->
-
             <div class="d-flex justify-content-between align-items-center mb-3">
 
-                <button
-                    id="agregar"
-                    class="btn btn-dark btn-sm">
+                <button id="agregar" class="btn btn-dark btn-sm">
 
                     <i class="bi bi-plus-circle"></i>
                     Agregar Reserva
@@ -95,8 +70,6 @@
                 class="text-danger text-center mb-3">
             </div>
 
-            <!-- TABLA -->
-
             <div class="table-responsive">
 
                 <table class="table table-bordered table-hover text-center align-middle">
@@ -106,34 +79,19 @@
                         <tr>
 
                             <th>Reserva</th>
-
                             <th>Número laboratorio</th>
-
                             <th>Cédula identidad</th>
-
                             <th>Correo</th>
-
                             <th>Estado reserva</th>
-
                             <th>Tipo actividad</th>
-
                             <th>Fecha a reservar</th>
-
                             <th>Hora inicio</th>
-
                             <th>Hora fin</th>
-
                             <th>Cantidad alumnos</th>
-
                             <th>Fecha solicitud</th>
-
                             <th>Motivo cancelación</th>
-
                             <th>Usuario cancelación</th>
-
-                            <th style="width:180px;">
-                                Acciones
-                            </th>
+                            <th style="width:180px;">Acciones</th>
 
                         </tr>
 
