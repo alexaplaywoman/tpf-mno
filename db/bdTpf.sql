@@ -484,7 +484,7 @@ create table DBA.PISOS
 /*==============================================================*/
 create table DBA.TIPO_ACTIVIDAD 
 (
-   ID_TIPO_ACTIVIDAD    D_CLAVE                        not null,
+   ID_TIPO_ACTIVIDAD    D_CLAVE                        not null default autoincrement,
    ID_PRIORIDAD         D_CLAVE                        null,
    NOMBRE               D_NOMBRE                       not null,
    NIVEL_PRIORIDAD      integer                        not null,

@@ -1,3 +1,10 @@
+// Helper: escapa credenciales antes de meterlas en la query string.
+function credsQueryString() {
+    const usuario = encodeURIComponent(sessionStorage.getItem('usuario') || '');
+    const clave   = encodeURIComponent(sessionStorage.getItem('clave')   || '');
+    return `usuario=${usuario}&clave=${clave}`;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById("inicio").addEventListener("click", function (e) {
         e.preventDefault();
@@ -7,19 +14,33 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById("botonSiguiente").addEventListener("click", function (e) {
         e.preventDefault();
 
+        const radioSeleccionado = document.querySelector('input[name="laboratorio"]:checked');
+        if (!radioSeleccionado) return;  // el boton deberia estar disabled si no hay lab
+
         let reservaLaboratorio = {
-            laboratorio: document.querySelector('input[name="laboratorio"]:checked').value,
+            laboratorio: radioSeleccionado.value,
             horaInicio: document.querySelector("#horaInicio").value,
             horaFin: document.querySelector("#horaFin").value
         };
 
         sessionStorage.setItem("reservaLaboratorio", JSON.stringify(reservaLaboratorio));
-
         window.location.href = "confirmar.html";
     });
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
         e.preventDefault();
+
+        // Guardar estado actual para que si el usuario vuelve, no pierda su seleccion.
+        // El radio puede no estar marcado -> guarda "".
+        const radioSeleccionado = document.querySelector('input[name="laboratorio"]:checked');
+
+        let reservaLaboratorio = {
+            laboratorio: radioSeleccionado ? radioSeleccionado.value : "",
+            horaInicio: document.querySelector("#horaInicio").value || "",
+            horaFin:    document.querySelector("#horaFin").value    || ""
+        };
+
+        sessionStorage.setItem("reservaLaboratorio", JSON.stringify(reservaLaboratorio));
         window.location.href = "evento.html";
     });
 
@@ -37,16 +58,47 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener("input", validar);
-
-    //ejecuta la validación inicial por si ya hay datos
     validar();
 
-    // Recupera la información que el usuario eligió en la pantalla anterior
-    let reservaEvento = JSON.parse(
-        sessionStorage.getItem("reservaEvento")
-    );
+    // =========================
+    // CARGA INICIAL + RESTAURACION
+    // =========================
+    let reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
 
-    cargarLaboratorios(reservaEvento);
+    cargarLaboratorios(reservaEvento).then(() => {
+        const previa = JSON.parse(sessionStorage.getItem("reservaLaboratorio"));
+        if (!previa) return;
+
+        if (previa.horaInicio) {
+            document.getElementById("horaInicio").value = previa.horaInicio;
+        }
+        if (previa.horaFin) {
+            document.getElementById("horaFin").value = previa.horaFin;
+        }
+
+        // Encadenamos los updates que hacen fetch para que corran uno detras
+        // de otro: primero traemos los horarios ocupados del lab, y despues
+        // consultamos la disponibilidad por horario. Asi la marca de
+        // "bloqueadoPermanente" que pone verificarLaboratorios queda seteada
+        // antes de que actualizarDisponibilidadPorHorario lea disabled.
+        let cadena = Promise.resolve();
+
+        if (previa.laboratorio) {
+            const radio = document.querySelector(
+                `input[name="laboratorio"][value="${previa.laboratorio}"]`
+            );
+            if (radio && !radio.disabled) {
+                radio.checked = true;
+                cadena = cadena.then(() => actualizarHorariosOcupadosDelLab());
+            }
+        }
+
+        if (previa.horaInicio && previa.horaFin) {
+            cadena = cadena.then(() => actualizarDisponibilidadPorHorario());
+        }
+
+        cadena.then(() => validar());
+    });
 
     // Vuelve a chequear disponibilidad (solapamiento) cada vez que
     // el usuario termina de elegir horaInicio u horaFin
@@ -54,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById("horaFin").addEventListener("change", actualizarDisponibilidadPorHorario);
 
     // Al elegir laboratorio, deshabilitamos en los <select> las horas
-    // que ya están ocupadas para ESE laboratorio en la fecha elegida
+    // que ya estan ocupadas para ESE laboratorio en la fecha elegida
     document.getElementById("horaInicio").addEventListener("change", actualizarOpcionesHoraFin);
     document.getElementById("listaLaboratorios").addEventListener("change", function (e) {
         if (e.target.name !== "laboratorio") return;
@@ -66,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // dia elegido. Se recalcula cada vez que cambia el laboratorio.
 let horariosOcupadosLab = [];
 
+// Devuelve la promesa del fetch para poder encadenar desde la restauracion.
 function actualizarHorariosOcupadosDelLab() {
     const laboratorio = document.querySelector('input[name="laboratorio"]:checked');
     const reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
@@ -73,20 +126,23 @@ function actualizarHorariosOcupadosDelLab() {
     if (!laboratorio || !reservaEvento) {
         horariosOcupadosLab = [];
         habilitarTodasLasHoras();
-        return;
+        return Promise.resolve();
     }
 
-    const usuario = sessionStorage.getItem('usuario');
-    const clave = sessionStorage.getItem('clave');
     const fecha = reservaEvento.fecha.split('T')[0];
 
-    fetch(`/api/laboratorios/horarios-ocupados?usuario=${usuario}&clave=${clave}` +
-          `&numero_laboratorio=${laboratorio.value}&fecha=${fecha}` +
-          `&id_tipo_actividad=${reservaEvento.actividad}`)
+    return fetch(`/api/laboratorios/horarios-ocupados?${credsQueryString()}` +
+                 `&numero_laboratorio=${laboratorio.value}&fecha=${fecha}` +
+                 `&id_tipo_actividad=${reservaEvento.actividad}`)
         .then(res => res.json())
         .then(ocupados => {
+            if (!Array.isArray(ocupados)) {
+                console.error('Respuesta invalida de horarios-ocupados:', ocupados);
+                horariosOcupadosLab = [];
+                return;
+            }
             // El backend devuelve "HH:MM:SS"; los <option> usan "HH:MM".
-            horariosOcupadosLab = (ocupados || []).map(o => ({
+            horariosOcupadosLab = ocupados.map(o => ({
                 HORA_INICIO: String(o.HORA_INICIO).slice(0, 5),
                 HORA_FIN: String(o.HORA_FIN).slice(0, 5)
             }));
@@ -107,7 +163,7 @@ function habilitarTodasLasHoras() {
 }
 
 // Una hora de inicio no sirve si cae DENTRO de una franja ya ocupada
-// (arrancar ahí ya se solapa, sin importar cuándo termine).
+// (arrancar ahi ya se solapa, sin importar cuando termine).
 function actualizarOpcionesHoraInicio() {
     const select = document.getElementById("horaInicio");
 
@@ -155,18 +211,24 @@ function actualizarOpcionesHoraFin() {
     }
 }
 
-// Trae los laboratorios reales del backend (capacidad y estado)
+// Trae los laboratorios reales del backend (capacidad y estado).
+// Los dos fetches podrian correr en paralelo, pero con el driver 'sybase'
+// eso a veces causaba JZ00L (Login failed) en concurrencia. La cola de
+// conexiones del backend serializa las peticiones, asi que ahora es seguro.
 function cargarLaboratorios(reservaEvento) {
-    const usuario = sessionStorage.getItem('usuario');
-    const clave = sessionStorage.getItem('clave');
-
-    Promise.all([
-        fetch(`/api/laboratorios?usuario=${usuario}&clave=${clave}`).then(r => r.json()),
-        fetch(`/api/recursos?usuario=${usuario}&clave=${clave}`).then(r => r.json())
+    return Promise.all([
+        fetch(`/api/laboratorios?${credsQueryString()}`).then(r => r.json()),
+        fetch(`/api/recursos?${credsQueryString()}`).then(r => r.json())
     ])
     .then(([laboratorios, recursos]) => {
-        console.log('recursos crudos:', recursos);
-        console.log('reservaEvento.recursos:', reservaEvento.recursos);
+        if (!Array.isArray(laboratorios)) {
+            console.error('Respuesta invalida de /api/laboratorios:', laboratorios);
+            return;
+        }
+        if (!Array.isArray(recursos)) {
+            console.error('Respuesta invalida de /api/recursos:', recursos);
+            return;
+        }
 
         // Agrupar recursos disponibles por lab
         const recursosPorLab = {};
@@ -239,30 +301,31 @@ function validarLaboratorio(laboratorio, reservaEvento) {
 
 // Vuelve a consultar disponibilidad (solapamiento) apenas el usuario
 // completa horaInicio y horaFin, y deshabilita los laboratorios que
-// ya tienen una reserva en ese rango horario
+// ya tienen una reserva en ese rango horario.
+// Devuelve la promesa del fetch para poder encadenar desde la restauracion.
 function actualizarDisponibilidadPorHorario() {
     const horaInicio = document.getElementById("horaInicio").value;
     const horaFin = document.getElementById("horaFin").value;
 
-    if (!horaInicio || !horaFin) return;
+    if (!horaInicio || !horaFin) return Promise.resolve();
 
-    const usuario = sessionStorage.getItem('usuario');
-    const clave = sessionStorage.getItem('clave');
     const reservaEvento = JSON.parse(sessionStorage.getItem("reservaEvento"));
     const fecha = reservaEvento.fecha.split('T')[0];
-    /*const recursos = reservaEvento.recursos && reservaEvento.recursos.length > 0
-        ? `&recursos=${encodeURIComponent(reservaEvento.recursos.join(','))}`
-        : '';*/
-    fetch(`/api/laboratorios/disponibilidad-horario?usuario=${usuario}&clave=${clave}` +
-          `&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}` +
-          `&id_tipo_actividad=${reservaEvento.actividad}`)
-    
+
+    return fetch(`/api/laboratorios/disponibilidad-horario?${credsQueryString()}` +
+                 `&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}` +
+                 `&id_tipo_actividad=${reservaEvento.actividad}`)
         .then(res => res.json())
         .then(data => {
+            if (!data || !Array.isArray(data.laboratorios)) {
+                console.error('Respuesta invalida de disponibilidad-horario:', data);
+                return;
+            }
             data.laboratorios.forEach(lab => {
                 const radio = document.querySelector(`input[name="laboratorio"][value="${lab.NUMERO_LABORATORIO}"]`);
                 if (!radio) return;
 
+                // Respetar el bloqueo permanente (estado / capacidad / recursos)
                 if (radio.dataset.bloqueadoPermanente === 'true') return;
 
                 const label = radio.parentElement.querySelector('label');
@@ -272,7 +335,6 @@ function actualizarDisponibilidadPorHorario() {
                     if (label) label.title = descripcionMotivo('horario');
                     if (radio.checked) {
                         radio.checked = false;
-                        validar();
                     }
                 } else {
                     if (label) label.removeAttribute('title');
