@@ -191,4 +191,274 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
+const monthYearEl = document.getElementById("month-year");
+const daysEl = document.getElementById("days");
+
+const prevMonthBtn = document.getElementById("prev-month");
+const nextMonthBtn = document.getElementById("next-month");
+const todayBtn = document.getElementById("today-btn");
+
+
+let currentDate = new Date();
+let reservasOcupadas = [];
+let selectedDate = null;
+
+
+// Traer fechas reservadas del backend
+async function cargarFechasOcupadas() {
+
+    try {
+
+        const usuario = sessionStorage.getItem("usuario");
+        const clave = sessionStorage.getItem("clave");
+
+        const respuesta = await fetch(
+            `/api/reservas/fechas-ocupadas?usuario=${usuario}&clave=${clave}`
+        );
+
+
+        if (respuesta.ok) {
+
+            reservasOcupadas = await respuesta.json();
+
+            console.log("Reservas:", reservasOcupadas);
+
+        } else {
+
+            reservasOcupadas = [];
+
+        }
+
+
+    } catch (error) {
+
+        console.error(error);
+        reservasOcupadas = [];
+
+    }
+
+}
+
+
+
+function renderCalendar() {
+
+    daysEl.innerHTML = "";
+
+
+    let year = currentDate.getFullYear();
+    let month = currentDate.getMonth();
+
+
+    const meses = [
+        "Enero", "Febrero", "Marzo", "Abril",
+        "Mayo", "Junio", "Julio", "Agosto",
+        "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+
+
+    monthYearEl.textContent = meses[month] + " " + year;
+
+
+    let primerDia = new Date(year, month, 1).getDay();
+    let ultimoDia = new Date(year, month + 1, 0).getDate();
+
+
+
+    // espacios antes del día 1
+    for (let i = 0; i < primerDia; i++) {
+
+        daysEl.appendChild(document.createElement("div"));
+
+    }
+
+
+
+    let hoy = new Date();
+    hoy.setHours(0,0,0,0);
+
+
+
+    for (let i = 1; i <= ultimoDia; i++) {
+
+
+        let day = document.createElement("div");
+
+        day.classList.add("day");
+
+        day.textContent = i;
+
+
+
+        let fecha = new Date(year, month, i);
+
+
+        let fechaString =
+            `${year}-${String(month + 1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+
+
+
+        let dow = fecha.getDay();
+
+        let esFinDeSemana = (dow === 0 || dow === 6);
+
+        let esPasado = fecha < hoy;
+
+
+
+        let reservaEseDia =
+            reservasOcupadas.find(r => r.fecha === fechaString);
+
+
+
+        if (esPasado || esFinDeSemana) {
+
+
+            day.classList.add("deshabilitado");
+
+
+            day.title = esPasado
+                ? "Fecha pasada"
+                : "Fin de semana: no se permiten reservas";
+
+
+        } else {
+
+
+
+            if (reservaEseDia) {
+
+                day.classList.add("has-events");
+
+                day.title =
+                    "Hay una reserva ese día";
+
+            }
+
+
+
+            day.addEventListener("click", function () {
+
+
+                selectedDate = fecha;
+
+
+                document.getElementById("fecha").value =
+                    fechaString;
+
+
+                renderCalendar();
+
+
+                validar();
+
+
+            });
+
+
+        }
+
+
+
+
+        // Hoy
+
+        if (
+            hoy.getDate() === i &&
+            hoy.getMonth() === month &&
+            hoy.getFullYear() === year
+        ) {
+
+            day.classList.add("today");
+
+        }
+
+
+
+        // Seleccionado
+
+        if (
+            selectedDate &&
+            selectedDate.getDate() === i &&
+            selectedDate.getMonth() === month &&
+            selectedDate.getFullYear() === year
+        ) {
+
+            day.classList.add("selected");
+
+        }
+
+
+
+        daysEl.appendChild(day);
+
+    }
+
+}
+
+
+
+// Mes anterior
+
+if (prevMonthBtn) {
+    prevMonthBtn.addEventListener("click", function(){
+
+        currentDate.setMonth(currentDate.getMonth() - 1);
+
+        renderCalendar();
+
+    });
+}
+
+
+if (nextMonthBtn) {
+    nextMonthBtn.addEventListener("click", function(){
+
+        currentDate.setMonth(currentDate.getMonth() + 1);
+
+        renderCalendar();
+
+    });
+}
+
+
+if (todayBtn) {
+    todayBtn.addEventListener("click", function(){
+
+        currentDate = new Date();
+
+        renderCalendar();
+
+    });
+}
+
+
+
+// Hoy
+
+todayBtn.addEventListener("click", function(){
+
+    currentDate = new Date();
+
+    renderCalendar();
+
 });
+
+
+
+
+// Inicializar calendario
+
+async function iniciarCalendario(){
+
+    await cargarFechasOcupadas();
+
+    renderCalendar();
+
+}
+
+
+iniciarCalendario();
+
+});
+

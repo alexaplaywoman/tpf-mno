@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar Reserva</title>
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/calendario_administrador.css">
 </head>
 
 <body class="bg-light">
@@ -51,9 +52,43 @@
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Fecha</label>
-                    <input type="date" id="fecha" class="form-control" required>
+                <div id="fecha" class="calendar-container">
+
+                    <div class="calendar-header">
+
+                        <div class="nav-buttons">
+
+                            <button type="button" id="prev-month" class="nav-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+
+                            <button type="button" id="next-month" class="nav-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+
+                        </div>
+
+                        <div class="month-year" id="month-year">
+                            Julio 2026
+                        </div>
+
+                    </div>
+
+                    <div class="weekdays">
+                        <div>Dom</div><div>Lun</div><div>Mar</div>
+                        <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                    </div>
+
+                    <div class="days" id="days"></div>
+
+                    <div class="calendar-footer">
+
+                        <button type="button" id="today-btn" class="today-btn">
+                            <i class="fas fa-calendar-day"></i> Hoy
+                        </button>
+
+                    </div>
+
                 </div>
 
                 <div class="mb-3">
