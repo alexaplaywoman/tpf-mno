@@ -8,6 +8,7 @@
     --rojo-dark: #7d2f46;  
 }
 
+
 body {
     margin: 0;
     background-color: var(--bg);

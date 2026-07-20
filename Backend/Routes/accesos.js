@@ -22,7 +22,7 @@ router.post('/', (req, res) => {
         db.disconnect();
 
         if (err) {
-          console.error("❌ Error al verificar permisos:", err);
+          console.error(" Error al verificar permisos:", err);
           return res.status(500).json({ exito: false, mensaje: "Error al verificar permisos." });
         }
 

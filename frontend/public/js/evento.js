@@ -1,24 +1,37 @@
 let selectedDate = null;
 let reservasOcupadas = [];
 
+// Helper: escapa credenciales antes de meterlas en la query string.
+// Sin esto, un usuario o clave con '&', '+', '%' o espacio rompia la URL
+// y el backend recibia credenciales cortadas -> login failed.
+function credsQueryString() {
+    const usuario = encodeURIComponent(sessionStorage.getItem('usuario') || '');
+    const clave   = encodeURIComponent(sessionStorage.getItem('clave')   || '');
+    return `usuario=${usuario}&clave=${clave}`;
+}
+
 // Los tipos de actividad se traen del backend (DBA.TIPO_ACTIVIDAD), no
-// se hardcodean acá: cada base local puede tener IDs distintos para el
+// se hardcodean aca: cada base local puede tener IDs distintos para el
 // mismo nombre (autoincrement + altas/bajas propias de cada integrante),
-// así que un <option value="X"> fijo podía guardar una actividad
-// distinta a la que el usuario veía en pantalla.
+// asi que un <option value="X"> fijo podia guardar una actividad
+// distinta a la que el usuario veia en pantalla.
 function renderActividades() {
-    const usuario = sessionStorage.getItem('usuario');
-    const clave = sessionStorage.getItem('clave');
     const select = document.getElementById("evento");
 
-    return fetch(`/api/actividades?usuario=${usuario}&clave=${clave}`)
+    return fetch(`/api/actividades?${credsQueryString()}`)
         .then(res => res.json())
         .then(actividades => {
+            console.log('actividades response:', actividades);
             select.innerHTML = `
                 <option value="" selected disabled class="text-muted">Seleccionar una actividad</option>
             `;
 
-            (actividades || []).forEach(function (actividad) {
+            if (!Array.isArray(actividades)) {
+                console.error('Respuesta invalida de /api/actividades:', actividades);
+                return;
+            }
+
+            actividades.forEach(function (actividad) {
                 const option = document.createElement("option");
                 option.value = actividad.ID_TIPO_ACTIVIDAD;
                 option.textContent = actividad.NOMBRE;
@@ -30,19 +43,17 @@ function renderActividades() {
         });
 }
 
-// Los recursos se traen del backend (DBA.RECURSOS), no se hardcodean acá,
+// Los recursos se traen del backend (DBA.RECURSOS), no se hardcodean aca,
 // porque los tipos y su disponibilidad por laboratorio los administra el admin.
 function renderRecursos() {
-    const usuario = sessionStorage.getItem('usuario');
-    const clave = sessionStorage.getItem('clave');
     const contenedor = document.getElementById("listaRecursos");
 
-    fetch(`/api/recursos/tipos?usuario=${usuario}&clave=${clave}`)
+    return fetch(`/api/recursos/tipos?${credsQueryString()}`)
         .then(res => res.json())
         .then(tipos => {
             contenedor.innerHTML = "";
 
-            if (!tipos || tipos.length === 0) {
+            if (!Array.isArray(tipos) || tipos.length === 0) {
                 contenedor.innerHTML = "<p class='text-muted'>No hay recursos disponibles.</p>";
                 return;
             }
@@ -71,183 +82,139 @@ function renderRecursos() {
 
 document.addEventListener("DOMContentLoaded", async function () {
 
-    // Generar el select de tipo de actividad y los checkboxes de
-    // recursos según el laboratorio elegido
+    // Generar el select de tipo de actividad y los checkboxes de recursos
     const actividadesListas = renderActividades();
-    renderRecursos();
-
+    const recursosListos    = renderRecursos();
 
     // =========================
-    // CARGAR DATOS DE EDICIÓN
+    // RESTAURACION DE DATOS
     // =========================
+    // Prioridad: si venimos del flujo de edicion -> reservaEditar.
+    // Si no, si el usuario volvio con "Atras" -> reservaEvento.
+    let reservaEditar = JSON.parse(sessionStorage.getItem("reservaEditar"));
+    const reservaEventoPrevia = JSON.parse(sessionStorage.getItem("reservaEvento"));
 
-    let reservaEditar = JSON.parse(
-        sessionStorage.getItem("reservaEditar")
-    );
+    const datos = reservaEditar
+        ? {
+              actividad: reservaEditar.ID_TIPO_ACTIVIDAD,
+              alumnos:   reservaEditar.CANTIDAD_ALUMNOS,
+              fecha:     reservaEditar.FECHA_A_RESERVAR,
+              recursos:  reservaEditar.recursos
+          }
+        : reservaEventoPrevia;
 
-    // El <select> de actividad recién tiene sus <option> después de
-    // que renderActividades termine, así que el value se setea ahí.
-    actividadesListas.then(() => {
-        if (reservaEditar) {
-            document.getElementById("evento").value =
-                reservaEditar.ID_TIPO_ACTIVIDAD;
+    // Esperamos a que ambos fetches terminen antes de restaurar, asi
+    // el <select> de actividad ya tiene sus <option> y los checkboxes
+    // de recursos ya estan en el DOM. Mas robusto que un setTimeout.
+    Promise.all([actividadesListas, recursosListos]).then(() => {
+        if (!datos) return;
+
+        if (datos.actividad) {
+            document.getElementById("evento").value = datos.actividad;
         }
+        if (datos.alumnos) {
+            document.getElementById("alumnos").value = datos.alumnos;
+        }
+        if (datos.fecha) {
+            selectedDate = new Date(datos.fecha);
+        }
+        if (Array.isArray(datos.recursos)) {
+            datos.recursos.forEach(nombre => {
+                const cb = document.getElementById("recurso" + nombre.replace(/\s+/g, ''));
+                if (cb) cb.checked = true;
+            });
+        }
+
+        // El calendario ya se pinto sin selectedDate; lo repintamos.
+        renderCalendar();
+        validar();
     });
 
-    setTimeout(() => {
-
-
-        if(reservaEditar){
-
-            console.log(
-                "Reserva cargada para editar:",
-                reservaEditar
-            );
-
-
-            // Cantidad de alumnos
-            document.getElementById("alumnos").value =
-                reservaEditar.CANTIDAD_ALUMNOS;
-
-
-
-            // Fecha seleccionada
-            selectedDate =
-                new Date(reservaEditar.FECHA_A_RESERVAR);
-
-
-
-            // Recursos (si existen)
-            if(reservaEditar.recursos){
-
-                reservaEditar.recursos.forEach(nombre => {
-
-                    let checkbox =
-                        document.getElementById(
-                            "recurso" + nombre.replace(/\s+/g, '')
-                        );
-
-
-                    if(checkbox){
-
-                        checkbox.checked = true;
-
-                    }
-
-                });
-
-            }
-
-        }
-
-
-    },100);
-
     // =========================
-    // BOTONES DE NAVEGACIÓN
+    // BOTONES DE NAVEGACION
     // =========================
 
     document.getElementById("botonSiguiente").addEventListener("click", function (e) {
-
         e.preventDefault();
-        let selectActividad = document.querySelector("#evento");
+        const selectActividad = document.querySelector("#evento");
+        const selOption = selectActividad.options[selectActividad.selectedIndex];
 
         let reservaEvento = {
             alumnos: parseInt(document.querySelector("#alumnos").value),
-            actividad: selectActividad.value,   // el número: sigue yendo al backend como id_tipo_actividad
-            actividadNombre: selectActividad.options[selectActividad.selectedIndex].text, // el texto visible
+            actividad: selectActividad.value,
+            actividadNombre: selOption ? selOption.text : "",
             fecha: selectedDate,
             recursos: obtenerRecursos()
         };
 
-        console.log(reservaEvento);
-
-        sessionStorage.setItem(
-            "reservaEvento",
-            JSON.stringify(reservaEvento)
-        );
-
-
+        sessionStorage.setItem("reservaEvento", JSON.stringify(reservaEvento));
         window.location.href = "laboratorios.html";
-
     });
 
 
     document.getElementById("botonAtras").addEventListener("click", function (e) {
-
         e.preventDefault();
 
+        // Guardar el estado actual del formulario para que si el usuario
+        // vuelve, encuentre todo como lo dejo. Usamos guardas para no
+        // romper si algun campo esta vacio (selOption puede ser null).
+        const selectActividad = document.querySelector("#evento");
+        const selOption = selectActividad.options[selectActividad.selectedIndex];
+
+        let reservaEvento = {
+            alumnos: parseInt(document.querySelector("#alumnos").value) || 0,
+            actividad: selectActividad.value || "",
+            actividadNombre: selOption ? selOption.text : "",
+            fecha: selectedDate,
+            recursos: obtenerRecursos()
+        };
+
+        sessionStorage.setItem("reservaEvento", JSON.stringify(reservaEvento));
         window.location.href = "edificio.html";
-
     });
 
 
-    document.getElementById("inicio").addEventListener("click", function(e){
+    document.getElementById("inicio").addEventListener("click", function (e) {
         e.preventDefault();
-        window.location.href="menu.html";
-
+        window.location.href = "menu.html";
     });
 
 
-
     // =========================
-    // VALIDACIÓN FORMULARIO
+    // VALIDACION FORMULARIO
     // =========================
-
 
     let form = document.querySelector("#form");
     let btn = document.querySelector("#botonSiguiente");
 
-
     function validar() {
-
-
         let deshabilitar = false;
-
 
         if (form.alumnos.value === "") {
             deshabilitar = true;
         }
-
-
         if (form.evento.value === "") {
             deshabilitar = true;
         }
-
-
         if (selectedDate === null) {
             deshabilitar = true;
         }
 
-
-
         let recursosSeleccionados =
             document.querySelectorAll('input[type="checkbox"]:checked');
-
-
 
         if (recursosSeleccionados.length === 0) {
             deshabilitar = true;
         }
-
-
-
         btn.disabled = deshabilitar;
-
     }
 
-
-
     form.addEventListener("input", validar);
-
     document.addEventListener("change", validar);
-
-
 
     // =========================
     // CALENDARIO
     // =========================
-
 
     const monthYearEl = document.getElementById("month-year");
     const daysEl = document.getElementById("days");
@@ -256,73 +223,28 @@ document.addEventListener("DOMContentLoaded", async function () {
     const nextMonthBtn = document.getElementById("next-month");
     const todayBtn = document.getElementById("today-btn");
 
-
     let currentDate = new Date();
 
-    // Traer fechas reservadas del backend
+    async function cargarFechasOcupadas() {
+        try {
+            const respuesta = await fetch(`/api/reservas/fechas-ocupadas?${credsQueryString()}`);
 
-   async function cargarFechasOcupadas(){
-
-
-    try{
-
-
-        const usuario =
-        sessionStorage.getItem("usuario");
-
-
-        const clave =
-        sessionStorage.getItem("clave");
-
-
-
-        const respuesta =
-        await fetch(
-            `/api/reservas/fechas-ocupadas?usuario=${usuario}&clave=${clave}`
-        );
-
-
-
-        if(respuesta.ok){
-
-
-            reservasOcupadas =
-            await respuesta.json();
-
-
-            console.log(
-                "Reservas:",
-                reservasOcupadas
-            );
-
-
-        }else{
-
-
-            reservasOcupadas=[];
-
-
+            if (respuesta.ok) {
+                const data = await respuesta.json();
+                reservasOcupadas = Array.isArray(data) ? data : [];
+                console.log("Reservas:", reservasOcupadas);
+            } else {
+                reservasOcupadas = [];
+            }
+        } catch (error) {
+            console.error(error);
+            reservasOcupadas = [];
         }
-
-
-
-    }catch(error){
-
-
-        console.error(error);
-
-        reservasOcupadas=[];
-
-
     }
 
-
-}
-
-
-
-function renderCalendar() {
-
+    // Se declara como funcion nombrada (no arrow) y a nivel del DOMContentLoaded
+    // para que el .then() de restauracion pueda llamarla por nombre.
+    function renderCalendar() {
         daysEl.innerHTML = "";
 
         let year  = currentDate.getFullYear();
@@ -338,16 +260,14 @@ function renderCalendar() {
         let primerDia = new Date(year, month, 1).getDay();
         let ultimoDia = new Date(year, month + 1, 0).getDate();
 
-        // espacios vacíos antes del día 1
         for (let i = 0; i < primerDia; i++) {
             daysEl.appendChild(document.createElement("div"));
         }
 
         let hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);   // comparar solo la fecha, sin la hora
+        hoy.setHours(0, 0, 0, 0);
 
         for (let i = 1; i <= ultimoDia; i++) {
-
             let day = document.createElement("div");
             day.classList.add("day");
             day.textContent = i;
@@ -360,27 +280,24 @@ function renderCalendar() {
             // SQL DOW(): 1=domingo, 7=sabado.  JS getDay(): 0=domingo, 6=sabado.
             let dow           = fecha.getDay();
             let esFinDeSemana = (dow === 0 || dow === 6);
-            let esPasado      = fecha < hoy;   // hoy NO es pasado (igual que "fecha < CURRENT DATE")
+            let esPasado      = fecha < hoy;
 
             let reservaEseDia = reservasOcupadas.find(r => r.fecha === fechaString);
 
             if (esPasado || esFinDeSemana) {
-
                 day.classList.add("deshabilitado");
                 day.title = esPasado
                     ? "Fecha pasada"
                     : "Fin de semana: no se permiten reservas";
-
             } else {
-
-                // Que haya una reserva ESE DÍA no significa que el día
-                // completo esté ocupado (puede ser en otro laboratorio
-                // u otro horario) — el solapamiento real se valida por
-                // laboratorio + horario en el siguiente paso. Acá solo
+                // Que haya una reserva ese dia no significa que el dia
+                // completo este ocupado (puede ser en otro laboratorio
+                // u otro horario) - el solapamiento real se valida por
+                // laboratorio + horario en el siguiente paso. Aca solo
                 // mostramos un indicador, sin bloquear el clic.
                 if (reservaEseDia) {
                     day.classList.add("has-events");
-                    day.title = "Hay una reserva ese día: " + reservaEseDia.inicio + " - " + reservaEseDia.fin;
+                    day.title = "Hay una reserva ese dia: " + reservaEseDia.inicio + " - " + reservaEseDia.fin;
                 }
 
                 day.addEventListener("click", function () {
@@ -390,12 +307,10 @@ function renderCalendar() {
                 });
             }
 
-            // Día actual
             if (hoy.getDate() === i && hoy.getMonth() === month && hoy.getFullYear() === year) {
                 day.classList.add("today");
             }
 
-            // Día seleccionado
             if (selectedDate &&
                 selectedDate.getDate() === i &&
                 selectedDate.getMonth() === month &&
@@ -407,108 +322,36 @@ function renderCalendar() {
         }
     }
 
+    prevMonthBtn.addEventListener("click", function () {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
 
+    nextMonthBtn.addEventListener("click", function () {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
 
-
-
-    // Cambiar mes anterior
-
-    prevMonthBtn.addEventListener(
-        "click",
-        function(){
-
-
-            currentDate.setMonth(
-                currentDate.getMonth()-1
-            );
-
-
-            renderCalendar();
-
-
-        }
-    );
-
-
-
-
-    // Cambiar mes siguiente
-
-    nextMonthBtn.addEventListener(
-        "click",
-        function(){
-
-
-            currentDate.setMonth(
-                currentDate.getMonth()+1
-            );
-
-
-            renderCalendar();
-
-
-        }
-    );
-
-
-
-
-
-    // Volver a hoy
-
-    todayBtn.addEventListener(
-        "click",
-        function(){
-
-
-            currentDate = new Date();
-
-            renderCalendar();
-
-
-        }
-    );
-
-
-
-
-    // cargar una sola vez
+    todayBtn.addEventListener("click", function () {
+        currentDate = new Date();
+        renderCalendar();
+    });
 
     await cargarFechasOcupadas();
-
-
     renderCalendar();
-
-
     validar();
-
-
-
 });
-
-
-
 
 // =========================
 // OBTENER RECURSOS
 // =========================
 
-
-function obtenerRecursos(){
-
+function obtenerRecursos() {
     let recursos = [];
-
     document
-    .querySelectorAll(
-        'input[type="checkbox"]:checked'
-    )
-    .forEach(r => {
-
-        recursos.push(
-            r.value
-        );
-
-    });
-
+        .querySelectorAll('input[type="checkbox"]:checked')
+        .forEach(r => {
+            recursos.push(r.value);
+        });
     return recursos;
 }
