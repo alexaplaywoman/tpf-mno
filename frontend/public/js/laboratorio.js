@@ -1,3 +1,103 @@
+// =========================
+// DROPDOWN CUSTOM CON SCROLL (envuelve a un <select> real)
+// Todo el resto del JS lee/escribe
+// sobre el <select> como siempre; esta capa solo dibuja.
+// =========================
+function inicializarSelectsCustom() {
+
+    document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+
+        const targetId = wrapper.dataset.target;
+        const select   = document.getElementById(targetId);
+        const toggle   = wrapper.querySelector('.custom-select-toggle');
+        const menu     = wrapper.querySelector('.custom-select-menu');
+
+        // Redibuja el menu leyendo el estado actual del <select> real
+        function refrescar() {
+            menu.innerHTML = '';
+
+            Array.from(select.options).forEach(opt => {
+                if (opt.value === '') return;  // no mostramos el placeholder
+
+                const item = document.createElement('div');
+                item.className   = 'custom-select-option';
+                item.textContent = opt.textContent.trim();
+                item.dataset.value = opt.value;
+
+                if (opt.disabled) {
+                    item.classList.add('disabled');
+                    if (opt.title) item.title = opt.title;
+                }
+                if (select.value === opt.value) {
+                    item.classList.add('selected');
+                }
+
+                item.addEventListener('click', () => {
+                    if (item.classList.contains('disabled')) return;
+
+                    select.value = opt.value;
+                    // Disparamos change para que el JS existente reaccione
+                    // (actualizarDisponibilidadPorHorario, actualizarOpcionesHoraFin, validar)
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    select.dispatchEvent(new Event('input',  { bubbles: true }));
+
+                    menu.classList.remove('show');
+                });
+
+                menu.appendChild(item);
+            });
+
+            // Etiqueta del boton
+            const sel = select.options[select.selectedIndex];
+            toggle.textContent = (sel && sel.value !== '')
+                ? sel.textContent.trim()
+                : 'Seleccionar';
+        }
+
+        // Toggle open/close
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.custom-select-menu').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+            menu.classList.toggle('show');
+        });
+
+        // Interceptamos el setter de .value del <select> real para que
+        // cuando el JS existente haga `select.value = ""` (linea 182/210
+        // al desmarcar una opcion recien deshabilitada), la UI se actualice.
+        const desc = Object.getOwnPropertyDescriptor(
+            HTMLSelectElement.prototype, 'value'
+        );
+        Object.defineProperty(select, 'value', {
+            configurable: true,
+            get()  { return desc.get.call(this); },
+            set(v) { desc.set.call(this, v); refrescar(); }
+        });
+
+        // Observamos cambios de "disabled" en los <option> reales
+        // (esto lo hacen actualizarOpcionesHoraInicio / HoraFin)
+        const mo = new MutationObserver(refrescar);
+        Array.from(select.options).forEach(opt => {
+            mo.observe(opt, { attributes: true, attributeFilter: ['disabled', 'title'] });
+        });
+
+        // Change nativo por si algo dispara change sin tocar .value
+        select.addEventListener('change', refrescar);
+
+        refrescar();
+    });
+
+    // Cerrar al hacer click afuera
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-select-wrapper')) {
+            document.querySelectorAll('.custom-select-menu')
+                    .forEach(m => m.classList.remove('show'));
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', inicializarSelectsCustom);
 // Helper: escapa credenciales antes de meterlas en la query string.
 function credsQueryString() {
     const usuario = encodeURIComponent(sessionStorage.getItem('usuario') || '');

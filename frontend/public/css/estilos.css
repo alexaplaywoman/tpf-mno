@@ -51,7 +51,76 @@ input[type="number"] {
     padding: 30px;
     transform: translateY(-15px);
 }
+/* Select real oculto pero presente en el form */
+.select-oculto {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    overflow: hidden;
+}
 
+/* Wrapper */
+.custom-select-wrapper {
+    position: relative;
+}
+
+.custom-select-toggle {
+    cursor: pointer;
+    background-color: #fff;
+}
+
+/* Menu con scroll */
+.custom-select-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    max-height: 120px;      /* ~5 opciones visibles */
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+}
+
+.custom-select-menu.show {
+    display: block;
+}
+
+.custom-select-option {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-select-option:hover:not(.disabled) {
+    background-color: #f1f3f5;
+}
+
+.custom-select-option.selected {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.custom-select-option.disabled {
+    color: #adb5bd;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* Scrollbar mas prolijo */
+.custom-select-menu::-webkit-scrollbar {
+    width: 8px;
+}
+.custom-select-menu::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 4px;
+}
 #botonReserva,
 #botonConsultar,
 #botonAtras,
