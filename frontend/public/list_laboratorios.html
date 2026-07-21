@@ -11,12 +11,10 @@
     <title>Laboratorios</title>
 
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
 
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 
 </head>
@@ -24,319 +22,142 @@
 
 <body>
 
+    <!-- modal para eliminar los laboratorios -->
+    <dialog id="alertaEliminar" style="border:none; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); text-align:center;">
+
+        <p style="margin-bottom:15px;font-family:sans-serif;">
+
+            ¿Seguro que desea eliminar este laboratorio?
+
+        </p>
+
+        <button id="btnConfirmarEliminarSi" class="btn btn-dark me-2">
+
+            Aceptar
+
+        </button>
+
+        <button id="btnConfirmarEliminarNo" class="btn btn-secondary">
+
+            Cancelar
+
+        </button>
 
 
-<!-- ALERTA ELIMINAR -->
+    </dialog>
 
-<dialog 
-    id="alertaEliminar"
-    style="
-        border:none;
-        border-radius:12px;
-        padding:20px;
-        box-shadow:0 4px 12px rgba(0,0,0,0.15);
-        text-align:center;
-    ">
+    <!-- navbar donde está el botón de atrás -->
 
+    <nav class="navbar navbar-dark bg-secondary w-100 px-3">
 
-    <p style="margin-bottom:15px;font-family:sans-serif;">
+        <a id="inicio" class="btn btn-dark btn-sm" href="menu.html">
 
-        ¿Seguro que desea eliminar este laboratorio?
+            Inicio
 
-    </p>
+        </a>
 
+    </nav>
 
+    <div class="container">
 
-    <button 
-        id="btnConfirmarEliminarSi"
-        class="btn btn-dark me-2">
+        <div class="container py-4">
 
-        Aceptar
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
 
-    </button>
-
-
-
-    <button 
-        id="btnConfirmarEliminarNo"
-        class="btn btn-secondary">
-
-        Cancelar
-
-    </button>
-
-
-</dialog>
-
-
-
-
-
-
-
-
-<!-- NAVBAR -->
-
-
-<nav class="navbar navbar-dark bg-secondary w-100 px-3">
-
-
-    <a id="inicio"
-       class="btn btn-dark btn-sm"
-       href="menu.html">
-
-
-        Inicio
-
-
-    </a>
-
-
-</nav>
-
-
-
-
-
-
-
-
-
-<div class="container">
-
-
-    <div class="mx-auto" style="width:90%;">
-
-
-
-
-
-        <!-- TITULO -->
-
-
-        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-
-
-            <h2 class="m-0">
+                <h2 class="m-0">
 
                 Laboratorios
 
-            </h2>
+                </h2>
 
+            </div>
 
-        </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
+                <button id="agregar" class="btn btn-dark btn-sm">
 
+                    <i class="bi bi-plus-circle"></i>
 
+                    Agregar Laboratorio
 
+                </button>
 
-
-
-
-
-        <!-- BOTONES -->
-
-
-        <div class="d-flex justify-content-between align-items-center mb-3">
-
-
-
-            <button 
-                id="agregar"
-                class="btn btn-dark btn-sm">
-
-
-                <i class="bi bi-plus-circle"></i>
-
-                Agregar Laboratorio
-
-
-            </button>
-
-
-
-
-
-
-
-            <button 
-                id="recursos"
-                class="btn btn-dark btn-sm">
-
+            <button  id="recursos" class="btn btn-dark btn-sm">
 
                 <i class="bi bi-tools"></i>
 
                 Recursos
 
-
             </button>
-
-
 
         </div>
 
+        <div class="table-responsive">
 
+            <table class="table table-bordered table-hover text-center">
 
+                <thead class="table-light">
 
+                    <tr>
 
+                        <th>Número laboratorio</th>
+                        <th>Edificio</th>
+                        <th>Capacidad Alumnos</th>
+                        <th>Cantidad Computadoras</th>
+                        <th>Velocidad Conexión a internet</th>
+                        <th style="width:180px;">Acciones</th>
 
+                    </tr>
 
+                </thead>
 
+                <tbody id="laboratorios-list">
 
-        <!-- TABLA -->
+                    <tr>
 
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
 
-        <table class="table table-bordered table-hover text-center">
+                        <td>
 
+                            <div class="d-flex justify-content-center gap-2">
 
-            <thead class="table-light">
+                                <button class="btnModificar btn btn-dark btn-sm">
 
+                                    <i class="bi bi-pencil-square"></i>
 
-                <tr>
+                                    Editar
 
+                                </button>
 
-                    <th>
-                        Número laboratorio
-                    </th>
+                                <button class="btnEliminar btn btn-dark btn-sm">
 
+                                    <i class="bi bi-trash"></i>
 
-                    <th>
-                        Edificio
-                    </th>
+                                    Eliminar
 
+                                </button>
 
-                    <th>
-                        Capacidad Alumnos
-                    </th>
+                            </div>
 
+                        </td>
 
-                    <th>
-                        Cantidad Computadoras
-                    </th>
+                    </tr>
 
+                </tbody>
 
-                    <th>
-                        Velocidad Conexión a internet
-                    </th>
+            </table>
 
-
-                    <th style="width:180px;">
-                        Acciones
-                    </th>
-
-
-                </tr>
-
-
-            </thead>
-
-
-
-
-
-
-
-
-            <tbody id="laboratorios-list">
-
-
-                <tr>
-
-
-                    <td></td>
-
-
-                    <td></td>
-
-
-                    <td></td>
-
-
-                    <td></td>
-
-
-                    <td></td>
-
-
-
-
-                    <td>
-
-
-                        <div class="d-flex justify-content-center gap-2">
-
-
-
-                            <button 
-                                class="btnModificar btn btn-dark btn-sm">
-
-
-                                <i class="bi bi-pencil-square"></i>
-
-                                Editar
-
-
-                            </button>
-
-
-
-
-
-
-
-                            <button 
-                                class="btnEliminar btn btn-dark btn-sm">
-
-
-                                <i class="bi bi-trash"></i>
-
-                                Eliminar
-
-
-                            </button>
-
-
-
-                        </div>
-
-
-                    </td>
-
-
-                </tr>
-
-
-
-            </tbody>
-
-
-
-        </table>
-
-
-
-
+        </div>
 
     </div>
 
-
-</div>
-
-
-
-
-
-
-
-
 <script src="./js/list_laboratorio.js"></script>
-
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 
-
-
 </body>
-
 
 </html>
