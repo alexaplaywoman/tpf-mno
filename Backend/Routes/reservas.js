@@ -227,7 +227,40 @@ router.post('/add', (req, res) => {
                         );
                     }
                 );
-
+                // Notificar a los solicitantes desplazados (si los hubo)
+                if (desplazadas.length > 0) {
+                    connection.query(
+                        `SELECT r.CORREO, s.NOMBRE, s.APELLIDO, r.FECHA_A_RESERVAR,
+                                r.HORA_INICIO, r.HORA_FIN, l.NUMERO_LABORATORIO,
+                                ta.NOMBRE AS ACTIVIDAD_NUEVA
+                        FROM DBA.RESERVAS r
+                        JOIN DBA.SOLICITANTES s
+                            ON s.CEDULA_IDENTIDAD = r.CEDULA_IDENTIDAD
+                            AND s.CORREO = r.CORREO
+                        JOIN DBA.LABORATORIOS l
+                            ON l.NUMERO_LABORATORIO = r.NUMERO_LABORATORIO
+                        CROSS JOIN DBA.TIPO_ACTIVIDAD ta
+                        WHERE r.ID_RESERVA IN (${desplazadas.join(',')})
+                        AND ta.ID_TIPO_ACTIVIDAD = ${id_tipo_actividad}`,
+                        (err, filas) => {
+                            if (err || !filas) return;   // no romper el flujo si falla el mail
+                            filas.forEach(f => {
+                                enviarCorreoReserva(
+                                    f.CORREO,
+                                    'Reserva cancelada por prioridad - Lab Kontrol',
+                                    `Hola ${f.NOMBRE} ${f.APELLIDO}!\n\n` +
+                                    `Tu reserva del laboratorio ${f.NUMERO_LABORATORIO} ` +
+                                    `para el ${f.FECHA_A_RESERVAR} de ${f.HORA_INICIO} a ${f.HORA_FIN} ` +
+                                    `fue cancelada automaticamente porque otro solicitante reservo ` +
+                                    `el mismo horario para una actividad de mayor prioridad ` +
+                                    `(${f.ACTIVIDAD_NUEVA}).\n\n` +
+                                    `Podes solicitar una nueva reserva en otro horario o laboratorio.\n\n` +
+                                    `Lab Kontrol.`
+                                );
+                            });
+                        }
+                    );
+                }
                 if (idsRecursosDisponibles.length === 0) {
                     connection.disconnect();
                     return res.json({ success: true, id_reserva: idReserva, desplazadas });
@@ -285,50 +318,73 @@ router.post('/cancelar/:id', (req, res) => {
                     }
 
                     const continuarCancelacion = () => {
+                        // Validar estado y timing antes de cancelar
                         connection.query(
-                            `UPDATE DBA.RESERVAS
-                            SET ID_ESTADO_RESERVA = (
-                                    SELECT ID_ESTADO_RESERVA
-                                    FROM DBA.ESTADO_RESERVA
-                                    WHERE ESTADO_RESERVA = 'C'
-                                ),
-                                MOTIVO_CANCELACION = '${motivo}',
-                                USUARIO_CANCELACION = '${cedula_responsable}'
-                            WHERE ID_RESERVA = ${id}`,
-                            (err) => {
-                                if (err) {
+                            `SELECT er.ESTADO_RESERVA, r.FECHA_A_RESERVAR, r.HORA_INICIO
+                            FROM DBA.RESERVAS r
+                            JOIN DBA.ESTADO_RESERVA er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
+                            WHERE r.ID_RESERVA = ${id}`,
+                            (err, filas) => {
+                                if (err) { connection.disconnect(); return manejarError(err, res, 'consultar estado de reserva'); }
+                                if (filas.length === 0) {
                                     connection.disconnect();
-                                    return manejarError(err, res, 'cancelar reserva');
+                                    return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+                                }
+
+                                const r = filas[0];
+                                if (r.ESTADO_RESERVA !== 'P') {
+                                    connection.disconnect();
+                                    return res.status(409).json({ success: false, error: 'Solo se pueden cancelar reservas pendientes.' });
+                                }
+
+                                // Un solicitante no puede cancelar reservas que ya iniciaron o pasaron.
+                                // Un admin sí (por si necesita registrar cancelacion tardia).
+                                if (!esAdmin) {
+                                    const ahora = new Date();
+                                    const inicio = new Date(`${String(r.FECHA_A_RESERVAR).split('T')[0]}T${r.HORA_INICIO}`);
+                                    if (inicio <= ahora) {
+                                        connection.disconnect();
+                                        return res.status(409).json({ success: false, error: 'No podés cancelar una reserva que ya inició o venció.' });
+                                    }
                                 }
 
                                 connection.query(
-                                    `SELECT r.CORREO, r.NUMERO_LABORATORIO, r.FECHA_A_RESERVAR, r.HORA_INICIO, r.HORA_FIN,
-                                            s.NOMBRE, s.APELLIDO, ta.NOMBRE AS ACTIVIDAD
-                                     FROM DBA.RESERVAS r
-                                     JOIN DBA.SOLICITANTES s ON s.CEDULA_IDENTIDAD = r.CEDULA_IDENTIDAD AND s.CORREO = r.CORREO
-                                     JOIN DBA.TIPO_ACTIVIDAD ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
-                                     WHERE r.ID_RESERVA = ${id}`,
-                                    (err, reservaCancelada) => {
-                                        connection.disconnect();
+                                    `UPDATE DBA.RESERVAS
+                                    SET ID_ESTADO_RESERVA = (SELECT ID_ESTADO_RESERVA FROM DBA.ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C'),
+                                        MOTIVO_CANCELACION = '${motivo}',
+                                        USUARIO_CANCELACION = '${cedula_responsable}'
+                                    WHERE ID_RESERVA = ${id}`,
+                                    (err) => {
+                                        if (err) { connection.disconnect(); return manejarError(err, res, 'cancelar reserva'); }
 
-                                        if (!err && reservaCancelada.length > 0) {
-                                            const r = reservaCancelada[0];
-                                            enviarCorreoReserva(
-                                                r.CORREO,
-                                                'Cancelación de reserva - Lab Kontrol',
-                                                `Hola ${r.NOMBRE || ''} ${r.APELLIDO || ''}!\n\n` +
-                                                `Tu reserva fue cancelada. Detalle:\n` +
-                                                `- Actividad: ${r.ACTIVIDAD || ''}\n` +
-                                                `- Laboratorio: ${r.NUMERO_LABORATORIO}\n` +
-                                                `- Fecha: ${String(r.FECHA_A_RESERVAR).split('T')[0]}\n` +
-                                                `- Horario: ${r.HORA_INICIO} a ${r.HORA_FIN}\n` +
-                                                `- Motivo de la cancelación: ${motivo}\n\n` +
-                                                `Gracias por usar Lab Kontrol.\n` +
-                                                `Ante cualquier duda, contactate con un administrador.`
-                                            );
-                                        }
-
-                                        return res.json({ success: true });
+                                        connection.query(
+                                            `SELECT r.CORREO, r.NUMERO_LABORATORIO, r.FECHA_A_RESERVAR, r.HORA_INICIO, r.HORA_FIN,
+                                                    s.NOMBRE, s.APELLIDO, ta.NOMBRE AS ACTIVIDAD
+                                            FROM DBA.RESERVAS r
+                                            JOIN DBA.SOLICITANTES s ON s.CEDULA_IDENTIDAD = r.CEDULA_IDENTIDAD AND s.CORREO = r.CORREO
+                                            JOIN DBA.TIPO_ACTIVIDAD ta ON ta.ID_TIPO_ACTIVIDAD = r.ID_TIPO_ACTIVIDAD
+                                            WHERE r.ID_RESERVA = ${id}`,
+                                            (err, reservaCancelada) => {
+                                                connection.disconnect();
+                                                if (!err && reservaCancelada.length > 0) {
+                                                    const r = reservaCancelada[0];
+                                                    enviarCorreoReserva(
+                                                        r.CORREO,
+                                                        'Cancelación de reserva - Lab Kontrol',
+                                                        `Hola ${r.NOMBRE || ''} ${r.APELLIDO || ''}!\n\n` +
+                                                        `Tu reserva fue cancelada. Detalle:\n` +
+                                                        `- Actividad: ${r.ACTIVIDAD || ''}\n` +
+                                                        `- Laboratorio: ${r.NUMERO_LABORATORIO}\n` +
+                                                        `- Fecha: ${String(r.FECHA_A_RESERVAR).split('T')[0]}\n` +
+                                                        `- Horario: ${r.HORA_INICIO} a ${r.HORA_FIN}\n` +
+                                                        `- Motivo de la cancelación: ${motivo}\n\n` +
+                                                        `Gracias por usar Lab Kontrol.\n` +
+                                                        `Ante cualquier duda, contactate con un administrador.`
+                                                    );
+                                                }
+                                                return res.json({ success: true });
+                                            }
+                                        );
                                     }
                                 );
                             }

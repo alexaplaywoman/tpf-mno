@@ -413,6 +413,18 @@ BEGIN
 END;
 commit;
 /*==============================================================*/
+/* 2.a EVENTOS PROGRAMADOS                                      */
+/*==============================================================*/
+
+CREATE EVENT ev_cancelar_reservas_vencidas
+SCHEDULE
+   START TIME '00:05 AM' EVERY 30 MINUTES
+HANDLER
+BEGIN
+    CALL DBA.sp_cancelar_reservas_vencidas();
+END;
+commit;
+/*==============================================================*/
 /* 3. TRIGGERS (sobre RESERVAS)                                 */
 /*==============================================================*/
 
