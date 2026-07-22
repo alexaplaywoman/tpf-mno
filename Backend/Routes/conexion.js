@@ -14,7 +14,7 @@ function obtenerOAbrirConexion(usuario, clave, callback) {
         return callback(null, cached);
     }
 
-    const connection = new Sybase('localhost', 2638, 'tpf_reservas', usuario, clave);
+    const connection = new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
     connection.connect((err) => {
         if (err) {
             console.error(`Error de conexion Sybase para ${usuario}:`, err.message || err);
