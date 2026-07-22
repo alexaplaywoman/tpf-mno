@@ -18,6 +18,10 @@
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.js"></script>
+
 
 </head>
 
@@ -46,6 +50,92 @@
             <h2 class="m-0">
                 Reportes
             </h2>
+
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="form-rango" class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Desde</label>
+                        <input type="date" id="desde" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Hasta</label>
+                        <input type="date" id="hasta" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-dark w-100">
+                            <i class="bi bi-bar-chart-line"></i> Generar reportes
+                        </button>
+                    </div>
+                </form>
+                <div id="error-message" class="text-danger mt-2"></div>
+                <div class="d-flex gap-2 mt-3">
+                    <button id="btnExportarPdf" class="btn btn-outline-dark btn-sm" disabled>
+                        <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                    </button>
+                    <span id="export-message" class="text-muted small align-self-center"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header text-white" style="background:#6c6480;">
+                        Laboratorios más utilizados
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartLaboratorios"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header text-white" style="background:#6c6480;">
+                        Horarios de mayor ocupación
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartHorarios"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header text-white" style="background:#6c6480;">
+                        Solicitantes con más reservas
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartSolicitantes"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="card h-100">
+                    <div class="card-header text-white" style="background:#6c6480;">
+                        Cancelaciones / Ausencias
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartCancelaciones"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="card h-100">
+                    <div class="card-header text-white" style="background:#6c6480;">
+                        % de uso de recursos
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartRecursos"></canvas>
+                    </div>
+                </div>
+            </div>
 
         </div>
 
