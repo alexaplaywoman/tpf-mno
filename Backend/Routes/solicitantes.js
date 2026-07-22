@@ -15,6 +15,48 @@ function verificarAdmin(connection, usuario, callback) {
     );
 }
 
+// El texto libre de SOLICITANTES.DEPARTAMENTO no siempre coincide letra por
+// letra con DEPARTAMENTOS.NOMBRE (tildes, mayusculas: "Analisis" vs
+// "Análisis"). Hacer esa comparacion con UPPER/REPLACE del lado de SQL
+// Anywhere corrompe el texto (problema de codificacion del driver con
+// caracteres acentuados), asi que la resolvemos en JS, que maneja
+// Unicode sin problemas.
+function normalizarTexto(texto) {
+    return String(texto || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '') // saca los acentos
+        .toUpperCase()
+        .trim();
+}
+
+// Completa el campo "carrera" de cada solicitante buscando su DEPARTAMENTO
+// (texto libre) entre los departamentos conocidos, cuando no vino ya
+// resuelta por ID_CARRERA.
+function completarCarrerasPorDepartamento(connection, solicitantes, callback) {
+    const faltantes = solicitantes.filter(s => !s.carrera && s.DEPARTAMENTO);
+    if (faltantes.length === 0) return callback(solicitantes);
+
+    connection.query(
+        `SELECT d.NOMBRE AS departamento, c.NOMBRE AS carrera
+         FROM DBA.DEPARTAMENTOS d
+         JOIN DBA.CARRERAS c ON c.ID_DEPARTAMENTO = d.ID_DEPARTAMENTO`,
+        (err, filas) => {
+            if (err || !filas) return callback(solicitantes);
+
+            const mapa = new Map();
+            filas.forEach(f => mapa.set(normalizarTexto(f.departamento), f.carrera));
+
+            solicitantes.forEach(s => {
+                if (!s.carrera && s.DEPARTAMENTO) {
+                    s.carrera = mapa.get(normalizarTexto(s.DEPARTAMENTO)) || s.carrera;
+                }
+            });
+
+            callback(solicitantes);
+        }
+    );
+}
+
 router.get('/', (req, res) => {
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
@@ -37,9 +79,11 @@ router.get('/', (req, res) => {
         `;
 
         connection.query(sql, (err, result) => {
-            connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar solicitantes');
-            return res.json(result);
+            if (err) { connection.disconnect(); return manejarError(err, res, 'consultar solicitantes'); }
+            completarCarrerasPorDepartamento(connection, result, (resultCompletado) => {
+                connection.disconnect();
+                return res.json(resultCompletado);
+            });
         });
     });
 });
@@ -124,10 +168,12 @@ router.get('/:cedula', (req, res) => {
         `;
 
         connection.query(sql, (err, result) => {
-            connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar solicitante');
-            if (result.length > 0) return res.json({ success: true, solicitante: result[0] });
-            return res.json({ success: false, error: 'Solicitante no encontrado.' });
+            if (err) { connection.disconnect(); return manejarError(err, res, 'consultar solicitante'); }
+            if (result.length === 0) { connection.disconnect(); return res.json({ success: false, error: 'Solicitante no encontrado.' }); }
+            completarCarrerasPorDepartamento(connection, result, (resultCompletado) => {
+                connection.disconnect();
+                return res.json({ success: true, solicitante: resultCompletado[0] });
+            });
         });
     });
 });
@@ -217,7 +263,15 @@ router.delete('/delete/:cedula', (req, res) => {
                 `DELETE FROM DBA.SOLICITANTES WHERE CEDULA_IDENTIDAD = ${cedula}`,
                 (err) => {
                     connection.disconnect();
-                    if (err) return manejarError(err, res, 'eliminar solicitante');
+                    if (err) {
+                        if (err.message && err.message.includes('referenced by foreign key')) {
+                            return res.status(409).json({
+                                success: false,
+                                error: 'No se puede eliminar el solicitante porque tiene reservas asociadas.'
+                            });
+                        }
+                        return manejarError(err, res, 'eliminar solicitante');
+                    }
                     return res.json({ success: true });
                 }
             );

@@ -334,7 +334,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         .then(parseJsonSafe)
 
-        .then(() => {
+        .then((data) => {
+
+            if (data.success === false) {
+                throw new Error(data.error || "Error al eliminar solicitante");
+            }
+
+            if (errorMessage) errorMessage.textContent = "";
 
             loadSolicitantes();
 
@@ -347,7 +353,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if(errorMessage){
 
                 errorMessage.textContent =
-                "Error al eliminar solicitante";
+                error.message || "Error al eliminar solicitante";
 
             }
 

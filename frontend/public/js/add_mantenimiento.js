@@ -221,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     let reservasOcupadas = [];
+    let feriados = [];
 
 
 
@@ -265,6 +266,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
+
+    }
+
+    // =====================================
+    // CARGAR FERIADOS
+    // =====================================
+
+    async function cargarFeriados() {
+
+        try {
+
+            const respuesta = await fetch(
+                `/api/feriados?usuario=${usuario}&clave=${clave}`
+            );
+
+            feriados = respuesta.ok ? await respuesta.json() : [];
+
+        } catch(error) {
+
+            console.error(error);
+
+            feriados = [];
+
+        }
 
     }
 
@@ -367,9 +392,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     r => r.fecha === fechaString
                 );
 
+            const feriadoEseDia =
+                feriados.find(
+                    f => String(f.FECHA).split('T')[0] === fechaString
+                );
 
 
-            if (esPasado || esFinSemana) {
+
+            if (esPasado || esFinSemana || feriadoEseDia) {
 
 
                 day.classList.add("deshabilitado");
@@ -378,7 +408,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 day.title =
                     esPasado
                         ? "Fecha pasada"
-                        : "Fin de semana: no permitido";
+                        : esFinSemana
+                            ? "Fin de semana: no permitido"
+                            : `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
 
 
 
@@ -617,6 +649,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         await cargarFechasOcupadas();
+        await cargarFeriados();
 
 
         renderCalendar(calendarioInicio);
