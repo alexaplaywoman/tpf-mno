@@ -142,6 +142,47 @@
     </div>
 
 </div>
+<!--
+    ============================================================
+    CARD DE ACCESO A AUDITORIA
+    Pegar en reportes.html DESPUES del <div class="card mb-4"> de
+    filtros globales, ANTES del <div class="row g-4 mb-5"> de
+    graficos.
+    ============================================================
+-->
+<div class="card mb-4">
+    <div class="card-header text-white" style="background:#6c6480;">
+        Auditoría y trazabilidad histórica
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center g-3">
+
+            <div class="col-auto text-center">
+                <i class="bi bi-clock-history"
+                   style="font-size: 3rem; color: #6c6480;"></i>
+            </div>
+
+            <div class="col">
+                <p class="mb-1">
+                    Consultá el registro histórico de eventos del sistema:
+                    creaciones, cambios de estado y reprogramaciones sobre
+                    reservas, laboratorios y mantenimientos.
+                </p>
+                <small class="text-muted">
+                    Filtros por fecha, tipo de evento, usuario y N° de referencia.
+                </small>
+            </div>
+
+            <div class="col-12 col-md-auto text-md-end">
+                <a href="./reporte_auditoria.html" class="btn btn-dark">
+                    <i class="bi bi-arrow-right-circle me-1"></i>
+                    Ver auditoría
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 
 <script src="./js/list_reportes.js"></script>

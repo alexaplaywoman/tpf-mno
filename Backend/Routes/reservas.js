@@ -22,7 +22,7 @@ const MOTIVOS_CANCELACION_VALIDOS = [
     'Actividad suspendida',
     'Error en la reserva',
     'Laboratorio no disponible',
-    'Reprogramación',
+    //'Reprogramación', 
     'Otro'
 ];
 

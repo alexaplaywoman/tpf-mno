@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auditoría</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Badges por grupo */
+        .badge-reservas       { background: #0d6efd; color: #fff; }
+        .badge-laboratorios   { background: #dc3545; color: #fff; }
+        .badge-mantenimientos { background: #fd7e14; color: #fff; }
+        .badge-otro           { background: #6c757d; color: #fff; }
+
+        /* Descripción: quebrar bien */
+        .desc-cell {
+            text-align: left;
+            word-break: break-word;
+            max-width: 400px;
+        }
+
+        /* Modal filtros */
+        #modalFiltros {
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        #modalFiltros::backdrop {
+            background: rgba(0,0,0,0.35);
+        }
+
+        /* Chip de filtro activo */
+        .chip-filtro {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            margin-right: 4px;
+            margin-bottom: 2px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- MODAL DE FILTROS -->
+
+    <dialog id="modalFiltros">
+
+        <h5 class="mb-3" style="font-family:sans-serif;">
+            <i class="bi bi-funnel"></i>
+            Filtrar auditoría
+        </h5>
+
+        <div class="row g-3">
+
+            <div class="col-12 col-md-6">
+                <label for="fFechaDesde" class="form-label small fw-semibold">Fecha desde</label>
+                <input type="date" class="form-control" id="fFechaDesde">
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label for="fFechaHasta" class="form-label small fw-semibold">Fecha hasta</label>
+                <input type="date" class="form-control" id="fFechaHasta">
+            </div>
+
+            <div class="col-12">
+                <label for="fGrupo" class="form-label small fw-semibold">Tipo de evento</label>
+                <select class="form-select" id="fGrupo">
+                    <option value="">Todos</option>
+                    <option value="Reservas">Reservas</option>
+                    <option value="Laboratorios">Laboratorios</option>
+                    <option value="Mantenimientos">Mantenimientos</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label for="fUsuario" class="form-label small fw-semibold">Usuario</label>
+                <input type="text" class="form-control" id="fUsuario" placeholder="Ej: DBA, SYSTEM">
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label for="fIdRef" class="form-label small fw-semibold" id="lblIdRef">
+                    N° de referencia
+                </label>
+                <input type="number" class="form-control" id="fIdRef" min="1" placeholder="ID">
+            </div>
+
+        </div>
+
+        <div class="d-flex gap-2 mt-4 justify-content-end">
+
+            <button id="btnLimpiarFiltros" class="btn btn-outline-dark me-auto">
+                <i class="bi bi-x-circle"></i>
+                Limpiar
+            </button>
+
+            <button id="btnCancelarFiltros" class="btn btn-secondary">
+                Cancelar
+            </button>
+
+            <button id="btnAplicarFiltros" class="btn btn-dark">
+                <i class="bi bi-check-circle"></i>
+                Aplicar
+            </button>
+
+        </div>
+
+    </dialog>
+
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar navbar-dark bg-secondary w-100 px-3">
+
+        <a id="inicio" class="btn btn-dark btn-sm" href="reportes.html">
+            Volver a Reportes
+        </a>
+
+    </nav>
+
+
+    <div class="container">
+
+        <div class="mx-auto" style="width:90%;">
+
+            <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                <h2 class="m-0">Auditoría</h2>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+                <button id="btnAbrirFiltros" class="btn btn-dark btn-sm">
+                    <i class="bi bi-funnel"></i>
+                    Filtrar
+                </button>
+
+                <span id="resumenResultados" class="text-muted small"></span>
+
+            </div>
+
+            <div id="chipsFiltrosActivos" class="mb-3"></div>
+
+            <div id="error-message" class="text-danger text-center mb-3"></div>
+
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <div class="mt-2 text-muted">Cargando eventos...</div>
+            </div>
+
+            <div id="vacio" class="text-center py-5 text-muted" style="display:none;">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <div class="mt-2">No se encontraron eventos con los filtros aplicados.</div>
+            </div>
+
+            <div class="table-responsive" id="tablaWrap" style="display:none;">
+
+                <table class="table table-bordered table-hover text-center">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 155px;">Fecha y hora</th>
+                            <th style="width: 130px;">Usuario</th>
+                            <th style="width: 140px;">Grupo</th>
+                            <th style="width: 140px;">Evento</th>
+                            <th style="width: 60px;">N°</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="auditoria-list">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PAGINACIÓN -->
+
+    <div class="d-flex justify-content-center" id="paginacionWrap" style="display:none;">
+
+        <nav aria-label="Paginación de auditoría">
+
+            <ul class="pagination">
+
+                <li class="page-item">
+
+                    <button class="page-link" onclick="previusPage()">
+
+                        <span aria-hidden="true">&laquo;</span>
+
+                    </button>
+
+                </li>
+
+                <span id="items" class="d-flex"></span>
+
+                <li class="page-item">
+
+                    <button class="page-link" onclick="nextPage()">
+
+                        <span aria-hidden="true">&raquo;</span>
+
+                    </button>
+
+                </li>
+
+            </ul>
+
+        </nav>
+
+    </div>
+
+
+    <script src="./js/reporte_auditoria.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

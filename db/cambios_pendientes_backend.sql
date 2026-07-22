@@ -7,6 +7,7 @@
 GRANT SELECT, INSERT, DELETE ON DBA.RESERVAS_RECURSOS TO solicitante;
 
 
+
 /*==============================================================*/
 /* 0. Revocar permisos peligrosos, por si ya corrieron una      */
 /*    version anterior de este script (v1) que le daba a       */
@@ -51,10 +52,6 @@ GRANT GROUP TO ADMINISTRADORES;
 GRANT MEMBERSHIP IN GROUP ADMINISTRADORES TO admin;
 
 
-GRANT CONNECT TO solicitante;
-GRANT SELECT ON SYS.SYSTABLE TO solicitante;
-GRANT SELECT ON SYS.SYSCOLUMN TO solicitante;
-GRANT SELECT ON SYS.SYSUSERPERM TO solicitante;
 COMMIT;
 
 /*==============================================================*/
@@ -93,7 +90,10 @@ GRANT EXECUTE ON DBA.fn_existe_solapamiento_reservas TO solicitante;
 GRANT EXECUTE ON DBA.fn_existe_mantenimiento       TO solicitante;
 GRANT EXECUTE ON DBA.fn_validar_horarios           TO solicitante;
 GRANT EXECUTE ON DBA.fn_validar_fechas_y_fin_semana TO solicitante;
-
+GRANT CONNECT TO solicitante;
+GRANT SELECT ON SYS.SYSTABLE TO solicitante;
+GRANT SELECT ON SYS.SYSCOLUMN TO solicitante;
+GRANT SELECT ON SYS.SYSUSERPERM TO solicitante;
 COMMIT;
 -- Nota: NO se necesita ningún GRANT sobre sys.sysgroup ni
 -- sys.sysuserperm. El backend valida membresía de admin contra
@@ -112,6 +112,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON DBA.PISOS TO admin;
 GRANT SELECT, INSERT, UPDATE, DELETE ON DBA.SOLICITANTES TO admin;
 GRANT SELECT, INSERT, UPDATE, DELETE ON DBA.TIPO_ACTIVIDAD TO admin;
 GRANT SELECT, INSERT, UPDATE, DELETE ON DBA.PRIORIDADES TO admin;
+
+GRANT EXECUTE ON DBA.sp_reporte_auditoria TO ADMINISTRADORES;
 GRANT EXECUTE ON DBA.sp_cancelar_reservas_vencidas TO ADMINISTRADORES;
 
 COMMIT;
