@@ -28,6 +28,18 @@ async function parseJsonSafe(response) {
 
 }
 
+    function formatearFecha(fecha) {
+
+        if (!fecha) return "";
+
+        const fechaCorta = String(fecha).split("T")[0];
+
+        const [anio, mes, dia] = fechaCorta.split("-");
+
+        return `${dia}/${mes}/${anio}`;
+
+    }
+
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -131,8 +143,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td>${escapeHtml(mant.ID_MANTENIMIENTO)}</td>
                     <td>${escapeHtml(estadoLabel)}</td>
                     <td>${escapeHtml(mant.NUMERO_LABORATORIO)} - ${escapeHtml(mant.EDIFICIO)}</td>
-                    <td>${escapeHtml(mant.FECHA_INICIO)}</td>
-                    <td>${escapeHtml(mant.FECHA_FIN_PREVISTA)}</td>
+                    <td>${escapeHtml(formatearFecha(mant.FECHA_INICIO))}</td>
+                    <td>${escapeHtml(formatearFecha(mant.FECHA_FIN_PREVISTA))}</td>
                     <td>${escapeHtml(mant.OBSERVACIONES)}</td>
                     <td>
                         <div class="d-flex justify-content-center gap-2">
