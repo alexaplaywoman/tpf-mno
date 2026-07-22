@@ -32,6 +32,16 @@ router.get('/motivos-cancelacion', (req, res) => {
     return res.json(MOTIVOS_CANCELACION_VALIDOS);
 });
 
+// Devuelve los estados de reserva posibles, para poblar el <select> de edición.
+router.get('/estados/listar', (req, res) => {
+    return res.json([
+        { id_estado_reserva: 1, estado: 'P', nombre: 'Pendiente' },
+        { id_estado_reserva: 2, estado: 'U', nombre: 'Utilizada' },
+        { id_estado_reserva: 3, estado: 'C', nombre: 'Cancelada' },
+        { id_estado_reserva: 4, estado: 'A', nombre: 'Ausente' }
+    ]);
+});
+
 router.get('/', (req, res) => {
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
@@ -429,8 +439,8 @@ router.post('/marcar/:id', (req, res) => {
     if (!usuario || !clave || !id_estado_reserva)
         return res.status(400).json({ success: false, error: 'Faltan credenciales o el estado.' });
 
-    if (id_estado_reserva != 2 && id_estado_reserva != 4)
-        return res.status(400).json({ success: false, error: 'Solo se puede marcar como Utilizada (2) o No presentado (4). Para cancelar, usá /cancelar/:id.' });
+    if (![1, 2, 3, 4].includes(Number(id_estado_reserva)))
+        return res.status(400).json({ success: false, error: 'Estado inválido. Opciones: 1 (Pendiente), 2 (Utilizada), 3 (Cancelada), 4 (No presentado).' });
 
     conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
@@ -482,7 +492,7 @@ router.post('/reprogramar/:id', (req, res) => {
             }
 
             connection.query(
-                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ID_ESTADO_RESERVA FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
                 (err, reservaActual) => {
                     if (err) {
                         connection.disconnect();
@@ -491,6 +501,15 @@ router.post('/reprogramar/:id', (req, res) => {
                     if (reservaActual.length === 0) {
                         connection.disconnect();
                         return res.status(404).json({ success: false, error: 'Reserva no encontrada.' });
+                    }
+
+                    // Una reserva ya Cancelada o Utilizada no se puede reprogramar
+                    // (cambiar laboratorio/fecha/horario). El estado en si (marcar
+                    // como Utilizada/Ausente/Cancelada) es otra ruta (/marcar,
+                    // /cancelar) que no tiene esta restriccion.
+                    if (reservaActual[0].ID_ESTADO_RESERVA === 2 || reservaActual[0].ID_ESTADO_RESERVA === 3) {
+                        connection.disconnect();
+                        return res.status(409).json({ success: false, error: 'No se puede reprogramar una reserva que ya está Cancelada o Utilizada.' });
                     }
 
                     const numeroLab = numero_laboratorio || reservaActual[0].NUMERO_LABORATORIO;
