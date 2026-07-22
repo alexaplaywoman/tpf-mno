@@ -36,6 +36,18 @@ async function parseJsonSafe(response) {
 
 }
 
+function formatearFecha(fecha) {
+
+    if (!fecha) return "";
+
+    const fechaCorta = String(fecha).split("T")[0];
+
+    const [anio, mes, dia] = fechaCorta.split("-");
+
+    return `${dia}/${mes}/${anio}`;
+
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -138,11 +150,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td>${escapeHtml(reserva.CORREO)}</td>
                     <td>${escapeHtml(NOMBRES_ESTADO_RESERVA[reserva.estado] ?? reserva.estado ?? "-")}</td>
                     <td>${escapeHtml(reserva.tipo_actividad)}</td>
-                    <td>${escapeHtml(formatearFechaCorta(reserva.FECHA_A_RESERVAR))}</td>
+                    <td>${escapeHtml(formatearFecha(reserva.FECHA_A_RESERVAR))}</td>
                     <td>${escapeHtml(reserva.HORA_INICIO)}</td>
                     <td>${escapeHtml(reserva.HORA_FIN)}</td>
                     <td>${escapeHtml(reserva.CANTIDAD_ALUMNOS)}</td>
-                    <td>${escapeHtml(formatearFechaCorta(reserva.FECHA_SOLICITUD))}</td>
+                    <td>${escapeHtml(formatearFecha(reserva.FECHA_SOLICITUD))}</td>
                     <td>${escapeHtml(reserva.MOTIVO_CANCELACION ?? "-")}</td>
                     <td>${escapeHtml(reserva.USUARIO_CANCELACION ?? "-")}</td>
                     <td>

@@ -224,14 +224,43 @@ document.addEventListener("DOMContentLoaded", function () {
             const dataReserva = await respuestaReserva.json();
 
             if (dataReserva.success) {
-                const modalConfirmar = bootstrap.Modal.getInstance(
-                    document.getElementById("modalConfirmar")
-                );
-                if (modalConfirmar) modalConfirmar.hide();
+                const dataReserva = await respuestaReserva.json();
 
-                setTimeout(() => {
-                    mostrarMensaje("success", "La reserva se realizo con exito");
-                }, 300);
+                if (dataReserva.success) {
+
+                    const modalConfirmar = bootstrap.Modal.getInstance(
+                        document.getElementById("modalConfirmar")
+                    );
+
+                    if (modalConfirmar) modalConfirmar.hide();
+
+                    setTimeout(() => {
+                        mostrarMensaje(
+                            "success",
+                            dataReserva.mensaje || "La reserva se realizo con exito"
+                        );
+                    }, 300);
+
+            document.getElementById("modalMensaje").addEventListener(
+                "hidden.bs.modal",
+                function () {
+                    sessionStorage.removeItem("reservaEvento");
+                    sessionStorage.removeItem("reservaLaboratorio");
+                    sessionStorage.removeItem("datosSolicitante");
+                    sessionStorage.removeItem("edificioSeleccionado");
+                    window.location.href = "menu.html";
+                },
+                { once: true }
+            );
+
+        } else {
+
+            mostrarMensaje(
+                "error",
+                dataReserva.error || dataReserva.mensaje || "No se pudo realizar la reserva"
+            );
+
+    }
 
                 // Al cerrar el modal de exito, limpiamos el sessionStorage
                 // de la reserva (usuario/clave se mantienen porque son la
