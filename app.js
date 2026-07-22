@@ -70,6 +70,9 @@ app.use('/api/recursos', recursosRoute);
 const feriadosRoute = require('./Backend/Routes/feriados');
 app.use('/api/feriados', feriadosRoute);
 
+const { iniciarJobVencidas } = require('./Backend/Jobs/cancelar_vencidas');
+iniciarJobVencidas();
+
 //const reservas_pruebasRoute = require('./Backend/Routes/reservas_pruebas');
 //app.use('/api/reservas_pruebas', reservas_pruebasRoute);
 
