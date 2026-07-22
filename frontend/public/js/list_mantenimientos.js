@@ -60,6 +60,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const usuario = sessionStorage.getItem('usuario');
     const clave = sessionStorage.getItem('clave');
 
+    let todosLosMantenimientos = [];
+    let paginaActual = 1;
+    const limite = 10;
+
     if (!usuario || !clave) {
         if (errorMessage) errorMessage.textContent = "Faltan credenciales.";
         return;
@@ -82,7 +86,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     mantenimientos = data.mantenimientos || data.rows || [];
                 }
 
-                mostrarMantenimientos(mantenimientos);
+                todosLosMantenimientos = mantenimientos;
+                paginaActual = 1;
+
+                mostrarMantenimientos();
+                crearPaginacion();
 
             })
             .catch(error => {
@@ -92,7 +100,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function mostrarMantenimientos(mantenimientos) {
+    function mostrarMantenimientos() {
+
+        const inicio = (paginaActual - 1) * limite;
+        const fin = inicio + limite;
+
+        const mantenimientos = todosLosMantenimientos.slice(inicio, fin);
+
+        console.log("MANTENIMIENTOS RECIBIDOS:", mantenimientos);
 
         mantenimientosList.innerHTML = "";
 
@@ -143,6 +158,63 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
+    }
+
+    function crearPaginacion(){
+
+        const items = document.getElementById("items");
+
+        if(!items) return;
+
+        items.innerHTML = "";
+
+        const cantidadPaginas = Math.ceil(todosLosMantenimientos.length / limite);
+
+
+        for(let i = 1; i <= cantidadPaginas; i++){
+
+            items.innerHTML += `
+                <li class="page-item ${paginaActual === i ? "active" : ""}">
+                    <button class="page-link" onclick="cambiarPagina(${i})">
+                        ${i}
+                    </button>
+                </li>
+            `;
+
+        }
+
+    }
+
+
+    window.cambiarPagina = function(numero){
+
+        paginaActual = numero;
+
+        mostrarMantenimientos();
+        crearPaginacion();
+
+    };
+
+    window.nextPage = function(){
+
+        const cantidadPaginas = Math.ceil(todosLosMantenimientos.length / limite);
+
+        if(paginaActual < cantidadPaginas){
+            paginaActual++;
+
+            mostrarMantenimientos();
+            crearPaginacion();
+        }
+    };
+
+    window.previusPage = function(){
+
+        if(paginaActual > 1){
+            paginaActual--;
+
+            mostrarMantenimientos();
+            crearPaginacion();
+        }
     }
 
     window.editarMantenimiento = function (id) {

@@ -85,10 +85,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
-
-
-
     let laboratoriosList = document.getElementById('laboratorios-list');
 
 
@@ -116,18 +112,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-
-
-
-
-
     const usuario = sessionStorage.getItem('usuario');
-
     const clave = sessionStorage.getItem('clave');
 
-
-
-
+    let todosLosLaboratorios = [];
+    let paginaActual = 1;
+    const limite = 10;
 
     if (!usuario || !clave) {
 
@@ -143,16 +133,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-
-
-
-
-
-
-
     function loadLaboratorios() {
-
-
 
         fetch(`/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
 
@@ -186,7 +167,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-            mostrarLaboratorios(laboratorios);
+            todosLosLaboratorios = laboratorios;
+            paginaActual = 1;
+
+            mostrarLaboratorios();
+            crearPaginacion();
 
 
 
@@ -223,7 +208,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    function mostrarLaboratorios(laboratorios) {
+    function mostrarLaboratorios() {
+
+        const inicio = (paginaActual - 1) * limite;
+        const fin = inicio + limite;
+
+        const laboratorios = todosLosLaboratorios.slice(inicio, fin);
 
 
         console.log("LABORATORIOS RECIBIDOS:", laboratorios);
@@ -390,9 +380,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
+    function crearPaginacion(){
+        const items = document.getElementById("items");
 
+        if(!items) return;
 
+        items.innerHTML = "";
 
+        const cantidadPaginas = Math.ceil(todosLosLaboratorios.length / limite);
+
+        for(let i = 1; i <= cantidadPaginas; i++){
+
+            items.innerHTML += `
+            <li class="page-item ${paginaActual === i ? "active" : ""}">
+                <button class="page-link" onclick="cambiarPagina(${i})">
+                    ${i}
+                </button>
+            </li>
+        `;
+        }
+    }
+
+    window.cambiarPagina = function(numero){
+
+        paginaActual = numero;
+
+        mostrarLaboratorios();
+        crearPaginacion();
+    }
+
+    window.nextPage = function(){
+
+        const cantidadPaginas = Math.ceil(todasLosLaboratorios.length / limite);
+
+        if(paginaActual < cantidadPaginas){
+            paginaActual++;
+
+            mostrarLaboratorios();
+            crearPaginacion();
+        }
+    };
+
+    window.previusPage = function(){
+
+        if(paginaActual > 1){
+            paginaActual--;
+
+            mostrarLaboratorios();
+            crearPaginacion();
+        }
+    }
 
 
 

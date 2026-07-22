@@ -53,6 +53,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const usuario = sessionStorage.getItem('usuario');
     const clave = sessionStorage.getItem('clave');
 
+    let todasLasActividades = [];
+    let paginaActual = 1;
+    const limite = 10;
+
     if (!usuario || !clave) {
         if (errorMessage) errorMessage.textContent = "Faltan credenciales.";
         return;
@@ -75,7 +79,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     actividades = data.actividades || data.rows || [];
                 }
 
-                mostrarActividades(actividades);
+                todasLasActividades = actividades;
+                paginaActual = 1;
+
+                mostrarActividades();
+                crearPaginacion();
 
             })
             .catch(error => {
@@ -85,7 +93,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function mostrarActividades(actividades) {
+    function mostrarActividades() {
+
+        const inicio = (paginaActual - 1) * limite;
+        const fin = inicio + limite;
+
+        const actividades = todasLasActividades.slice(inicio, fin);
+
+        console.log("ACTIVIDADES RECIBIDOS:", actividades);
 
         actividadesList.innerHTML = "";
 
@@ -133,6 +148,63 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
+    }
+
+    function crearPaginacion(){
+
+        const items = document.getElementById("items");
+
+        if(!items) return;
+
+        items.innerHTML = "";
+
+        const cantidadPaginas = Math.ceil(todasLasActividades.length / limite);
+
+
+        for(let i = 1; i <= cantidadPaginas; i++){
+
+            items.innerHTML += `
+                <li class="page-item ${paginaActual === i ? "active" : ""}">
+                    <button class="page-link" onclick="cambiarPagina(${i})">
+                        ${i}
+                    </button>
+                </li>
+            `;
+
+        }
+
+    }
+
+
+    window.cambiarPagina = function(numero){
+
+        paginaActual = numero;
+
+        mostrarActividades();
+        crearPaginacion();
+
+    };
+
+    window.nextPage = function(){
+
+        const cantidadPaginas = Math.ceil(todasLasActividades.length / limite);
+
+        if(paginaActual < cantidadPaginas){
+            paginaActual++;
+
+            mostrarActividades();
+            crearPaginacion();
+        }
+    };
+
+    window.previusPage = function(){
+
+        if(paginaActual > 1){
+            paginaActual--;
+
+            mostrarActividades();
+            crearPaginacion();
+        }
     }
 
     window.editarActividad = function (id) {

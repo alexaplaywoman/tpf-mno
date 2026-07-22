@@ -54,6 +54,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const usuario = sessionStorage.getItem('usuario');
     const clave = sessionStorage.getItem('clave');
 
+    let todosLosRecursos = [];
+    let paginaActual = 1;
+    const limite = 10;
+
     if (!usuario || !clave) {
         if (errorMessage) errorMessage.textContent = "Faltan credenciales.";
         return;
@@ -76,7 +80,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     recursos = data.recursos || data.rows || [];
                 }
 
-                mostrarRecursos(recursos);
+                todosLosRecursos = recursos;
+                paginaActual = 1;
+
+                mostrarRecursos();
+                crearPaginacion();
 
             })
             .catch(error => {
@@ -86,7 +94,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function mostrarRecursos(recursos) {
+    function mostrarRecursos() {
+
+        const inicio = (paginaActual - 1) * limite;
+        const fin = inicio + limite;
+
+        const recursos = todosLosRecursos.slice(inicio, fin);
 
         recursosList.innerHTML = "";
 
@@ -134,6 +147,63 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     }
+
+    function crearPaginacion(){
+
+        const items = document.getElementById("items");
+
+        if(!items) return;
+
+        items.innerHTML = "";
+
+        const cantidadPaginas = Math.ceil(todosLosRecursos.length / limite);
+
+
+        for(let i = 1; i <= cantidadPaginas; i++){
+
+            items.innerHTML += `
+                <li class="page-item ${paginaActual === i ? "active" : ""}">
+                    <button class="page-link" onclick="cambiarPagina(${i})">
+                        ${i}
+                    </button>
+                </li>
+            `;
+
+        }
+
+    }
+
+
+    window.cambiarPagina = function(numero){
+
+        paginaActual = numero;
+
+        mostrarRecursos();
+        crearPaginacion();
+
+    };
+
+    window.nextPage = function(){
+
+        const cantidadPaginas = Math.ceil(todosLosRecursos.length / limite);
+
+        if(paginaActual < cantidadPaginas){
+            paginaActual++;
+
+            mostrarRecursos();
+            crearPaginacion();
+        }
+    };
+
+    window.previusPage = function(){
+
+        if(paginaActual > 1){
+            paginaActual--;
+
+            mostrarRecursos();
+            crearPaginacion();
+        }
+    };
 
     window.editarRecurso = function (id) {
         window.location.href = `/upd_recursos.html?id=${id}`;

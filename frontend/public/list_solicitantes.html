@@ -8,6 +8,7 @@
     <title>Solicitantes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
 
 </head>
 
@@ -108,6 +109,42 @@
             </table>
 
         </div>
+
+    </div>
+
+    <!-- paginación -->
+
+    <div class="d-flex justify-content-center">
+
+        <nav aria-label="Page navigation example">
+
+            <ul class="pagination">
+
+                <li class="page-item">
+
+                    <button class="page-link" onclick="previusPage()">
+
+                        <span aria-hidden="true">&laquo;</span>
+
+                    </button>
+
+                </li>
+
+                <span id="items" class="d-flex"></span>
+
+                <li class="page-item">
+
+                    <button class="page-link" onclick="nextPage()">
+
+                        <span aria-hidden="true">&raquo;</span>
+
+                    </button>
+
+                </li>
+
+            </ul>
+
+        </nav>
 
     </div>
 

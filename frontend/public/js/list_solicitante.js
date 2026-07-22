@@ -8,8 +8,6 @@ function escapeHtml(str) {
 
 }
 
-
-
 async function parseJsonSafe(response) {
 
     const text = await response.text();
@@ -30,16 +28,9 @@ async function parseJsonSafe(response) {
 
 }
 
-
-
-
-
 document.addEventListener("DOMContentLoaded", function () {
 
-
-
     const btnInicio = document.getElementById("inicio");
-
 
     if(btnInicio){
 
@@ -53,12 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-
-
-
     const btnAgregar = document.getElementById("agregar");
-
 
     if(btnAgregar){
 
@@ -72,27 +58,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-
-
-
-
-
     const solicitantesList = document.getElementById("solicitantes-list");
-
     const errorMessage = document.getElementById("error-message");
 
-
-
-
-
     const usuario = sessionStorage.getItem("usuario");
-
     const clave = sessionStorage.getItem("clave");
 
-
-
-
+    let todosLosSolicitantes = [];
+    let paginaActual = 1;
+    const limite = 10;
 
     if(!usuario || !clave){
 
@@ -107,27 +81,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-
-
-
-
-
-
     function loadSolicitantes(){
-
-
 
         fetch(
             `/api/solicitantes?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
         )
 
-
         .then(async response => {
 
-
             const data = await parseJsonSafe(response);
-
-
 
             if(!response.ok){
 
@@ -137,13 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
 
-
-
-
-
             let solicitantes = data;
-
-
 
             if(!Array.isArray(solicitantes)){
 
@@ -154,25 +110,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
 
-
-
             console.log("Solicitantes:", solicitantes);
 
+            todosLosSolicitantes = solicitantes;
+            paginaActual = 1;
 
-
-            mostrarSolicitantes(solicitantes);
+            mostrarSolicitantes();
+            crearPaginacion();
 
 
 
         })
 
-
-
         .catch(error => {
 
-
             console.error(error);
-
 
             if(errorMessage){
 
@@ -181,225 +133,150 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
 
-
         });
-
-
 
     }
 
+    function mostrarSolicitantes(){
 
+        const inicio = (paginaActual - 1) * limite;
+        const fin = inicio + limite;
 
+        const solicitantes = todosLosSolicitantes.slice(inicio, fin);
 
-
-
-
-
-
-    function mostrarSolicitantes(solicitantes){
-
-
+        console.log("SOLICITANTES RECIBIDOS:", solicitantes);
 
         solicitantesList.innerHTML = "";
 
-
-
-
-
         if(solicitantes.length === 0){
 
-
             solicitantesList.innerHTML = `
-
                 <tr>
-
                     <td colspan="10">
-
                         No hay solicitantes cargados.
-
                     </td>
-
                 </tr>
-
             `;
-
 
             return;
 
         }
 
-
-
-
-
-
-
         solicitantes.forEach(soli => {
 
-
-
             solicitantesList.innerHTML += `
-
-
             <tr>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.CEDULA_IDENTIDAD)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.CORREO)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.carrera)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.tipo_solicitante)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.tipo_documento)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.NOMBRE)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.APELLIDO)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.TELEFONO)}
-
                 </td>
-
-
-
                 <td>
-
                     ${escapeHtml(soli.DEPARTAMENTO)}
-
                 </td>
-
-
-
-
-
                 <td>
-
-
-
                     <div class="d-flex justify-content-center gap-2">
-
-
-
-
-
                         <button
-
                             class="btn btn-dark btn-sm"
-
                             onclick="editarSolicitante('${soli.CEDULA_IDENTIDAD}')">
-
-
                             <i class="bi bi-pencil-square"></i>
-
                             Editar
-
-
                         </button>
-
-
-
-
-
-
 
                         <button
-
                             class="btn btn-dark btn-sm"
-
                             onclick="confirmarEliminar('${soli.CEDULA_IDENTIDAD}')">
-
-
                             <i class="bi bi-trash"></i>
-
                             Eliminar
-
-
                         </button>
-
-
-
-
 
                     </div>
 
-
-
                 </td>
-
-
-
 
             </tr>
 
-
             `;
-
-
 
         });
 
+    }
 
+    function crearPaginacion(){
+
+        const items = document.getElementById("items");
+
+        if(!items) return;
+
+        items.innerHTML = "";
+
+        const cantidadPaginas = Math.ceil(todosLosSolicitantes.length / limite);
+
+        for(let i = 1; i <= cantidadPaginas; i++){
+
+            items.innerHTML += `
+                <li class="page-item ${paginaActual === i ? "active" : ""}">
+                    <button class="page-link" onclick="cambiarPagina(${i})">
+                        ${i}
+                    </button>
+                </li>
+            `;
+
+        }
 
     }
 
+    window.cambiarPagina = function(numero){
 
+        paginaActual = numero;
 
+        mostrarSolicitantes();
+        crearPaginacion();
 
+    };
 
+    window.nextPage = function(){
 
+        const cantidadPaginas = Math.ceil(todosLosSolicitantes.length / limite);
 
+        if(paginaActual < cantidadPaginas){
+            paginaActual++;
 
+            mostrarSolicitantes();
+            crearPaginacion();
+        }
+    };
+
+    window.previusPage = function(){
+
+        if(paginaActual > 1){
+            paginaActual--;
+
+            mostrarSolicitantes();
+            crearPaginacion();
+        }
+    }
 
     window.editarSolicitante = function(cedula){
-
-
 
         window.location.href =
             `/upd_solicitantes.html?cedula=${cedula}`
@@ -407,39 +284,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     };
 
-
-
-
-
-
-
-
-
     window.confirmarEliminar = function(cedula){
 
+        const dialog = document.getElementById("alertaEliminar");
 
+        const btnSi =  document.getElementById("btnConfirmarEliminarSi");
 
-        const dialog =
-            document.getElementById("alertaEliminar");
-
-
-
-        const btnSi =
-            document.getElementById("btnConfirmarEliminarSi");
-
-
-
-        const btnNo =
-            document.getElementById("btnConfirmarEliminarNo");
-
-
-
-
-
-
+        const btnNo = document.getElementById("btnConfirmarEliminarNo");
 
         if(!dialog){
-
 
             eliminarSolicitante(cedula);
 
@@ -447,16 +300,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
-
-
-
-
-
         dialog.showModal();
-
-
-
-
 
         btnNo.onclick = function(){
 
@@ -464,38 +308,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         };
 
-
-
-
-
-
-
         btnSi.onclick = function(){
-
 
             dialog.close();
 
-
             eliminarSolicitante(cedula);
-
 
         };
 
-
-
     };
 
-
-
-
-
-
-
-
-
     function eliminarSolicitante(cedula){
-
-
 
         fetch(
 
@@ -509,24 +332,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         )
 
-
         .then(parseJsonSafe)
-
 
         .then(() => {
 
-
             loadSolicitantes();
-
 
         })
 
-
         .catch(error => {
 
-
             console.error(error);
-
 
             if(errorMessage){
 
@@ -535,21 +351,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
 
-
         });
-
-
 
     }
 
-
-
-
-
-
-
     loadSolicitantes();
-
-
 
 });

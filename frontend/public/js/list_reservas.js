@@ -57,6 +57,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    let todasLasReservas = [];
+    let paginaActual = 1;
+    const limite = 10;
+
     const reservasList = document.getElementById('reservas-list');
     const errorMessage = document.getElementById('error-message');
 
@@ -90,7 +94,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     reservas = data.reservas || data.rows || [];
                 }
 
-                mostrarReservas(reservas);
+                todasLasReservas = reservas;
+                paginaActual = 1;
+
+                mostrarReservas();
+                crearPaginacion();
 
             })
             .catch(error => {
@@ -100,8 +108,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function mostrarReservas(reservas) {
+    function mostrarReservas() {
 
+        const inicio = (paginaActual - 1) * limite;
+        const fin = inicio + limite;
+
+        const reservas = todasLasReservas.slice(inicio, fin);
+    
         reservasList.innerHTML = "";
 
         if (!reservas || reservas.length === 0) {
@@ -156,6 +169,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
+    }
+
+    function crearPaginacion(){
+        const items = document.getElementById("items");
+
+        if(!items) return;
+
+        items.innerHTML = "";
+
+        const cantidadPaginas = Math.ceil(todasLasReservas.length / limite);
+
+        for(let i = 1; i <= cantidadPaginas; i++){
+            
+            items.innerHTML += `
+                 <li class="page-item ${paginaActual === i ? "active" : ""}">
+                <button class="page-link" onclick="cambiarPagina(${i})">
+                    ${i}
+                </button>
+            </li>
+        `;
+        }
+    }
+
+    window.cambiarPagina = function(numero){
+        paginaActual = numero;
+
+        mostrarReservas();
+        crearPaginacion();
+    };
+
+    window.nextPage = function(){
+
+        const cantidadPaginas = Math.ceil(todasLasReservas.length / limite);
+
+        if(paginaActual < cantidadPaginas){
+            paginaActual++;
+
+            mostrarReservas();
+            crearPaginacion();
+        }
+    };
+
+    window.previusPage = function(){
+
+        if(paginaActual > 1){
+            paginaActual--;
+
+            mostrarReservas();
+            crearPaginacion();
+        }
     }
 
     window.editarReserva = function (id) {

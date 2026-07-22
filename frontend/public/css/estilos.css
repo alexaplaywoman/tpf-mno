@@ -547,3 +547,18 @@ html, body {
     }
 
 }
+
+.pagination .page-link {
+    color: #6c6480;
+}
+
+.pagination .page-link:hover {
+    color: white;
+    background-color: #6c6480;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #6c6480;
+    border-color: #6c6480;
+    color: white;
+}
