@@ -202,6 +202,7 @@ const todayBtn = document.getElementById("today-btn");
 let currentDate = new Date();
 let reservasOcupadas = [];
 let selectedDate = null;
+let feriados = [];
 
 
 // Traer fechas reservadas del backend
@@ -234,6 +235,30 @@ async function cargarFechasOcupadas() {
 
         console.error(error);
         reservasOcupadas = [];
+
+    }
+
+}
+
+
+// Traer feriados del backend
+async function cargarFeriados() {
+
+    try {
+
+        const usuario = sessionStorage.getItem("usuario");
+        const clave = sessionStorage.getItem("clave");
+
+        const respuesta = await fetch(
+            `/api/feriados?usuario=${usuario}&clave=${clave}`
+        );
+
+        feriados = respuesta.ok ? await respuesta.json() : [];
+
+    } catch (error) {
+
+        console.error(error);
+        feriados = [];
 
     }
 
@@ -309,9 +334,12 @@ function renderCalendar() {
         let reservaEseDia =
             reservasOcupadas.find(r => r.fecha === fechaString);
 
+        let feriadoEseDia =
+            feriados.find(f => String(f.FECHA).split('T')[0] === fechaString);
 
 
-        if (esPasado || esFinDeSemana) {
+
+        if (esPasado || esFinDeSemana || feriadoEseDia) {
 
 
             day.classList.add("deshabilitado");
@@ -319,7 +347,9 @@ function renderCalendar() {
 
             day.title = esPasado
                 ? "Fecha pasada"
-                : "Fin de semana: no se permiten reservas";
+                : esFinDeSemana
+                    ? "Fin de semana: no se permiten reservas"
+                    : `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
 
 
         } else {
@@ -452,6 +482,7 @@ todayBtn.addEventListener("click", function(){
 async function iniciarCalendario(){
 
     await cargarFechasOcupadas();
+    await cargarFeriados();
 
     renderCalendar();
 

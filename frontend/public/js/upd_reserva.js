@@ -246,6 +246,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let currentDate = new Date();
     let selectedDate = null;
     let reservasOcupadas = [];
+    let feriados = [];
 
     async function cargarFechasOcupadas() {
 
@@ -271,6 +272,27 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.error(error);
 
             reservasOcupadas = [];
+
+        }
+
+    }
+
+    async function cargarFeriados() {
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/feriados?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+                );
+
+            feriados = respuesta.ok ? await respuesta.json() : [];
+
+        } catch(error) {
+
+            console.error(error);
+
+            feriados = [];
 
         }
 
@@ -344,8 +366,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             let esFinSemana = fecha.getDay() === 0 || fecha.getDay() === 6;
             let esPasado = fecha < hoy;
             let reservaEseDia = reservasOcupadas.find(r => r.fecha === fechaString);
+            let feriadoEseDia = feriados.find(f => String(f.FECHA).split('T')[0] === fechaString);
 
-            if(esPasado || esFinSemana) {
+            if(esPasado || esFinSemana || feriadoEseDia) {
 
                 day.classList.add(
                     "deshabilitado"
@@ -356,10 +379,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                     day.title =
                         "Fecha pasada";
 
-                } else {
+                } else if(esFinSemana) {
 
                     day.title =
                         "No se permiten reservas los fines de semana";
+
+                } else {
+
+                    day.title =
+                        `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
 
                 }
 
@@ -481,6 +509,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     await cargarFechasOcupadas();
+    await cargarFeriados();
 
     renderCalendar();
 
