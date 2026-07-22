@@ -336,26 +336,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
-
-                        <button 
-
-                            class="btn btn-dark btn-sm"
-
-                            onclick="confirmarEliminar(${lab.NUMERO_LABORATORIO})">
-
-
-                            <i class="bi bi-trash"></i>
-
-                            Eliminar
-
-
-                        </button>
-
-
-
-
-
                     </div>
 
 
