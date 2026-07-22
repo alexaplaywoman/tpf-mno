@@ -172,6 +172,17 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             const dataCheck = await respuestaCheck.json();
 
+            // SOLICITANTES tiene clave primaria compuesta (CEDULA_IDENTIDAD +
+            // CORREO). El chequeo de arriba busca solo por cedula, asi que si
+            // ya existe un solicitante con esa cedula pero otro correo, no
+            // hay que crear uno nuevo (dataCheck.success ya da true) - pero
+            // tampoco hay que usar el correo recien tipeado para la reserva,
+            // porque ese par (cedula, correo) no existe en la base y la FK
+            // de RESERVAS lo rechaza. Usamos el correo real ya registrado.
+            const correoParaReserva = dataCheck.success
+                ? dataCheck.solicitante.CORREO
+                : datosSolicitante.correo;
+
             // 2. Si no existe, lo creamos
             if (!dataCheck.success) {
                 const nuevoSolicitante = {
@@ -203,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function () {
             let reservaCompleta = {
                 numero_laboratorio: Number(reservaLaboratorio.laboratorio),
                 cedula_identidad: datosSolicitante.numeroDocumento,
-                correo: datosSolicitante.correo,
+                correo: correoParaReserva,
                 id_estado_reserva: 1,
                 id_tipo_actividad: reservaEvento.actividad,
                 fecha_a_reservar: reservaEvento.fecha.split("T")[0],
@@ -224,43 +235,19 @@ document.addEventListener("DOMContentLoaded", function () {
             const dataReserva = await respuestaReserva.json();
 
             if (dataReserva.success) {
-                const dataReserva = await respuestaReserva.json();
 
-                if (dataReserva.success) {
+                const modalConfirmar = bootstrap.Modal.getInstance(
+                    document.getElementById("modalConfirmar")
+                );
 
-                    const modalConfirmar = bootstrap.Modal.getInstance(
-                        document.getElementById("modalConfirmar")
+                if (modalConfirmar) modalConfirmar.hide();
+
+                setTimeout(() => {
+                    mostrarMensaje(
+                        "success",
+                        dataReserva.mensaje || "La reserva se realizo con exito"
                     );
-
-                    if (modalConfirmar) modalConfirmar.hide();
-
-                    setTimeout(() => {
-                        mostrarMensaje(
-                            "success",
-                            dataReserva.mensaje || "La reserva se realizo con exito"
-                        );
-                    }, 300);
-
-            document.getElementById("modalMensaje").addEventListener(
-                "hidden.bs.modal",
-                function () {
-                    sessionStorage.removeItem("reservaEvento");
-                    sessionStorage.removeItem("reservaLaboratorio");
-                    sessionStorage.removeItem("datosSolicitante");
-                    sessionStorage.removeItem("edificioSeleccionado");
-                    window.location.href = "menu.html";
-                },
-                { once: true }
-            );
-
-        } else {
-
-            mostrarMensaje(
-                "error",
-                dataReserva.error || dataReserva.mensaje || "No se pudo realizar la reserva"
-            );
-
-    }
+                }, 300);
 
                 // Al cerrar el modal de exito, limpiamos el sessionStorage
                 // de la reserva (usuario/clave se mantienen porque son la
@@ -276,6 +263,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     },
                     { once: true }
                 );
+
+            } else {
+
+                mostrarMensaje(
+                    "error",
+                    dataReserva.error || dataReserva.mensaje || "No se pudo realizar la reserva"
+                );
+
             }
 
         } catch (error) {
