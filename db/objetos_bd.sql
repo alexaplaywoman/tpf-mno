@@ -387,29 +387,35 @@ END;
 CREATE PROCEDURE "DBA"."sp_cancelar_reservas_vencidas"()
 BEGIN
     DECLARE v_id_estado_cancelada INT;
-    DECLARE v_id_estado_ausente INT;
-    
-    -- Obtener IDs de estados
+    DECLARE v_id_estado_pendiente INT;
+
     SELECT ID_ESTADO_RESERVA INTO v_id_estado_cancelada
-    FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C';
-    
-    SELECT ID_ESTADO_RESERVA INTO v_id_estado_ausente
-    FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'A';
-    
-    -- Cancelar reservas pendientes cuya fecha ya pasó
-    UPDATE RESERVAS
-    SET ID_ESTADO_RESERVA = v_id_estado_cancelada,
-        MOTIVO_CANCELACION = 'Cancelada automáticamente por fecha vencida',
+    FROM "DBA"."ESTADO_RESERVA" WHERE ESTADO_RESERVA = 'C';
+
+    SELECT ID_ESTADO_RESERVA INTO v_id_estado_pendiente
+    FROM "DBA"."ESTADO_RESERVA" WHERE ESTADO_RESERVA = 'P';
+
+    -- Toda reserva pendiente cuyo bloque ya termino y no fue confirmada
+    -- como utilizada se cancela automaticamente. Cubre reservas de dias
+    -- pasados y reservas de hoy cuya hora fin ya paso.
+    UPDATE "DBA"."RESERVAS"
+    SET ID_ESTADO_RESERVA   = v_id_estado_cancelada,
+        MOTIVO_CANCELACION  = 'No confirmada como utilizada',
         USUARIO_CANCELACION = 'SYSTEM'
-    WHERE ID_ESTADO_RESERVA = (SELECT ID_ESTADO_RESERVA FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'P')
-      AND FECHA_A_RESERVAR < CURRENT DATE;
-      
-    -- Marcar como ausentes las reservas del día actual que ya pasaron su hora de inicio
-    UPDATE RESERVAS
-    SET ID_ESTADO_RESERVA = v_id_estado_ausente
-    WHERE ID_ESTADO_RESERVA = (SELECT ID_ESTADO_RESERVA FROM ESTADO_RESERVA WHERE ESTADO_RESERVA = 'P')
-      AND FECHA_A_RESERVAR = CURRENT DATE
-      AND HORA_INICIO < CURRENT TIME;
+    WHERE ID_ESTADO_RESERVA = v_id_estado_pendiente
+      AND (FECHA_A_RESERVAR < CURRENT DATE
+           OR (FECHA_A_RESERVAR = CURRENT DATE AND HORA_FIN < CURRENT TIME));
+END;
+/*==============================================================*/
+/* 2.a EVENTOS PROGRAMADOS                                      */
+/*==============================================================*/
+
+CREATE EVENT ev_cancelar_reservas_vencidas
+SCHEDULE
+   START TIME '00:05 AM' EVERY 60 MINUTES
+HANDLER
+BEGIN
+    CALL DBA.sp_cancelar_reservas_vencidas();
 END;
 commit;
 /*==============================================================*/
