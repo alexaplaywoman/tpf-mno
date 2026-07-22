@@ -35,6 +35,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         'laboratorio'
     );
 
+    const selectEstado = document.getElementById(
+        'estado'
+    );
+
 
 
     const id = new URLSearchParams(
@@ -75,6 +79,61 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
 
+
+    let estadoOriginal = "";
+    let programacionOriginal = null;
+
+
+
+
+
+    function cargarEstados() {
+
+        return fetch(
+            `/api/reservas/estados/listar`
+        )
+
+        .then(res => res.json())
+
+        .then(estados => {
+
+            selectEstado.innerHTML = `
+
+                <option value="">
+                    Seleccione un estado
+                </option>
+
+            `;
+
+            estados.forEach(estado => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value =
+                    estado.id_estado_reserva;
+
+                option.textContent =
+                    estado.nombre;
+
+                selectEstado.appendChild(
+                    option
+                );
+
+            });
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                "No se pudieron cargar los estados.";
+
+        });
+
+    }
 
 
 
@@ -194,6 +253,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
 
+            selectEstado.value =
+                reserva.ID_ESTADO_RESERVA ?? "";
+
+
+
             document.getElementById("fecha").value =
                 String(reserva.FECHA_A_RESERVAR)
                 .split("T")[0];
@@ -209,6 +273,19 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.getElementById("horaFin").value =
                 String(reserva.HORA_FIN)
                 .slice(0,5);
+
+
+
+            // Guardamos los valores originales para saber, al enviar el
+            // formulario, que cambio realmente el usuario: si el estado
+            // (-> /marcar) y/o el laboratorio/fecha/horario (-> /reprogramar).
+            estadoOriginal = String(reserva.ID_ESTADO_RESERVA ?? "");
+            programacionOriginal = {
+                numero_laboratorio: String(reserva.NUMERO_LABORATORIO ?? ""),
+                fecha_a_reservar: String(reserva.FECHA_A_RESERVAR).split("T")[0],
+                hora_inicio: String(reserva.HORA_INICIO).slice(0, 5),
+                hora_fin: String(reserva.HORA_FIN).slice(0, 5)
+            };
 
 
 
@@ -236,6 +313,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await cargarLaboratorios();
 
+    await cargarEstados();
+
     await cargarReserva();
 
     const monthYearEl = document.getElementById("month-year");
@@ -246,6 +325,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let currentDate = new Date();
     let selectedDate = null;
     let reservasOcupadas = [];
+    let feriados = [];
 
     async function cargarFechasOcupadas() {
 
@@ -271,6 +351,27 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.error(error);
 
             reservasOcupadas = [];
+
+        }
+
+    }
+
+    async function cargarFeriados() {
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/feriados?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+                );
+
+            feriados = respuesta.ok ? await respuesta.json() : [];
+
+        } catch(error) {
+
+            console.error(error);
+
+            feriados = [];
 
         }
 
@@ -344,8 +445,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             let esFinSemana = fecha.getDay() === 0 || fecha.getDay() === 6;
             let esPasado = fecha < hoy;
             let reservaEseDia = reservasOcupadas.find(r => r.fecha === fechaString);
+            let feriadoEseDia = feriados.find(f => String(f.FECHA).split('T')[0] === fechaString);
 
-            if(esPasado || esFinSemana) {
+            if(esPasado || esFinSemana || feriadoEseDia) {
 
                 day.classList.add(
                     "deshabilitado"
@@ -356,10 +458,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                     day.title =
                         "Fecha pasada";
 
-                } else {
+                } else if(esFinSemana) {
 
                     day.title =
                         "No se permiten reservas los fines de semana";
+
+                } else {
+
+                    day.title =
+                        `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
 
                 }
 
@@ -481,6 +588,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     await cargarFechasOcupadas();
+    await cargarFeriados();
 
     renderCalendar();
 
@@ -492,49 +600,103 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             errorMessage.textContent = "";
 
-            const datos = {
-
-                usuario,
-                clave,
+            const nuevaProgramacion = {
                 numero_laboratorio: selectLaboratorio.value,
                 fecha_a_reservar: document.getElementById("fecha").value,
                 hora_inicio: document.getElementById("horaInicio").value,
                 hora_fin: document.getElementById("horaFin").value
-
             };
+
+            const cambioEstado =
+                selectEstado.value !== "" &&
+                selectEstado.value !== estadoOriginal;
+
+            const cambioProgramacion =
+                programacionOriginal &&
+                (nuevaProgramacion.numero_laboratorio !== programacionOriginal.numero_laboratorio ||
+                 nuevaProgramacion.fecha_a_reservar !== programacionOriginal.fecha_a_reservar ||
+                 nuevaProgramacion.hora_inicio !== programacionOriginal.hora_inicio ||
+                 nuevaProgramacion.hora_fin !== programacionOriginal.hora_fin);
 
             try {
 
-                const response = await fetch(`/api/reservas/reprogramar/${id}`,
+                // El estado (Pendiente/Utilizada/Cancelada/Ausente) se
+                // actualiza por /marcar, que no tiene la restriccion de
+                // "ya Cancelada o Utilizada" que si tiene /reprogramar.
+                if (cambioEstado) {
+
+                    const respuestaEstado = await fetch(`/api/reservas/marcar/${id}`,
                         {
                             method: "POST",
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body: JSON.stringify(datos)
-
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                usuario,
+                                clave,
+                                id_estado_reserva: Number(selectEstado.value)
+                            })
                         }
                     );
 
-                const data =
-                    await response.json()
-                    .catch(() => null);
+                    const dataEstado =
+                        await respuestaEstado.json()
+                        .catch(() => null);
 
-                if(
-                    !response.ok ||
-                    !data ||
-                    data.success === false
-                ) {
+                    if(
+                        !respuestaEstado.ok ||
+                        !dataEstado ||
+                        dataEstado.success === false
+                    ) {
 
-                    throw new Error(
-                        data?.error ||
-                        "Error al reprogramar la reserva."
-                    );
+                        throw new Error(
+                            dataEstado?.error ||
+                            "Error al actualizar el estado de la reserva."
+                        );
 
+                    }
+
+                    estadoOriginal = selectEstado.value;
+
+                }
+
+                // El laboratorio/fecha/horario se actualizan por
+                // /reprogramar, que bloquea si la reserva ya esta
+                // Cancelada o Utilizada.
+                if (cambioProgramacion) {
+
+                    const response = await fetch(`/api/reservas/reprogramar/${id}`,
+                            {
+                                method: "POST",
+                                headers: {
+
+                                    "Content-Type":
+                                        "application/json"
+
+                                },
+
+                                body: JSON.stringify({ usuario, clave, ...nuevaProgramacion })
+
+                            }
+                        );
+
+                    const data =
+                        await response.json()
+                        .catch(() => null);
+
+                    if(
+                        !response.ok ||
+                        !data ||
+                        data.success === false
+                    ) {
+
+                        throw new Error(
+                            data?.error ||
+                            "Error al reprogramar la reserva."
+                        );
+
+
+                    }
+
+                    programacionOriginal = nuevaProgramacion;
 
                 }
 
