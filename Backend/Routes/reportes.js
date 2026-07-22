@@ -1,8 +1,6 @@
 const express = require('express');
-const { conectar ,manejarError} = require('./conexion');
+const { conectar, manejarError } = require('./conexion');
 const router = express.Router();
-
-
 
 function esFecha(value) {
     return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -24,14 +22,7 @@ router.get('/laboratorios-mas-utilizados', (req, res) => {
     conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sql = `
-            SELECT r.NUMERO_LABORATORIO, l.EDIFICIO, COUNT(*) AS cantidad_reservas
-            FROM DBA.RESERVAS r
-            JOIN DBA.LABORATORIOS l ON r.NUMERO_LABORATORIO = l.NUMERO_LABORATORIO
-            WHERE r.FECHA_A_RESERVAR BETWEEN '${params.desde}' AND '${params.hasta}'
-            GROUP BY r.NUMERO_LABORATORIO, l.EDIFICIO
-            ORDER BY cantidad_reservas DESC
-        `;
+        const sql = `CALL DBA.sp_reporte_laboratorios_mas_utilizados('${params.desde}', '${params.hasta}')`;
 
         connection.query(sql, (err, result) => {
             connection.disconnect();
@@ -48,13 +39,7 @@ router.get('/horarios-mas-ocupados', (req, res) => {
     conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sql = `
-            SELECT HORA_INICIO, COUNT(*) AS cantidad_reservas
-            FROM DBA.RESERVAS
-            WHERE FECHA_A_RESERVAR BETWEEN '${params.desde}' AND '${params.hasta}'
-            GROUP BY HORA_INICIO
-            ORDER BY cantidad_reservas DESC
-        `;
+        const sql = `CALL DBA.sp_reporte_horarios_mas_ocupados('${params.desde}', '${params.hasta}')`;
 
         connection.query(sql, (err, result) => {
             connection.disconnect();
@@ -71,14 +56,7 @@ router.get('/solicitantes-top', (req, res) => {
     conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sql = `
-            SELECT r.CEDULA_IDENTIDAD, s.NOMBRE, s.APELLIDO, COUNT(*) AS cantidad_reservas
-            FROM DBA.RESERVAS r
-            JOIN DBA.SOLICITANTES s ON r.CEDULA_IDENTIDAD = s.CEDULA_IDENTIDAD AND r.CORREO = s.CORREO
-            WHERE r.FECHA_A_RESERVAR BETWEEN '${params.desde}' AND '${params.hasta}'
-            GROUP BY r.CEDULA_IDENTIDAD, s.NOMBRE, s.APELLIDO
-            ORDER BY cantidad_reservas DESC
-        `;
+        const sql = `CALL DBA.sp_reporte_solicitantes_top('${params.desde}', '${params.hasta}')`;
 
         connection.query(sql, (err, result) => {
             connection.disconnect();
@@ -95,18 +73,28 @@ router.get('/cancelaciones-inasistencias', (req, res) => {
     conectar(params.usuario, params.clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
-        const sql = `
-            SELECT er.ESTADO_RESERVA, COUNT(*) AS cantidad
-            FROM DBA.RESERVAS r
-            JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
-            WHERE r.FECHA_A_RESERVAR BETWEEN '${params.desde}' AND '${params.hasta}'
-              AND r.ID_ESTADO_RESERVA IN (3, 4)
-            GROUP BY er.ESTADO_RESERVA
-        `;
+        const sql = `CALL DBA.sp_reporte_cancelaciones_inasistencias('${params.desde}', '${params.hasta}')`;
 
         connection.query(sql, (err, result) => {
             connection.disconnect();
             if (err) return manejarError(err, res, 'generar reporte de cancelaciones e inasistencias');
+            return res.json(result);
+        });
+    });
+});
+
+router.get('/porcentaje-recursos', (req, res) => {
+    const params = validarRango(req, res);
+    if (!params) return;
+
+    conectar(params.usuario, params.clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        const sql = `CALL DBA.sp_reporte_porcentaje_recursos('${params.desde}', '${params.hasta}')`;
+
+        connection.query(sql, (err, result) => {
+            connection.disconnect();
+            if (err) return manejarError(err, res, 'generar reporte de porcentaje de recursos');
             return res.json(result);
         });
     });
