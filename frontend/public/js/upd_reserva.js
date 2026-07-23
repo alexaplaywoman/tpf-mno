@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         'estado'
     );
 
+    const selectMotivoCancelacion = document.getElementById(
+        'motivoCancelacion'
+    );
+
+    const grupoMotivoCancelacion = document.getElementById(
+        'grupoMotivoCancelacion'
+    );
+
 
 
     const id = new URLSearchParams(
@@ -81,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
     let estadoOriginal = "";
+    let motivoCancelacionOriginal = "";
     let programacionOriginal = null;
 
 
@@ -134,6 +143,67 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
     }
+
+
+
+    function cargarMotivosCancelacion() {
+
+        return fetch(
+            `/api/reservas/motivos-cancelacion`
+        )
+
+        .then(res => res.json())
+
+        .then(motivos => {
+
+            selectMotivoCancelacion.innerHTML = `
+
+                <option value="">
+                    Seleccione el motivo de cancelación
+                </option>
+
+            `;
+
+            motivos.forEach(motivo => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = motivo;
+                option.textContent = motivo;
+
+                selectMotivoCancelacion.appendChild(
+                    option
+                );
+
+            });
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                "No se pudieron cargar los motivos de cancelación.";
+
+        });
+
+    }
+
+    // El motivo solo aplica (y solo es obligatorio) cuando el estado
+    // elegido es Cancelada (3). El select arranca oculto y sin "required"
+    // en el HTML; esto lo prende/apaga segun corresponda.
+    function actualizarVisibilidadMotivo() {
+
+        const esCancelada = Number(selectEstado.value) === 3;
+
+        grupoMotivoCancelacion.style.display = esCancelada ? "" : "none";
+        selectMotivoCancelacion.required = esCancelada;
+
+    }
+
+    selectEstado.addEventListener("change", actualizarVisibilidadMotivo);
 
 
 
@@ -256,6 +326,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             selectEstado.value =
                 reserva.ID_ESTADO_RESERVA ?? "";
 
+            selectMotivoCancelacion.value =
+                reserva.MOTIVO_CANCELACION ?? "";
+
+            actualizarVisibilidadMotivo();
+
 
 
             document.getElementById("fecha").value =
@@ -280,6 +355,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             // formulario, que cambio realmente el usuario: si el estado
             // (-> /marcar) y/o el laboratorio/fecha/horario (-> /reprogramar).
             estadoOriginal = String(reserva.ID_ESTADO_RESERVA ?? "");
+            motivoCancelacionOriginal = String(reserva.MOTIVO_CANCELACION ?? "");
             programacionOriginal = {
                 numero_laboratorio: String(reserva.NUMERO_LABORATORIO ?? ""),
                 fecha_a_reservar: String(reserva.FECHA_A_RESERVAR).split("T")[0],
@@ -314,6 +390,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     await cargarLaboratorios();
 
     await cargarEstados();
+
+    await cargarMotivosCancelacion();
 
     await cargarReserva();
 
@@ -611,6 +689,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 selectEstado.value !== "" &&
                 selectEstado.value !== estadoOriginal;
 
+            const cambioMotivo =
+                Number(selectEstado.value) === 3 &&
+                selectMotivoCancelacion.value !== motivoCancelacionOriginal;
+
             const cambioProgramacion =
                 programacionOriginal &&
                 (nuevaProgramacion.numero_laboratorio !== programacionOriginal.numero_laboratorio ||
@@ -623,17 +705,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                 // El estado (Pendiente/Utilizada/Cancelada/Ausente) se
                 // actualiza por /marcar, que no tiene la restriccion de
                 // "ya Cancelada o Utilizada" que si tiene /reprogramar.
-                if (cambioEstado) {
+                if (cambioEstado || cambioMotivo) {
+
+                    const bodyMarcar = {
+                        usuario,
+                        clave,
+                        id_estado_reserva: Number(selectEstado.value)
+                    };
+
+                    if (Number(selectEstado.value) === 3) {
+                        bodyMarcar.motivo_cancelacion = selectMotivoCancelacion.value;
+                    }
 
                     const respuestaEstado = await fetch(`/api/reservas/marcar/${id}`,
                         {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                usuario,
-                                clave,
-                                id_estado_reserva: Number(selectEstado.value)
-                            })
+                            body: JSON.stringify(bodyMarcar)
                         }
                     );
 
@@ -655,6 +743,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
 
                     estadoOriginal = selectEstado.value;
+                    motivoCancelacionOriginal = selectMotivoCancelacion.value;
 
                 }
 
