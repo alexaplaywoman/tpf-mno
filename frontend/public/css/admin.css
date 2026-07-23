@@ -1,0 +1,324 @@
+:root {
+    --purple: #8b597b;
+    --dark: #493129;
+    --bar: #c9a6bb;
+    --bg: #fbf0e4;
+    --cards: #F1D9DA;
+    --rojo: #a84461;
+    --rojo-dark: #7d2f46;
+}
+
+
+/* GENERAL */
+
+body {
+    background-color: var(--bg) !important;
+    color: var(--dark);
+    font-family: 'Poppins', sans-serif;
+}
+
+
+/* NAVBAR MOVIL */
+
+.navbar {
+    background-color: var(--bar) !important;
+}
+
+.navbar-brand {
+    color: var(--dark) !important;
+}
+
+
+/* SIDEBAR */
+
+.sidebar {
+    background-color: var(--bar) !important;
+}
+
+
+/* TITULO INICIO DEL MENU */
+
+.sidebar > div > a {
+    color: var(--purple) !important;
+}
+
+
+/* =========================
+   MENU LATERAL
+   ========================= */
+
+
+/* NOMBRES DEL MENU */
+
+.sidebar .nav-link span {
+    color: var(--purple) !important;
+}
+
+
+/* ICONOS DEL MENU */
+
+.sidebar .nav-link i {
+    color: white !important;
+}
+
+
+/* LINKS */
+
+.sidebar .nav-link {
+    border-radius: 10px;
+    transition: .3s;
+}
+
+
+/* HOVER */
+
+.sidebar .nav-link:hover {
+    background-color: var(--purple) !important;
+}
+
+
+.sidebar .nav-link:hover span,
+.sidebar .nav-link:hover i {
+    color: white !important;
+}
+
+
+
+/* =========================
+   MENU MOVIL
+   ========================= */
+
+
+.offcanvas {
+    background-color: var(--purple) !important;
+}
+
+
+.offcanvas .nav-link,
+.offcanvas .nav-link span,
+.offcanvas .nav-link i {
+    color: white !important;
+}
+
+
+.offcanvas .nav-link:hover {
+    background-color: var(--dark) !important;
+}
+
+
+
+/* =========================
+   TITULO PRINCIPAL
+   ========================= */
+
+
+.text-center h1,
+h1.text-primary {
+    color: var(--purple) !important;
+}
+
+
+
+/* DESCRIPCION */
+
+.text-muted {
+    color: #6b5a52 !important;
+}
+
+
+
+/* =========================
+   CARDS
+   ========================= */
+
+
+.card {
+    background-color: var(--cards) !important;
+    border: none !important;
+    border-radius: 15px;
+    transition: .3s;
+}
+
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+
+.card h4 {
+    color: var(--dark) !important;
+}
+
+
+.card p {
+    color: #6b5a52 !important;
+}
+
+
+/* ICONOS DE CARDS */
+
+.card .bi {
+    color: var(--purple) !important;
+}
+
+
+
+/* =========================
+   ALERTA FINAL
+   ========================= */
+
+
+.alert-success {
+    background-color: var(--cards) !important;
+    border: 2px solid var(--purple) !important;
+    color: var(--dark) !important;
+}
+
+
+.alert-success h5 {
+    color: var(--purple) !important;
+}
+
+
+
+/* =========================
+   PERFIL
+   ========================= */
+
+
+.sidebar img {
+    border: 2px solid var(--purple);
+}
+
+
+
+/* =========================
+   BOTONES
+   ========================= */
+
+
+button,
+.btn {
+    background-color: var(--purple) !important;
+    border-color: var(--purple) !important;
+    color: white !important;
+}
+
+
+button:hover,
+.btn:hover {
+    background-color: var(--dark) !important;
+    border-color: var(--dark) !important;
+}
+
+
+button .bi,
+.btn .bi {
+    color: white !important;
+}
+
+
+
+/* BOTON HAMBURGUESA */
+
+.navbar-toggler {
+    border-color: var(--purple) !important;
+}
+
+
+
+/* RESPONSIVE */
+
+@media(max-width:768px){
+
+    .sidebar {
+        display:none;
+    }
+
+}
+
+/* PERFIL ADMINISTRADOR */
+
+.sidebar .mt-auto a,
+.sidebar .mt-auto span {
+    color: var(--purple) !important;
+}
+
+.table {
+    background-color: var(--cards);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: var(--purple) !important;
+    color: white !important;
+    border-color: var(--purple) !important;
+}
+
+.table td {
+    color: var(--dark);
+    border-color: var(--bar) !important;
+}
+
+table {
+    border-color: var(--purple) !important;
+}
+
+.table > :not(caption) > * > * {
+    border-color: var(--purple) !important;
+}
+
+.table {
+    border: 2px solid var(--purple) !important;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* =========================
+   FONDO PAGINAS ADMIN
+   ========================= */
+
+.container,
+.container-fluid {
+    background-color: transparent !important;
+}
+
+
+/* FORMULARIOS BLANCOS */
+
+.form-control,
+.form-select,
+textarea {
+    background-color: white !important;
+    color: var(--dark) !important;
+    border: 1px solid #ced4da !important;
+}
+
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--purple) !important;
+    box-shadow: 0 0 0 0.2rem rgba(139, 89, 123, .25) !important;
+}
+
+/* CHECKBOX SELECCIONADO */
+
+.form-check-input:checked {
+    background-color: var(--purple) !important;
+    border-color: var(--purple) !important;
+}
+
+
+/* BORDE CUANDO NO ESTÁ SELECCIONADO */
+
+.form-check-input {
+    border-color: var(--purple) !important;
+}
+
+
+/* EFECTO AL HACER CLICK */
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(139, 89, 123, 0.25) !important;
+}
