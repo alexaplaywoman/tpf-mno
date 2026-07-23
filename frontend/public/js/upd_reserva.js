@@ -19,11 +19,35 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
-    const form = document.getElementById('update-reserva-form');
-    const errorMessage = document.getElementById('error-message');
-    const selectLaboratorio = document.getElementById('laboratorio');
-    const selectEstado = document.getElementById('estado');
-    const selectMotivoCancelacion = document.getElementById('motivoCancelacion');
+
+
+    const form = document.getElementById(
+        'update-reserva-form'
+    );
+
+
+    const errorMessage = document.getElementById(
+        'error-message'
+    );
+
+
+    const selectLaboratorio = document.getElementById(
+        'laboratorio'
+    );
+
+    const selectEstado = document.getElementById(
+        'estado'
+    );
+
+    const selectMotivoCancelacion = document.getElementById(
+        'motivoCancelacion'
+    );
+
+    const grupoMotivoCancelacion = document.getElementById(
+        'grupoMotivoCancelacion'
+    );
+
+
 
     const id = new URLSearchParams(
         window.location.search
@@ -187,6 +211,67 @@ document.addEventListener('DOMContentLoaded', async function () {
     selectEstado.addEventListener("change", actualizarVisibilidadMotivo)
 
 
+    function cargarMotivosCancelacion() {
+
+        return fetch(
+            `/api/reservas/motivos-cancelacion`
+        )
+
+        .then(res => res.json())
+
+        .then(motivos => {
+
+            selectMotivoCancelacion.innerHTML = `
+
+                <option value="">
+                    Seleccione el motivo de cancelación
+                </option>
+
+            `;
+
+            motivos.forEach(motivo => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = motivo;
+                option.textContent = motivo;
+
+                selectMotivoCancelacion.appendChild(
+                    option
+                );
+
+            });
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                "No se pudieron cargar los motivos de cancelación.";
+
+        });
+
+    }
+
+    // El motivo solo aplica (y solo es obligatorio) cuando el estado
+    // elegido es Cancelada (3). El select arranca oculto y sin "required"
+    // en el HTML; esto lo prende/apaga segun corresponda.
+    function actualizarVisibilidadMotivo() {
+
+        const esCancelada = Number(selectEstado.value) === 3;
+
+        grupoMotivoCancelacion.style.display = esCancelada ? "" : "none";
+        selectMotivoCancelacion.required = esCancelada;
+
+    }
+
+    selectEstado.addEventListener("change", actualizarVisibilidadMotivo);
+
+
+
     function cargarLaboratorios() {
 
 
@@ -306,6 +391,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             selectEstado.value =
                 reserva.ID_ESTADO_RESERVA ?? "";
 
+            selectMotivoCancelacion.value =
+                reserva.MOTIVO_CANCELACION ?? "";
+
+            actualizarVisibilidadMotivo();
+
 
 
             selectMotivoCancelacion.value =
@@ -372,6 +462,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     await cargarMotivosCancelacion();
 
     await cargarEstados();
+
+    await cargarMotivosCancelacion();
 
     await cargarReserva();
 
@@ -725,6 +817,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
 
                     estadoOriginal = selectEstado.value;
+                    motivoCancelacionOriginal = selectMotivoCancelacion.value;
 
                 }
 

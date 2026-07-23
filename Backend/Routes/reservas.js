@@ -434,13 +434,23 @@ router.post('/cancelar/:id', (req, res) => {
 
 router.post('/marcar/:id', (req, res) => {
     const { id } = req.params;
-    const { id_estado_reserva, usuario, clave } = req.body;
+    const { id_estado_reserva, motivo_cancelacion, usuario, clave } = req.body;
 
     if (!usuario || !clave || !id_estado_reserva)
         return res.status(400).json({ success: false, error: 'Faltan credenciales o el estado.' });
 
     if (![1, 2, 3, 4].includes(Number(id_estado_reserva)))
         return res.status(400).json({ success: false, error: 'Estado inválido. Opciones: 1 (Pendiente), 2 (Utilizada), 3 (Cancelada), 4 (No presentado).' });
+
+    // El trigger de la base exige MOTIVO_CANCELACION cuando el estado pasa
+    // a Cancelada (3); si no lo mandamos, el UPDATE explota en la base en
+    // vez de dar un error claro aca.
+    if (Number(id_estado_reserva) === 3) {
+        if (!motivo_cancelacion)
+            return res.status(400).json({ success: false, error: 'Falta el motivo de cancelación.' });
+        if (!MOTIVOS_CANCELACION_VALIDOS.includes(motivo_cancelacion))
+            return res.status(400).json({ success: false, error: `Motivo inválido. Opciones: ${MOTIVOS_CANCELACION_VALIDOS.join(', ')}` });
+    }
 
     conectar(usuario, clave, (err, connection) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
@@ -455,14 +465,15 @@ router.post('/marcar/:id', (req, res) => {
                 return res.status(403).json({ success: false, error: 'Solo un usuario administrativo puede marcar la asistencia de una reserva.' });
             }
 
-            connection.query(
-                `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`,
-                (err) => {
-                    connection.disconnect();
-                    if (err) return manejarError(err, res, 'marcar reserva');
-                    return res.json({ success: true });
-                }
-            );
+            const sql = Number(id_estado_reserva) === 3
+                ? `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva}, MOTIVO_CANCELACION = '${motivo_cancelacion}' WHERE ID_RESERVA = ${id}`
+                : `UPDATE DBA.RESERVAS SET ID_ESTADO_RESERVA = ${id_estado_reserva} WHERE ID_RESERVA = ${id}`;
+
+            connection.query(sql, (err) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'marcar reserva');
+                return res.json({ success: true });
+            });
         });
     });
 });
