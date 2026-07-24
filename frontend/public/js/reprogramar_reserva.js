@@ -48,13 +48,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
-    let estadoOriginal = "";
-    let motivoCancelacionOriginal = "";
-    let programacionOriginal = null;
-
     function cargarSolicitantes() {
 
-        return fetch(`/api/reservas/solicitantes`)
+        fetch(`/api/reservas/solicitantes?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
 
         .then(res => res.json())
 
@@ -93,32 +89,30 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function cargarTipoActividad() {
 
-        return fetch(`/api/reservas/motivos-cancelacion`)
+        return fetch(`/api/reservas/actividades`)
 
         .then(res => res.json())
 
-        .then(estados => {
+        .then(tipo => {
 
-            selectMotivoCancelacion.innerHTML = `
+            selectTipoActividad.innerHTML = `
 
                 <option value="">
-                    Seleccione un motivo de cancelación
+                    Seleccione un tipo de actividad
                 </option>
 
             `;
 
-            estados.forEach(motivo => {
+            tipo.forEach(tip => {
 
                 const option =
                     document.createElement("option");
 
-                option.value = motivo;
+                option.value = tip.ID_TIPO_ACTIVIDAD;
 
-                option.textContent = motivo;
+                option.textContent = tip.NOMBRE;
 
-                selectMotivoCancelacion.appendChild(
-                    option
-                );
+                selectTipoActividad.appendChild(option);
 
             });
 
@@ -129,92 +123,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.error(error);
 
             errorMessage.textContent =
-                "No se pudieron cargar los motivos de cancelación.";
+                "No se pudieron cargar los tipos de actividad.";
 
         });
 
     }
-
-    function actualizarVisibilidadMotivo(){
-
-        const esCancelada = Number(selectEstado.value) === 3; //para saber si es 3 (cancelada)
-
-        if (esCancelada){
-
-            selectMotivoCancelacion.disabled = false;
-            selectMotivoCancelacion.required = true;
-
-        } else {
-
-            selectMotivoCancelacion.value = "";
-            selectMotivoCancelacion.disabled = true;
-            selectMotivoCancelacion.required = false;
-        }
-    }
-
-    selectEstado.addEventListener("change", actualizarVisibilidadMotivo)
-
-
-    function cargarMotivosCancelacion() {
-
-        return fetch(
-            `/api/reservas/motivos-cancelacion`
-        )
-
-        .then(res => res.json())
-
-        .then(motivos => {
-
-            selectMotivoCancelacion.innerHTML = `
-
-                <option value="">
-                    Seleccione el motivo de cancelación
-                </option>
-
-            `;
-
-            motivos.forEach(motivo => {
-
-                const option =
-                    document.createElement("option");
-
-                option.value = motivo;
-                option.textContent = motivo;
-
-                selectMotivoCancelacion.appendChild(
-                    option
-                );
-
-            });
-
-        })
-
-        .catch(error => {
-
-            console.error(error);
-
-            errorMessage.textContent =
-                "No se pudieron cargar los motivos de cancelación.";
-
-        });
-
-    }
-
-    // El motivo solo aplica (y solo es obligatorio) cuando el estado
-    // elegido es Cancelada (3). El select arranca oculto y sin "required"
-    // en el HTML; esto lo prende/apaga segun corresponda.
-    function actualizarVisibilidadMotivo() {
-
-        const esCancelada = Number(selectEstado.value) === 3;
-
-        grupoMotivoCancelacion.style.display = esCancelada ? "" : "none";
-        selectMotivoCancelacion.required = esCancelada;
-
-    }
-
-    selectEstado.addEventListener("change", actualizarVisibilidadMotivo);
-
-
 
     function cargarLaboratorios() {
 
@@ -246,64 +159,41 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const option =
                     document.createElement("option");
 
-
-
                 option.value =
                     lab.NUMERO_LABORATORIO;
 
-
-
                 option.textContent =
                     `Laboratorio ${lab.NUMERO_LABORATORIO} - ${lab.EDIFICIO}`;
-
-
 
                 selectLaboratorio.appendChild(
                     option
                 );
 
-
             });
-
 
         })
 
-
         .catch(error => {
 
-
             console.error(error);
-
 
             errorMessage.textContent =
                 "No se pudieron cargar los laboratorios.";
 
-
         });
-
 
     }
 
-
-
-
-
-
     function cargarReserva() {
-
 
         return fetch(
             `/api/reservas/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
         )
 
-
         .then(async response => {
-
 
             const data =
                 await response.json().catch(() => null);
-
-
 
             if(
                 !response.ok ||
@@ -311,63 +201,37 @@ document.addEventListener('DOMContentLoaded', async function () {
                 data.success === false
             ) {
 
-
                 throw new Error(
                     data?.error ||
                     "No se encontró la reserva."
                 );
 
-
             }
-
-
 
             const reserva =
                 data.reserva;
 
-
-
             selectLaboratorio.value =
                 reserva.NUMERO_LABORATORIO ?? "";
 
-
-
-            selectEstado.value =
-                reserva.ID_ESTADO_RESERVA ?? "";
-
-            selectMotivoCancelacion.value =
-                reserva.MOTIVO_CANCELACION ?? "";
-
-            actualizarVisibilidadMotivo();
-
-
-
-            selectMotivoCancelacion.value =
-                reserva.MOTIVO_CANCELACION ?? "";
-
-
+            selectSolicitante.value =
+                reserva.CEDULA_IDENTIDAD ?? "";
+                
+            selectTipoActividad.value =
+                reserva.ID_TIPO_ACTIVIDAD    ?? "";
 
             document.getElementById("fecha").value =
                 String(reserva.FECHA_A_RESERVAR)
                 .split("T")[0];
 
-
-
             document.getElementById("horaInicio").value =
                 String(reserva.HORA_INICIO)
                 .slice(0,5);
-
-
 
             document.getElementById("horaFin").value =
                 String(reserva.HORA_FIN)
                 .slice(0,5);
 
-
-
-            // Guardamos los valores originales para saber, al enviar el
-            // formulario, que cambio realmente el usuario: si el estado
-            // (-> /marcar) y/o el laboratorio/fecha/horario (-> /reprogramar).
             estadoOriginal = String(reserva.ID_ESTADO_RESERVA ?? "");
             motivoCancelacionOriginal = String(reserva.MOTIVO_CANCELACION ?? "");
             programacionOriginal = {
@@ -376,8 +240,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 hora_inicio: String(reserva.HORA_INICIO).slice(0, 5),
                 hora_fin: String(reserva.HORA_FIN).slice(0, 5)
             };
-
-
 
         })
 
@@ -403,15 +265,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await cargarLaboratorios();
 
-    await cargarMotivosCancelacion();
+    await cargarSolicitantes();
 
-    await cargarEstados();
-
-    await cargarMotivosCancelacion();
+    await cargarTipoActividad();
 
     await cargarReserva();
 
-    actualizarVisibilidadMotivo();
+    //calendario
 
     const monthYearEl = document.getElementById("month-year");
     const daysEl = document.getElementById("days");
@@ -703,14 +563,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 hora_fin: document.getElementById("horaFin").value
             };
 
-            const cambioEstado =
-                selectEstado.value !== "" &&
-                selectEstado.value !== estadoOriginal;
-
-            const cambioMotivo =
-                Number(selectEstado.value) === 3 &&
-                selectMotivoCancelacion.value !== motivoCancelacionOriginal;
-
             const cambioProgramacion =
                 programacionOriginal &&
                 (nuevaProgramacion.numero_laboratorio !== programacionOriginal.numero_laboratorio ||
@@ -723,48 +575,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 // El estado (Pendiente/Utilizada/Cancelada/Ausente) se
                 // actualiza por /marcar, que no tiene la restriccion de
                 // "ya Cancelada o Utilizada" que si tiene /reprogramar.
-                if (cambioEstado || cambioMotivo) {
-
-                    const bodyMarcar = {
-                        usuario,
-                        clave,
-                        id_estado_reserva: Number(selectEstado.value)
-                    };
-
-                    if (Number(selectEstado.value) === 3) {
-                        bodyMarcar.motivo_cancelacion = selectMotivoCancelacion.value;
-                    }
-
-                    const respuestaEstado = await fetch(`/api/reservas/marcar/${id}`,
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(bodyMarcar)
-                        }
-                    );
-
-                    const dataEstado =
-                        await respuestaEstado.json()
-                        .catch(() => null);
-
-                    if(
-                        !respuestaEstado.ok ||
-                        !dataEstado ||
-                        dataEstado.success === false
-                    ) {
-
-                        throw new Error(
-                            dataEstado?.error ||
-                            "Error al actualizar el estado de la reserva."
-                        );
-
-                    }
-
-                    estadoOriginal = selectEstado.value;
-                    motivoCancelacionOriginal = selectMotivoCancelacion.value;
-
-                }
-
                 // El laboratorio/fecha/horario se actualizan por
                 // /reprogramar, que bloquea si la reserva ya esta
                 // Cancelada o Utilizada.
