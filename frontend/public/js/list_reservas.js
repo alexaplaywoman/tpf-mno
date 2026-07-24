@@ -164,7 +164,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                 class="btn btn-dark btn-sm"
                                 onclick="editarReserva(${reserva.ID_RESERVA})">
                                 <i class="bi bi-pencil-square"></i>
-                                Editar
+                                Actualizar
+                            </button>
+
+                            <button
+                                class="btn btn-dark btn-sm"
+                                onclick="editarReserva(${reserva.ID_RESERVA})">
+                                <i class="bi bi-calendar2-week"></i>
+                                Reprogramar
                             </button>
 
                             <button

@@ -232,6 +232,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify(reservaCompleta)
             });
 
+            const data = await respuestaReserva.json();
+
+                if(data.success){
+
+                    mostrarMensaje(
+                        "success",
+                        "Reserva creada correctamente"
+                    );
+
+                }else{
+
+                    mostrarMensaje(
+                        "error",
+                        data.error
+                    );
+
+                }
+
             const dataReserva = await respuestaReserva.json();
 
             if (dataReserva.success) {
@@ -281,25 +299,51 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function mostrarMensaje(tipo, mensaje) {
-    const modalConfirmar = bootstrap.Modal.getInstance(
-        document.getElementById("modalConfirmar")
-    );
-    if (modalConfirmar) modalConfirmar.hide();
+
+    const modalConfirmarElement = document.getElementById("modalConfirmar");
+    const modalConfirmar = bootstrap.Modal.getInstance(modalConfirmarElement);
+
+    if (modalConfirmar) {
+        modalConfirmar.hide();
+    }
 
     const tituloModal = document.getElementById("tituloMensaje");
     const texto = document.getElementById("textoMensaje");
 
     switch (tipo) {
-        case "success": tituloModal.textContent = "Exito"; break;
-        case "error":   tituloModal.textContent = "Error"; break;
-        case "warning": tituloModal.textContent = "Advertencia"; break;
-        default:        tituloModal.textContent = "Mensaje";
+        case "success":
+            tituloModal.textContent = "Éxito";
+            break;
+        case "error":
+            tituloModal.textContent = "Error";
+            break;
+        case "warning":
+            tituloModal.textContent = "Advertencia";
+            break;
+        default:
+            tituloModal.textContent = "Mensaje";
     }
 
     texto.textContent = mensaje;
 
+
+    // Esperar a que Bootstrap termine de cerrar el primer modal
     setTimeout(() => {
-        const modal = new bootstrap.Modal(document.getElementById("modalMensaje"));
-        modal.show();
-    }, 300);
+        const modalMensaje = new bootstrap.Modal(
+            document.getElementById("modalMensaje")
+        );
+
+        modalMensaje.show();
+
+    }, 800);
 }
+
+document.getElementById("cerrarMensaje").addEventListener("click", function(){
+
+    document.body.classList.remove("modal-open");
+
+    document.querySelectorAll(".modal-backdrop").forEach(function(backdrop){
+        backdrop.remove();
+    });
+
+});

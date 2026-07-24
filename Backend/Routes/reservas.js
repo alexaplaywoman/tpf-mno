@@ -62,12 +62,23 @@ router.get('/', (req, res) => {
         `;
 
         connection.query(sql, (err, result) => {
+
             connection.disconnect();
-            if (err) return manejarError(err, res, 'consultar reservas');
-            return res.json(result);
+
+                if (err) {
+                    return res.json({
+                        success: false,
+                        error: err.message
+                    });
+                }
+
+                return res.json({
+                    success: true
+                });
+
+            });
         });
     });
-});
 
 router.get('/fechas-ocupadas', (req, res) => {
     const { usuario, clave } = req.query;
@@ -207,7 +218,11 @@ router.post('/add', (req, res) => {
                 // Todo mensaje del trigger o del SP llega aca por err.message
                 if (err) {
                     connection.disconnect();
-                    return manejarError(err, res, 'crear reserva');
+
+                    return res.json({
+                        success: false,
+                        error: err.message
+                    });
                 }
 
                 const fila = (result && result[0]) || {};
