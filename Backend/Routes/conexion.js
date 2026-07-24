@@ -63,24 +63,14 @@ function cerrarTodo() {
 process.on('SIGINT',  cerrarTodo);
 process.on('SIGTERM', cerrarTodo);
 
-const manejarError = (err, res, action) => {
-    let mensajeCrudo;
-    if (err && typeof err === 'object') {
-        mensajeCrudo = err.message || JSON.stringify(err);
-    } else {
-        mensajeCrudo = String(err || 'Error de Base de Datos Desconocido');
-    }
-    let mensajeUsuario = mensajeCrudo;
-    const partes = mensajeCrudo.split('\n').map(s => s.trim()).filter(Boolean);
-    if (partes.length > 0) mensajeUsuario = partes[partes.length - 1];
-    mensajeUsuario = mensajeUsuario.replace(/^\[.*?\]\s*/g, '').trim();
+function manejarError(err, res, mensaje) {
 
-    console.error(`Error al ${action}:`, err);
-    return res.status(500).json({
+    console.error(mensaje, err);
+
+    res.status(400).json({
         success: false,
-        error: mensajeUsuario,
-        contexto: action,
+        error: err.message || mensaje
     });
-};
+}
 
 module.exports = { conectar, manejarError };

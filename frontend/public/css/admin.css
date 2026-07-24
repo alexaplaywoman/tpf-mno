@@ -88,21 +88,77 @@ body {
    MENU MOVIL
    ========================= */
 
-
 .offcanvas {
+    background-color: var(--bar) !important;
+}
+
+/* Cabecera */
+
+.offcanvas-header {
+    border-bottom: 1px solid rgba(80, 26, 63, .2);
+}
+
+/* Título */
+
+.offcanvas-title {
+    color: var(--purple) !important;
+    font-weight: 700;
+}
+
+/* Botón cerrar */
+
+.offcanvas .btn-close {
+    filter: brightness(0) saturate(100%);
+    opacity: 1 !important;
+}
+
+/* Logo */
+
+.offcanvas .navbar-brand,
+.offcanvas .navbar-brand i {
+    color: var(--purple) !important;
+}
+
+/* Links */
+
+.offcanvas .nav-link {
+    color: var(--purple) !important;
+    border-radius: 10px;
+    transition: .3s;
+}
+
+/* Texto */
+
+.offcanvas .nav-link span {
+    color: var(--purple) !important;
+}
+
+/* Íconos */
+
+.offcanvas .nav-link i {
+    color: var(--purple) !important;
+}
+
+/* Hover */
+
+.offcanvas .nav-link:hover {
     background-color: var(--purple) !important;
 }
 
-
-.offcanvas .nav-link,
-.offcanvas .nav-link span,
-.offcanvas .nav-link i {
+.offcanvas .nav-link:hover span,
+.offcanvas .nav-link:hover i {
     color: white !important;
 }
 
+/* Página activa */
 
-.offcanvas .nav-link:hover {
-    background-color: var(--dark) !important;
+.offcanvas .nav-link.active {
+    background-color: var(--purple) !important;
+}
+
+.offcanvas .nav-link.active span,
+.offcanvas .nav-link.active i {
+    color: white !important;
 }
 
 
@@ -323,3 +379,214 @@ textarea {
     box-shadow: 0 0 0 0.25rem rgba(139, 89, 123, 0.25) !important;
 }
 
+/* Botón cerrar del menú móvil */
+
+.offcanvas .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 1;
+}
+
+.offcanvas .btn-close:hover {
+    opacity: .8;
+}
+
+/* Título del menú móvil */
+
+.offcanvas-title {
+    color: white !important;
+    font-weight: 600;
+}
+
+.offcanvas-header {
+    border-bottom: 1px solid rgba(255,255,255,.2);
+}
+
+/* =========================
+   PAGINACIÓN
+   ========================= */
+
+.pagination .page-link {
+    background: white !important;
+    color: var(--purple) !important;
+    border: 1px solid var(--purple) !important;
+    transition: .2s;
+}
+
+.pagination .page-link:hover {
+    background: var(--cards) !important;
+    color: var(--purple) !important;
+    border-color: var(--purple) !important;
+}
+
+/* Página actual */
+
+.pagination .page-item.active .page-link {
+    background: var(--purple) !important;
+    color: white !important;
+    border-color: var(--purple) !important;
+    font-weight: bold;
+    box-shadow: 0 0 0 3px rgba(80,26,63,.25);
+}
+
+/* Al hacer click */
+
+.pagination .page-link:focus {
+    box-shadow: 0 0 0 .2rem rgba(80,26,63,.25) !important;
+}
+
+/* Deshabilitados */
+
+.pagination .page-item.disabled .page-link {
+    color: #aaa !important;
+    background: white !important;
+}
+
+/* =========================
+   COLORES RESPONSIVE MOVIL/TABLET
+   ========================= */
+
+@media (max-width: 992px) {
+
+    body {
+        background-color: var(--bg) !important;
+        color: var(--dark);
+    }
+
+
+    /* Navbar móvil */
+    .navbar {
+        background-color: var(--bar) !important;
+    }
+
+
+    .navbar-brand {
+        color: var(--purple) !important;
+    }
+
+
+    /* Menú móvil */
+    .offcanvas {
+        background-color: var(--bar) !important;
+    }
+
+
+    .offcanvas-header {
+        background-color: var(--bar) !important;
+        border-color: rgba(118, 39, 93, 0.3);
+    }
+
+
+    /* Botón cerrar menú móvil */
+    .offcanvas .btn-close {
+        background-color: transparent !important;
+        filter: none !important;
+        opacity: 1 !important;
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+
+/* Cruz violeta */
+    .offcanvas .btn-close::before {
+        color: var(--purple);
+    }
+
+    /* Links menú */
+    .offcanvas .nav-link {
+        color: var(--purple) !important;
+    }
+
+
+    .offcanvas .nav-link i,
+    .offcanvas .nav-link span {
+        color: var(--purple) !important;
+    }
+
+
+    .offcanvas .nav-link:hover,
+    .offcanvas .nav-link.active {
+        background-color: var(--purple) !important;
+    }
+
+
+    .offcanvas .nav-link:hover i,
+    .offcanvas .nav-link:hover span,
+    .offcanvas .nav-link.active i,
+    .offcanvas .nav-link.active span {
+        color: white !important;
+    }
+
+
+    /* Cards */
+    .card {
+        background-color: var(--cards) !important;
+    }
+
+
+    .card h4 {
+        color: var(--dark) !important;
+    }
+
+
+    .card p {
+        color: #6b5a52 !important;
+    }
+
+
+    /* Inputs */
+    .form-control,
+    .form-select,
+    textarea {
+        background-color: white !important;
+        color: var(--dark) !important;
+        border-color: var(--purple) !important;
+    }
+
+
+    /* Botones */
+    .btn,
+    button {
+        background-color: var(--purple) !important;
+        border-color: var(--purple) !important;
+        color: white !important;
+    }
+
+
+    .btn:hover,
+    button:hover {
+        background-color: var(--dark) !important;
+        border-color: var(--dark) !important;
+    }
+
+
+    /* Tablas */
+    .table {
+        background-color: var(--cards) !important;
+        border-color: var(--purple) !important;
+    }
+
+
+    .table th {
+        background-color: var(--purple) !important;
+        color: white !important;
+    }
+
+
+    .table td {
+        color: var(--dark) !important;
+    }
+
+
+    /* Paginación */
+    .pagination .page-link {
+        background-color: white !important;
+        color: var(--purple) !important;
+        border-color: var(--purple) !important;
+    }
+
+
+    .pagination .page-item.active .page-link {
+        background-color: var(--purple) !important;
+        color: white !important;
+    }
+
+}
