@@ -73,7 +73,8 @@ router.get('/', (req, res) => {
                 }
 
                 return res.json({
-                    success: true
+                    success: true,
+                    reservas: result
                 });
 
             });
