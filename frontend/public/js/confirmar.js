@@ -232,24 +232,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify(reservaCompleta)
             });
 
-            const data = await respuestaReserva.json();
-
-                if(data.success){
-
-                    mostrarMensaje(
-                        "success",
-                        "Reserva creada correctamente"
-                    );
-
-                }else{
-
-                    mostrarMensaje(
-                        "error",
-                        data.error
-                    );
-
-                }
-
             const dataReserva = await respuestaReserva.json();
 
             if (dataReserva.success) {

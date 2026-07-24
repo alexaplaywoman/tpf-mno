@@ -145,72 +145,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
 
-        function cargarMotivosCancelacion() {
-
-        return fetch(
-            `/api/reservas/motivos-cancelacion`
-        )
-
-        .then(res => res.json())
-
-        .then(estados => {
-
-            selectMotivoCancelacion.innerHTML = `
-
-                <option value="">
-                    Seleccione un motivo de cancelación
-                </option>
-
-            `;
-
-            estados.forEach(motivo => {
-
-                const option =
-                    document.createElement("option");
-
-                option.value = motivo;
-
-                option.textContent = motivo;
-
-                selectMotivoCancelacion.appendChild(
-                    option
-                );
-
-            });
-
-        })
-
-        .catch(error => {
-
-            console.error(error);
-
-            errorMessage.textContent =
-                "No se pudieron cargar los motivos de cancelación.";
-
-        });
-
-    }
-
-    function actualizarVisibilidadMotivo(){
-
-        const esCancelada = Number(selectEstado.value) === 3; //para saber si es 3 (cancelada)
-
-        if (esCancelada){
-
-            selectMotivoCancelacion.disabled = false;
-            selectMotivoCancelacion.required = true;
-
-        } else {
-
-            selectMotivoCancelacion.value = "";
-            selectMotivoCancelacion.disabled = true;
-            selectMotivoCancelacion.required = false;
-        }
-    }
-
-    selectEstado.addEventListener("change", actualizarVisibilidadMotivo)
-
-
     function cargarMotivosCancelacion() {
 
         return fetch(
@@ -398,11 +332,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 
 
-            selectMotivoCancelacion.value =
-                reserva.MOTIVO_CANCELACION ?? "";
-
-
-
             document.getElementById("fecha").value =
                 String(reserva.FECHA_A_RESERVAR)
                 .split("T")[0];
@@ -459,15 +388,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await cargarLaboratorios();
 
-    await cargarMotivosCancelacion();
-
     await cargarEstados();
 
     await cargarMotivosCancelacion();
 
     await cargarReserva();
-
-    actualizarVisibilidadMotivo();
 
     const monthYearEl = document.getElementById("month-year");
     const daysEl = document.getElementById("days");
