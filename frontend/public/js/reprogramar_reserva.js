@@ -1,495 +1,824 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', async function () {
 
     const btnInicio = document.getElementById("inicio");
-    const form = document.getElementById("add-reserva-form");
-    const errorMessage = document.getElementById("error-message");
-    const selectLaboratorio = document.getElementById("laboratorio");
-    const selectSolicitante = document.getElementById("solicitante");
-    const selectTipoActividad = document.getElementById("tipoActividad");
-    const contenedorRecursos = document.getElementById("listaRecursos");
-
-    const usuario = sessionStorage.getItem("usuario");
-    const clave = sessionStorage.getItem("clave");
 
     if (btnInicio) {
-        btnInicio.addEventListener("click", function (e) {
-            e.preventDefault();
-            window.location.href = "/list_reservas.html";
-        });
-    }
 
-    if (!usuario || !clave) {
-        errorMessage.textContent = "Faltan las credenciales del usuario.";
-        return;
-    }
+        btnInicio.addEventListener(
+            "click",
+            function (e) {
 
-    // =====================================
-    // CARGAR LABORATORIOS, SOLICITANTES, TIPOS DE ACTIVIDAD Y RECURSOS
-    // =====================================
-
-    function cargarOpciones() {
-
-        fetch(`/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
-            .then(res => res.json())
-            .then(laboratorios => {
-                selectLaboratorio.innerHTML = `
-                    <option value="">Seleccione un laboratorio</option>
-                `;
-
-                laboratorios.forEach(lab => {
-                    const option = document.createElement("option");
-                    option.value = lab.NUMERO_LABORATORIO;
-                    option.textContent = `Laboratorio ${lab.NUMERO_LABORATORIO} - ${lab.EDIFICIO}`;
-                    selectLaboratorio.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                errorMessage.textContent = "No se pudieron cargar los laboratorios.";
-            });
-
-        fetch(`/api/solicitantes?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
-            .then(res => res.json())
-            .then(solicitantes => {
-                selectSolicitante.innerHTML = `
-                    <option value="">Seleccione un solicitante</option>
-                `;
-
-                solicitantes.forEach(soli => {
-                    const option = document.createElement("option");
-                    option.value = soli.CEDULA_IDENTIDAD;
-                    option.textContent = `${soli.NOMBRE} ${soli.APELLIDO} - ${soli.CEDULA_IDENTIDAD}`;
-                    // Guardamos el correo acá porque el backend lo necesita
-                    // junto con la cédula
-                    option.dataset.correo = soli.CORREO;
-                    selectSolicitante.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                errorMessage.textContent = "No se pudieron cargar los solicitantes.";
-            });
-
-        fetch(`/api/actividades?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
-            .then(res => res.json())
-            .then(tipos => {
-                selectTipoActividad.innerHTML = `
-                    <option value="">Seleccione un tipo de actividad</option>
-                `;
-
-                tipos.forEach(tipo => {
-                    const option = document.createElement("option");
-                    option.value = tipo.ID_TIPO_ACTIVIDAD;
-                    option.textContent = tipo.NOMBRE;
-                    selectTipoActividad.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                errorMessage.textContent = "No se pudieron cargar los tipos de actividad.";
-            });
-
-        fetch(`/api/recursos/tipos?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
-            .then(res => res.json())
-            .then(tipos => {
-                contenedorRecursos.innerHTML = '';
-
-                if (!tipos || tipos.length === 0) {
-                    contenedorRecursos.innerHTML = "<p class='text-muted mb-0'>No hay recursos disponibles.</p>";
-                    return;
-                }
-
-                tipos.forEach(tipo => {
-                    const nombre = tipo.NOMBRE;
-                    const id = "recurso" + nombre.replace(/\s+/g, '');
-
-                    const div = document.createElement('div');
-                    div.className = 'form-check';
-                    div.innerHTML = `
-                        <input class="form-check-input" type="checkbox" id="${id}" value="${nombre}">
-                        <label class="form-check-label" for="${id}">${nombre}</label>
-                    `;
-                    contenedorRecursos.appendChild(div);
-                });
-            })
-            .catch(error => {
-                console.error('Error al cargar recursos:', error);
-                contenedorRecursos.innerHTML = "<p class='text-muted mb-0'>No se pudieron cargar los recursos.</p>";
-            });
-
-    }
-
-    cargarOpciones();
-
-    // =====================================
-    // AGREGAR RESERVA
-    // =====================================
-
-    form.addEventListener("submit", function (e) {
-
-        e.preventDefault();
-
-        errorMessage.textContent = "";
-
-        const opcionSolicitante = selectSolicitante.options[selectSolicitante.selectedIndex];
-        const correo = opcionSolicitante ? opcionSolicitante.dataset.correo : "";
-
-        const recursosElegidos = Array.from(
-            contenedorRecursos.querySelectorAll('input[type="checkbox"]:checked')
-        ).map(checkbox => checkbox.value);
-
-        const reservaData = {
-
-            usuario,
-            clave,
-
-            numero_laboratorio: selectLaboratorio.value,
-
-            cedula_identidad: selectSolicitante.value,
-            correo: correo,
-
-            id_tipo_actividad: selectTipoActividad.value,
-
-            fecha_a_reservar: document.getElementById("fecha").value,
-
-            hora_inicio: document.getElementById("horaInicio").value,
-
-            hora_fin: document.getElementById("horaFin").value,
-
-            cantidad_alumnos: document.getElementById("cantidadAlumnos").value,
-
-            recursos: recursosElegidos
-
-        };
-
-        fetch("/api/reservas/add", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify(reservaData)
-
-        })
-            .then(async response => {
-
-                const data = await response.json();
-
-                if (!response.ok || data.success === false) {
-                    throw new Error(data.error || "Error al agregar reserva");
-                }
+                e.preventDefault();
 
                 window.location.href = "/list_reservas.html";
 
-            })
-            .catch(error => {
-                console.error(error);
-                errorMessage.textContent = error.message;
+            }
+        );
+
+    }
+
+    const form = document.getElementById('reprogramar-reserva-form');
+    const errorMessage = document.getElementById('error-message');
+    const selectLaboratorio = document.getElementById('laboratorio');
+    const selectSolicitante = document.getElementById('solicitante');
+    const selectTipoActividad = document.getElementById('tipoActividad');
+
+    const id = new URLSearchParams(
+        window.location.search
+    ).get('id');
+
+    if (!id) {
+
+        errorMessage.textContent =
+            "Falta el ID de la reserva en la URL.";
+
+        return;
+
+    }
+
+    const usuario = sessionStorage.getItem('usuario');
+    const clave = sessionStorage.getItem('clave');
+
+    if (!usuario || !clave) {
+
+        errorMessage.textContent =
+            "Faltan credenciales.";
+
+        return;
+
+    }
+
+    let estadoOriginal = "";
+    let motivoCancelacionOriginal = "";
+    let programacionOriginal = null;
+
+    function cargarSolicitantes() {
+
+        return fetch(`/api/reservas/solicitantes`)
+
+        .then(res => res.json())
+
+        .then(solicitante => {
+
+            selectSolicitante.innerHTML = `
+
+                <option value="">
+                    Seleccione un solicitante
+                </option>
+
+            `;
+
+            solicitante.forEach(solic => {
+
+                const option = document.createElement("option");
+                option.value = solic.CEDULA_IDENTIDAD;
+                option.textContent = `${solic.NOMBRE} ${solic.APELLIDO} - ${solic.CEDULA_IDENTIDAD}`;
+                selectSolicitante.appendChild(option);
+
             });
 
-    });
+        })
 
-const monthYearEl = document.getElementById("month-year");
-const daysEl = document.getElementById("days");
+        .catch(error => {
 
-const prevMonthBtn = document.getElementById("prev-month");
-const nextMonthBtn = document.getElementById("next-month");
-const todayBtn = document.getElementById("today-btn");
+            console.error(error);
 
+            errorMessage.textContent =
+                "No se pudieron cargar los solicitante.";
 
-let currentDate = new Date();
-let reservasOcupadas = [];
-let selectedDate = null;
-let feriados = [];
+        });
+
+    }
 
 
-// Traer fechas reservadas del backend
-async function cargarFechasOcupadas() {
+    function cargarTipoActividad() {
 
-    try {
+        return fetch(`/api/reservas/motivos-cancelacion`)
 
-        const usuario = sessionStorage.getItem("usuario");
-        const clave = sessionStorage.getItem("clave");
+        .then(res => res.json())
 
-        const respuesta = await fetch(
-            `/api/reservas/fechas-ocupadas?usuario=${usuario}&clave=${clave}`
-        );
+        .then(estados => {
 
+            selectMotivoCancelacion.innerHTML = `
 
-        if (respuesta.ok) {
+                <option value="">
+                    Seleccione un motivo de cancelación
+                </option>
 
-            reservasOcupadas = await respuesta.json();
+            `;
 
-            console.log("Reservas:", reservasOcupadas);
+            estados.forEach(motivo => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = motivo;
+
+                option.textContent = motivo;
+
+                selectMotivoCancelacion.appendChild(
+                    option
+                );
+
+            });
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                "No se pudieron cargar los motivos de cancelación.";
+
+        });
+
+    }
+
+    function actualizarVisibilidadMotivo(){
+
+        const esCancelada = Number(selectEstado.value) === 3; //para saber si es 3 (cancelada)
+
+        if (esCancelada){
+
+            selectMotivoCancelacion.disabled = false;
+            selectMotivoCancelacion.required = true;
 
         } else {
 
-            reservasOcupadas = [];
-
+            selectMotivoCancelacion.value = "";
+            selectMotivoCancelacion.disabled = true;
+            selectMotivoCancelacion.required = false;
         }
+    }
+
+    selectEstado.addEventListener("change", actualizarVisibilidadMotivo)
 
 
-    } catch (error) {
+    function cargarMotivosCancelacion() {
 
-        console.error(error);
-        reservasOcupadas = [];
+        return fetch(
+            `/api/reservas/motivos-cancelacion`
+        )
+
+        .then(res => res.json())
+
+        .then(motivos => {
+
+            selectMotivoCancelacion.innerHTML = `
+
+                <option value="">
+                    Seleccione el motivo de cancelación
+                </option>
+
+            `;
+
+            motivos.forEach(motivo => {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = motivo;
+                option.textContent = motivo;
+
+                selectMotivoCancelacion.appendChild(
+                    option
+                );
+
+            });
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                "No se pudieron cargar los motivos de cancelación.";
+
+        });
 
     }
 
-}
+    // El motivo solo aplica (y solo es obligatorio) cuando el estado
+    // elegido es Cancelada (3). El select arranca oculto y sin "required"
+    // en el HTML; esto lo prende/apaga segun corresponda.
+    function actualizarVisibilidadMotivo() {
 
+        const esCancelada = Number(selectEstado.value) === 3;
 
-// Traer feriados del backend
-async function cargarFeriados() {
-
-    try {
-
-        const usuario = sessionStorage.getItem("usuario");
-        const clave = sessionStorage.getItem("clave");
-
-        const respuesta = await fetch(
-            `/api/feriados?usuario=${usuario}&clave=${clave}`
-        );
-
-        feriados = respuesta.ok ? await respuesta.json() : [];
-
-    } catch (error) {
-
-        console.error(error);
-        feriados = [];
+        grupoMotivoCancelacion.style.display = esCancelada ? "" : "none";
+        selectMotivoCancelacion.required = esCancelada;
 
     }
 
-}
+    selectEstado.addEventListener("change", actualizarVisibilidadMotivo);
 
 
 
-function renderCalendar() {
-
-    daysEl.innerHTML = "";
+    function cargarLaboratorios() {
 
 
-    let year = currentDate.getFullYear();
-    let month = currentDate.getMonth();
+        return fetch(
+            `/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+        )
 
 
-    const meses = [
-        "Enero", "Febrero", "Marzo", "Abril",
-        "Mayo", "Junio", "Julio", "Agosto",
-        "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
+        .then(res => res.json())
 
 
-    monthYearEl.textContent = meses[month] + " " + year;
+        .then(laboratorios => {
 
 
-    let primerDia = new Date(year, month, 1).getDay();
-    let ultimoDia = new Date(year, month + 1, 0).getDate();
+            selectLaboratorio.innerHTML = `
+
+                <option value="">
+                    Seleccione un laboratorio
+                </option>
+
+            `;
 
 
 
-    // espacios antes del día 1
-    for (let i = 0; i < primerDia; i++) {
+            laboratorios.forEach(lab => {
 
-        daysEl.appendChild(document.createElement("div"));
+
+                const option =
+                    document.createElement("option");
+
+
+
+                option.value =
+                    lab.NUMERO_LABORATORIO;
+
+
+
+                option.textContent =
+                    `Laboratorio ${lab.NUMERO_LABORATORIO} - ${lab.EDIFICIO}`;
+
+
+
+                selectLaboratorio.appendChild(
+                    option
+                );
+
+
+            });
+
+
+        })
+
+
+        .catch(error => {
+
+
+            console.error(error);
+
+
+            errorMessage.textContent =
+                "No se pudieron cargar los laboratorios.";
+
+
+        });
+
 
     }
 
 
 
-    let hoy = new Date();
-    hoy.setHours(0,0,0,0);
 
 
 
-    for (let i = 1; i <= ultimoDia; i++) {
+    function cargarReserva() {
 
 
-        let day = document.createElement("div");
-
-        day.classList.add("day");
-
-        day.textContent = i;
+        return fetch(
+            `/api/reservas/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+        )
 
 
+        .then(async response => {
 
-        let fecha = new Date(year, month, i);
 
-
-        let fechaString =
-            `${year}-${String(month + 1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+            const data =
+                await response.json().catch(() => null);
 
 
 
-        let dow = fecha.getDay();
-
-        let esFinDeSemana = (dow === 0 || dow === 6);
-
-        let esPasado = fecha < hoy;
-
-
-
-        let reservaEseDia =
-            reservasOcupadas.find(r => r.fecha === fechaString);
-
-        let feriadoEseDia =
-            feriados.find(f => String(f.FECHA).split('T')[0] === fechaString);
+            if(
+                !response.ok ||
+                !data ||
+                data.success === false
+            ) {
 
 
+                throw new Error(
+                    data?.error ||
+                    "No se encontró la reserva."
+                );
 
-        if (esPasado || esFinDeSemana || feriadoEseDia) {
-
-
-            day.classList.add("deshabilitado");
-
-
-            day.title = esPasado
-                ? "Fecha pasada"
-                : esFinDeSemana
-                    ? "Fin de semana: no se permiten reservas"
-                    : `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
-
-
-        } else {
-
-
-
-            if (reservaEseDia) {
-
-                day.classList.add("has-events");
-
-                day.title =
-                    "Hay una reserva ese día";
 
             }
 
 
 
-            day.addEventListener("click", function () {
+            const reserva =
+                data.reserva;
 
 
-                selectedDate = fecha;
+
+            selectLaboratorio.value =
+                reserva.NUMERO_LABORATORIO ?? "";
 
 
-                document.getElementById("fecha").value =
-                    fechaString;
 
+            selectEstado.value =
+                reserva.ID_ESTADO_RESERVA ?? "";
+
+            selectMotivoCancelacion.value =
+                reserva.MOTIVO_CANCELACION ?? "";
+
+            actualizarVisibilidadMotivo();
+
+
+
+            selectMotivoCancelacion.value =
+                reserva.MOTIVO_CANCELACION ?? "";
+
+
+
+            document.getElementById("fecha").value =
+                String(reserva.FECHA_A_RESERVAR)
+                .split("T")[0];
+
+
+
+            document.getElementById("horaInicio").value =
+                String(reserva.HORA_INICIO)
+                .slice(0,5);
+
+
+
+            document.getElementById("horaFin").value =
+                String(reserva.HORA_FIN)
+                .slice(0,5);
+
+
+
+            // Guardamos los valores originales para saber, al enviar el
+            // formulario, que cambio realmente el usuario: si el estado
+            // (-> /marcar) y/o el laboratorio/fecha/horario (-> /reprogramar).
+            estadoOriginal = String(reserva.ID_ESTADO_RESERVA ?? "");
+            motivoCancelacionOriginal = String(reserva.MOTIVO_CANCELACION ?? "");
+            programacionOriginal = {
+                numero_laboratorio: String(reserva.NUMERO_LABORATORIO ?? ""),
+                fecha_a_reservar: String(reserva.FECHA_A_RESERVAR).split("T")[0],
+                hora_inicio: String(reserva.HORA_INICIO).slice(0, 5),
+                hora_fin: String(reserva.HORA_FIN).slice(0, 5)
+            };
+
+
+
+        })
+
+
+
+        .catch(error => {
+
+
+            console.error(error);
+
+
+            errorMessage.textContent =
+                error.message;
+
+
+        });
+
+
+    }
+
+
+
+
+    await cargarLaboratorios();
+
+    await cargarMotivosCancelacion();
+
+    await cargarEstados();
+
+    await cargarMotivosCancelacion();
+
+    await cargarReserva();
+
+    actualizarVisibilidadMotivo();
+
+    const monthYearEl = document.getElementById("month-year");
+    const daysEl = document.getElementById("days");
+    const prevMonthBtn = document.getElementById("prev-month");
+    const nextMonthBtn = document.getElementById("next-month");
+    const todayBtn = document.getElementById("today-btn");
+    let currentDate = new Date();
+    let selectedDate = null;
+    let reservasOcupadas = [];
+    let feriados = [];
+
+    async function cargarFechasOcupadas() {
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/reservas/fechas-ocupadas?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+                );
+
+            if(respuesta.ok) {
+
+                reservasOcupadas = await respuesta.json();
+
+            } else {
+
+                reservasOcupadas = [];
+
+            }
+
+        } catch(error) {
+
+            console.error(error);
+
+            reservasOcupadas = [];
+
+        }
+
+    }
+
+    async function cargarFeriados() {
+
+        try {
+
+            const respuesta =
+                await fetch(
+                    `/api/feriados?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
+                );
+
+            feriados = respuesta.ok ? await respuesta.json() : [];
+
+        } catch(error) {
+
+            console.error(error);
+
+            feriados = [];
+
+        }
+
+    }
+
+    function renderCalendar() {
+        daysEl.innerHTML = "";
+
+        const year =
+            currentDate.getFullYear();
+
+        const month =
+            currentDate.getMonth();
+
+        const meses = [
+
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+
+        ];
+
+        monthYearEl.textContent =
+            `${meses[month]} ${year}`;
+
+        const primerDia =
+            new Date(year, month, 1).getDay();
+
+        const ultimoDia =
+            new Date(year, month + 1, 0).getDate();
+
+        for(let i = 0; i < primerDia; i++) {
+
+            daysEl.appendChild(
+                document.createElement("div")
+            );
+
+        }
+
+        let hoy = new Date();
+
+        hoy.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+        for(let i = 1; i <= ultimoDia; i++) {
+
+            let day =
+                document.createElement("div");
+
+            day.classList.add(
+                "day"
+            );
+
+            day.textContent = i;
+
+            let fecha = new Date(year, month, i);
+            let fechaString = `${year}-${String(month + 1).padStart(2,"0")}-${String(i).padStart(2,"0")}`;
+            let esFinSemana = fecha.getDay() === 0 || fecha.getDay() === 6;
+            let esPasado = fecha < hoy;
+            let reservaEseDia = reservasOcupadas.find(r => r.fecha === fechaString);
+            let feriadoEseDia = feriados.find(f => String(f.FECHA).split('T')[0] === fechaString);
+
+            if(esPasado || esFinSemana || feriadoEseDia) {
+
+                day.classList.add(
+                    "deshabilitado"
+                );
+
+                if(esPasado) {
+
+                    day.title =
+                        "Fecha pasada";
+
+                } else if(esFinSemana) {
+
+                    day.title =
+                        "No se permiten reservas los fines de semana";
+
+                } else {
+
+                    day.title =
+                        `Feriado: ${feriadoEseDia.DESCRIPCION || ''}`;
+
+                }
+
+            } else {
+
+                if(reservaEseDia) {
+
+                    day.classList.add(
+                        "has-events"
+                    );
+
+                    day.title =
+                        "Hay reservas ese día";
+
+                }
+
+                day.addEventListener("click",
+                    function() {
+
+                        selectedDate = fecha;
+
+                        document.getElementById("fecha").value = fechaString;
+
+                        renderCalendar();
+
+                    }
+                );
+
+            }
+
+            if(
+                hoy.getDate() === i &&
+                hoy.getMonth() === month &&
+                hoy.getFullYear() === year
+            ) {
+
+                day.classList.add(
+                    "today"
+                );
+
+
+            }
+
+            if(
+                selectedDate &&
+                selectedDate.getDate() === i &&
+                selectedDate.getMonth() === month &&
+                selectedDate.getFullYear() === year
+            ) {
+
+                day.classList.add(
+                    "selected"
+                );
+
+
+            }
+
+            daysEl.appendChild(
+                day
+            );
+
+        }
+
+    }
+
+    if(prevMonthBtn) {
+
+        prevMonthBtn.addEventListener(
+            "click",
+            function() {
+
+                currentDate.setMonth(
+                    currentDate.getMonth() - 1
+                );
+
+                renderCalendar();
+
+            }
+        );
+
+
+    }
+
+    if(nextMonthBtn) {
+
+        nextMonthBtn.addEventListener(
+            "click",
+            function() {
+
+                currentDate.setMonth(
+                    currentDate.getMonth() + 1
+                );
 
                 renderCalendar();
 
 
-                validar();
+            }
+        );
 
-
-            });
-
-
-        }
-
-
-
-
-        // Hoy
-
-        if (
-            hoy.getDate() === i &&
-            hoy.getMonth() === month &&
-            hoy.getFullYear() === year
-        ) {
-
-            day.classList.add("today");
-
-        }
-
-
-
-        // Seleccionado
-
-        if (
-            selectedDate &&
-            selectedDate.getDate() === i &&
-            selectedDate.getMonth() === month &&
-            selectedDate.getFullYear() === year
-        ) {
-
-            day.classList.add("selected");
-
-        }
-
-
-
-        daysEl.appendChild(day);
 
     }
 
-}
+    if(todayBtn) {
+
+        todayBtn.addEventListener(
+            "click",
+            function() {
+
+                currentDate =
+                    new Date();
+
+                renderCalendar();
 
 
-
-// Mes anterior
-
-if (prevMonthBtn) {
-    prevMonthBtn.addEventListener("click", function(){
-
-        currentDate.setMonth(currentDate.getMonth() - 1);
-
-        renderCalendar();
-
-    });
-}
+            }
+        );
 
 
-if (nextMonthBtn) {
-    nextMonthBtn.addEventListener("click", function(){
-
-        currentDate.setMonth(currentDate.getMonth() + 1);
-
-        renderCalendar();
-
-    });
-}
-
-
-if (todayBtn) {
-    todayBtn.addEventListener("click", function(){
-
-        currentDate = new Date();
-
-        renderCalendar();
-
-    });
-}
-
-
-
-// Hoy
-
-todayBtn.addEventListener("click", function(){
-
-    currentDate = new Date();
-
-    renderCalendar();
-
-});
-
-
-
-
-// Inicializar calendario
-
-async function iniciarCalendario(){
+    }
 
     await cargarFechasOcupadas();
     await cargarFeriados();
 
     renderCalendar();
 
-}
+        form.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+            errorMessage.textContent = "";
+
+            const nuevaProgramacion = {
+                numero_laboratorio: selectLaboratorio.value,
+                fecha_a_reservar: document.getElementById("fecha").value,
+                hora_inicio: document.getElementById("horaInicio").value,
+                hora_fin: document.getElementById("horaFin").value
+            };
+
+            const cambioEstado =
+                selectEstado.value !== "" &&
+                selectEstado.value !== estadoOriginal;
+
+            const cambioMotivo =
+                Number(selectEstado.value) === 3 &&
+                selectMotivoCancelacion.value !== motivoCancelacionOriginal;
+
+            const cambioProgramacion =
+                programacionOriginal &&
+                (nuevaProgramacion.numero_laboratorio !== programacionOriginal.numero_laboratorio ||
+                 nuevaProgramacion.fecha_a_reservar !== programacionOriginal.fecha_a_reservar ||
+                 nuevaProgramacion.hora_inicio !== programacionOriginal.hora_inicio ||
+                 nuevaProgramacion.hora_fin !== programacionOriginal.hora_fin);
+
+            try {
+
+                // El estado (Pendiente/Utilizada/Cancelada/Ausente) se
+                // actualiza por /marcar, que no tiene la restriccion de
+                // "ya Cancelada o Utilizada" que si tiene /reprogramar.
+                if (cambioEstado || cambioMotivo) {
+
+                    const bodyMarcar = {
+                        usuario,
+                        clave,
+                        id_estado_reserva: Number(selectEstado.value)
+                    };
+
+                    if (Number(selectEstado.value) === 3) {
+                        bodyMarcar.motivo_cancelacion = selectMotivoCancelacion.value;
+                    }
+
+                    const respuestaEstado = await fetch(`/api/reservas/marcar/${id}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(bodyMarcar)
+                        }
+                    );
+
+                    const dataEstado =
+                        await respuestaEstado.json()
+                        .catch(() => null);
+
+                    if(
+                        !respuestaEstado.ok ||
+                        !dataEstado ||
+                        dataEstado.success === false
+                    ) {
+
+                        throw new Error(
+                            dataEstado?.error ||
+                            "Error al actualizar el estado de la reserva."
+                        );
+
+                    }
+
+                    estadoOriginal = selectEstado.value;
+                    motivoCancelacionOriginal = selectMotivoCancelacion.value;
+
+                }
+
+                // El laboratorio/fecha/horario se actualizan por
+                // /reprogramar, que bloquea si la reserva ya esta
+                // Cancelada o Utilizada.
+                if (cambioProgramacion) {
+
+                    const response = await fetch(`/api/reservas/reprogramar/${id}`,
+                            {
+                                method: "POST",
+                                headers: {
+
+                                    "Content-Type":
+                                        "application/json"
+
+                                },
+
+                                body: JSON.stringify({ usuario, clave, ...nuevaProgramacion })
+
+                            }
+                        );
+
+                    const data =
+                        await response.json()
+                        .catch(() => null);
+
+                    if(
+                        !response.ok ||
+                        !data ||
+                        data.success === false
+                    ) {
+
+                        throw new Error(
+                            data?.error ||
+                            "Error al reprogramar la reserva."
+                        );
 
 
-iniciarCalendario();
+                    }
+
+                    programacionOriginal = nuevaProgramacion;
+
+                }
+
+                window.location.href = "/list_reservas.html";
+
+            } catch(error) {
+
+                console.error(error);
+
+                errorMessage.textContent =
+                    error.message;
+
+            }
+
+        }
+    );
 
 });
-

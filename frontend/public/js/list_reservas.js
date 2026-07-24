@@ -102,11 +102,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 let reservas = data;
 
+                console.log("Respuesta del backend:", data);
+
                 if (!Array.isArray(reservas)) {
                     reservas = data.reservas || data.rows || [];
                 }
 
                 todasLasReservas = reservas;
+                console.log("Reservas a mostrar:", todasLasReservas);
                 paginaActual = 1;
 
                 mostrarReservas();
