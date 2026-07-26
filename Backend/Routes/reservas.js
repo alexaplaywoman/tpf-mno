@@ -121,7 +121,12 @@ router.get('/:id', (req, res) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         connection.query(
-            `SELECT * FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+            `SELECT r.*,
+                    (SELECT LIST(rec.NOMBRE) FROM DBA.RESERVAS_RECURSOS rr
+                       JOIN DBA.RECURSOS rec ON rr.ID_RECURSO = rec.ID_RECURSO
+                      WHERE rr.ID_RESERVA = r.ID_RESERVA) AS NOMBRES_RECURSOS
+             FROM DBA.RESERVAS r
+             WHERE r.ID_RESERVA = ${id}`,
             (err, result) => {
                 connection.disconnect();
                 if (err) return manejarError(err, res, 'consultar reserva');
@@ -496,7 +501,8 @@ router.post('/marcar/:id', (req, res) => {
 
 router.post('/reprogramar/:id', (req, res) => {
     const { id } = req.params;
-    const { numero_laboratorio, fecha_a_reservar, hora_inicio, hora_fin, usuario, clave } = req.body;
+    const { numero_laboratorio, fecha_a_reservar, hora_inicio, hora_fin, recursos, usuario, clave } = req.body;
+    const listaRecursos = recursos || null; // null = no tocar los recursos; [] = dejar la reserva sin recursos
 
     if (!usuario || !clave || !fecha_a_reservar || !hora_inicio || !hora_fin)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
@@ -565,6 +571,37 @@ router.post('/reprogramar/:id', (req, res) => {
                                 });
                             }
 
+                            // Recursos no tienen trigger propio, se validan aca (mismo
+                            // criterio que /add: tienen que pertenecer a este laboratorio
+                            // y estar disponibles). Si listaRecursos es null, el admin no
+                            // toco esa parte del formulario y no la tocamos nosotros.
+                            const validarRecursos = (callback) => {
+                                if (listaRecursos === null) return callback(null);
+                                if (listaRecursos.length === 0) return callback([]);
+                                const nombresRecursos = listaRecursos.map(n => `'${n}'`).join(',');
+                                connection.query(
+                                    `SELECT NOMBRE,
+                                            MIN(CASE WHEN DISPONIBILIDAD = 'S' THEN ID_RECURSO END) AS ID_RECURSO,
+                                            MAX(DISPONIBILIDAD) AS DISPONIBLE
+                                     FROM DBA.RECURSOS
+                                     WHERE NOMBRE IN (${nombresRecursos}) AND NUMERO_LABORATORIO = ${numeroLab}
+                                     GROUP BY NOMBRE`,
+                                    (err, result) => {
+                                        if (err) { connection.disconnect(); return manejarError(err, res, 'verificar recursos'); }
+                                        if (result.length !== listaRecursos.length) {
+                                            connection.disconnect();
+                                            return res.status(400).json({ success: false, error: 'Alguno de los recursos solicitados no pertenece a este laboratorio.' });
+                                        }
+                                        const noDisponible = result.find(r => r.DISPONIBLE !== 'S');
+                                        if (noDisponible) {
+                                            connection.disconnect();
+                                            return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
+                                        }
+                                        callback(result.map(r => r.ID_RECURSO));
+                                    }
+                                );
+                            };
+
                             const sqlSolapamiento = `
                                 SELECT ID_RESERVA FROM DBA.RESERVAS
                                 WHERE NUMERO_LABORATORIO = ${numeroLab}
@@ -585,6 +622,8 @@ router.post('/reprogramar/:id', (req, res) => {
                                     return res.status(409).json({ success: false, error: 'Ya existe una reserva en ese horario.' });
                                 }
 
+                                validarRecursos((idsRecursosNuevos) => {
+
                                 connection.query(
                                     `UPDATE DBA.RESERVAS
                                      SET NUMERO_LABORATORIO = ${numeroLab},
@@ -593,11 +632,45 @@ router.post('/reprogramar/:id', (req, res) => {
                                          HORA_FIN           = '${hora_fin}'
                                      WHERE ID_RESERVA = ${id}`,
                                     (err) => {
-                                        connection.disconnect();
-                                        if (err) return manejarError(err, res, 'reprogramar reserva');
-                                        return res.json({ success: true });
+                                        if (err) { connection.disconnect(); return manejarError(err, res, 'reprogramar reserva'); }
+
+                                        if (idsRecursosNuevos === null) {
+                                            connection.disconnect();
+                                            return res.json({ success: true });
+                                        }
+
+                                        connection.query(
+                                            `DELETE FROM DBA.RESERVAS_RECURSOS WHERE ID_RESERVA = ${id}`,
+                                            (err) => {
+                                                if (err) { connection.disconnect(); return manejarError(err, res, 'actualizar recursos'); }
+
+                                                if (idsRecursosNuevos.length === 0) {
+                                                    connection.disconnect();
+                                                    return res.json({ success: true });
+                                                }
+
+                                                let j = 0;
+                                                const insertarSiguienteRecurso = () => {
+                                                    if (j >= idsRecursosNuevos.length) {
+                                                        connection.disconnect();
+                                                        return res.json({ success: true });
+                                                    }
+                                                    const idRecurso = idsRecursosNuevos[j++];
+                                                    connection.query(
+                                                        `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES (${id}, ${idRecurso})`,
+                                                        (err) => {
+                                                            if (err) { connection.disconnect(); return manejarError(err, res, 'asociar recursos'); }
+                                                            insertarSiguienteRecurso();
+                                                        }
+                                                    );
+                                                };
+                                                insertarSiguienteRecurso();
+                                            }
+                                        );
                                     }
                                 );
+
+                                });
                             });
                         }
                     );

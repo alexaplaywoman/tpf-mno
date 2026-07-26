@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             <button
                                 class="btn btn-dark btn-sm"
-                                onclick="editarReserva(${reserva.ID_RESERVA})">
+                                onclick="reprogramarReserva(${reserva.ID_RESERVA})">
                                 <i class="bi bi-calendar2-week"></i>
                                 Reprogramar
                             </button>
@@ -245,6 +245,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.editarReserva = function (id) {
         window.location.href = `/upd_reservas.html?id=${id}`;
+    };
+
+    window.reprogramarReserva = function (id) {
+        window.location.href = `/reprogramar_reservas.html?id=${id}`;
     };
 
     window.confirmarEliminar = function (id) {
