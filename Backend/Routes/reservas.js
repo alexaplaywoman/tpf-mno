@@ -518,7 +518,17 @@ router.post('/reprogramar/:id', (req, res) => {
     if (!usuario || !clave || !fecha_a_reservar || !hora_inicio || !hora_fin)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const diaSemana = new Date(fecha_a_reservar).getDay();
+    // new Date('YYYY-MM-DD') parsea en UTC; con getDay() (que da el dia en
+    // hora local) eso puede correr la fecha un dia para atras en husos
+    // horarios negativos (Paraguay UTC-3/-4), haciendo que un lunes real
+    // se lea como domingo. Armamos la fecha con los componentes locales
+    // en vez de parsear el string.
+    const [anioReprogramar, mesReprogramar, diaReprogramar] = fecha_a_reservar.split('-');
+    const diaSemana = new Date(
+        Number(anioReprogramar),
+        Number(mesReprogramar) - 1,
+        Number(diaReprogramar)
+    ).getDay();
     if (diaSemana === 0 || diaSemana === 6)
         return res.status(400).json({ success: false, error: 'No se puede reprogramar a un fin de semana.' });
 
