@@ -270,10 +270,22 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json().catch(() => null);
 
             if (!response.ok || !data || data.success === false) {
+                
+                if(
+                    data?.error?.includes("SQL Anywhere") ||
+                    data?.error.includes("RAISERROR")
+                ){
+
+                    throw new Error(
+                        "No se pudo actualizar el laboratorio."
+                    );
+                }
+
                 throw new Error(
                     data?.error ||
-                    "Error al actualizar laboratorio."
+                    "No se pudo actualizar el laboratorio"
                 );
+
             }
 
             return actualizarRecursos();

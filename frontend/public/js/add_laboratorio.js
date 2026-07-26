@@ -12,22 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const usuario = sessionStorage.getItem("usuario");
     const clave = sessionStorage.getItem("clave");
 
-    function mostrarError(error){
-        
-        const mensaje = error.message || "";
-
-        if( 
-            mensaje.includes("RAISERROR") ||
-            mensaje.includes("SQL Anywhere")
-        ){
-            errorMessage.textContent = "No fue posible agregar el laboratorio.";
-
-            return;
-        }
-
-        errorMessage.textContent = mensaje;
-    }
-
     // BOTÓN ATRÁS
 
     if (btnInicio) {
@@ -400,13 +384,22 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!response.ok || data.success === false) {
 
 
+                if(
+                    data.error?.includes("SQL Anywhere") ||
+                    data.error?.includes("RAISERROR")
+                ) {
+                    
+                    throw new Error(
+                        "No se pudo agregar el laboratorio."
+                    )
+                };
+
                 throw new Error(
                     data.error ||
-                    "Error al agregar laboratorio"
+                    "No se pudo agregar el laboratorio."
                 );
 
-
-            }
+            };
 
 
             return crearRecursosElegidos(data.numero_laboratorio);
