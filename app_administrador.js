@@ -73,7 +73,7 @@ app.get('/add_mantenimientos', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/add_mantenimientos.html'));
 });
 
-app.get('/uod_mantenimientos', (req, res) => {
+app.get('/upd_mantenimientos', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_mantenimientos.html'));
 });
 
@@ -87,6 +87,10 @@ app.get('/add_actividades', (req, res) => {
 
 app.get('/upd_mantenimientos', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/public/upd_actividades.html'));
+});
+
+app.get('/reprogramar_reservas', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/public/reprogramar_reservas.html'));
 });
 
 // Usar la ruta backend desde archivos separados

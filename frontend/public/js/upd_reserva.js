@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
 
-
     const btnInicio = document.getElementById("inicio");
-
 
     if (btnInicio) {
 
@@ -19,41 +17,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
-
-
-    const form = document.getElementById(
-        'update-reserva-form'
-    );
-
-
-    const errorMessage = document.getElementById(
-        'error-message'
-    );
-
-
-    const selectLaboratorio = document.getElementById(
-        'laboratorio'
-    );
-
-    const selectEstado = document.getElementById(
-        'estado'
-    );
-
-    const selectMotivoCancelacion = document.getElementById(
-        'motivoCancelacion'
-    );
-
-    const grupoMotivoCancelacion = document.getElementById(
-        'grupoMotivoCancelacion'
-    );
-
-
-
-    const id = new URLSearchParams(
-        window.location.search
-    ).get('id');
-
-
+    const form = document.getElementById('update-reserva-form');
+    const errorMessage = document.getElementById('error-message');
+    const selectEstado = document.getElementById('estado');
+    const selectMotivoCancelacion = document.getElementById('motivoCancelacion');
+    const grupoMotivoCancelacion = document.getElementById('grupoMotivoCancelacion');
+    
+    const id = new URLSearchParams(window.location.search).get('id');
 
     if (!id) {
 
@@ -64,18 +34,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
-
-
-    const usuario = sessionStorage.getItem(
-        'usuario'
-    );
-
-
-    const clave = sessionStorage.getItem(
-        'clave'
-    );
-
-
+    const usuario = sessionStorage.getItem('usuario');
+    const clave = sessionStorage.getItem('clave');
 
     if (!usuario || !clave) {
 
@@ -86,21 +46,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
-
-
     let estadoOriginal = "";
     let motivoCancelacionOriginal = "";
     let programacionOriginal = null;
 
-
-
-
-
     function cargarEstados() {
 
-        return fetch(
-            `/api/reservas/estados/listar`
-        )
+        return fetch(`/api/reservas/estados/listar`)
 
         .then(res => res.json())
 
@@ -147,9 +99,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function cargarMotivosCancelacion() {
 
-        return fetch(
-            `/api/reservas/motivos-cancelacion`
-        )
+        return fetch(`/api/reservas/motivos-cancelacion`)
 
         .then(res => res.json())
 
@@ -190,9 +140,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
-    // El motivo solo aplica (y solo es obligatorio) cuando el estado
-    // elegido es Cancelada (3). El select arranca oculto y sin "required"
-    // en el HTML; esto lo prende/apaga segun corresponda.
     function actualizarVisibilidadMotivo() {
 
         const esCancelada = Number(selectEstado.value) === 3;
@@ -204,95 +151,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     selectEstado.addEventListener("change", actualizarVisibilidadMotivo);
 
-
-
-    function cargarLaboratorios() {
-
-
-        return fetch(
-            `/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
-        )
-
-
-        .then(res => res.json())
-
-
-        .then(laboratorios => {
-
-
-            selectLaboratorio.innerHTML = `
-
-                <option value="">
-                    Seleccione un laboratorio
-                </option>
-
-            `;
-
-
-
-            laboratorios.forEach(lab => {
-
-
-                const option =
-                    document.createElement("option");
-
-
-
-                option.value =
-                    lab.NUMERO_LABORATORIO;
-
-
-
-                option.textContent =
-                    `Laboratorio ${lab.NUMERO_LABORATORIO} - ${lab.EDIFICIO}`;
-
-
-
-                selectLaboratorio.appendChild(
-                    option
-                );
-
-
-            });
-
-
-        })
-
-
-        .catch(error => {
-
-
-            console.error(error);
-
-
-            errorMessage.textContent =
-                "No se pudieron cargar los laboratorios.";
-
-
-        });
-
-
-    }
-
-
-
-
-
-
     function cargarReserva() {
 
-
-        return fetch(
-            `/api/reservas/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
-        )
-
+        return fetch(`/api/reservas/${id}?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
 
         .then(async response => {
 
-
             const data =
                 await response.json().catch(() => null);
-
 
 
             if(
@@ -310,18 +176,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             }
 
-
-
             const reserva =
                 data.reserva;
-
-
-
-            selectLaboratorio.value =
-                reserva.NUMERO_LABORATORIO ?? "";
-
-
-
+            
             selectEstado.value =
                 reserva.ID_ESTADO_RESERVA ?? "";
 
@@ -330,68 +187,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             actualizarVisibilidadMotivo();
 
-
-
-            document.getElementById("fecha").value =
-                String(reserva.FECHA_A_RESERVAR)
-                .split("T")[0];
-
-
-
-            document.getElementById("horaInicio").value =
-                String(reserva.HORA_INICIO)
-                .slice(0,5);
-
-
-
-            document.getElementById("horaFin").value =
-                String(reserva.HORA_FIN)
-                .slice(0,5);
-
-
-
-            // Guardamos los valores originales para saber, al enviar el
-            // formulario, que cambio realmente el usuario: si el estado
-            // (-> /marcar) y/o el laboratorio/fecha/horario (-> /reprogramar).
             estadoOriginal = String(reserva.ID_ESTADO_RESERVA ?? "");
             motivoCancelacionOriginal = String(reserva.MOTIVO_CANCELACION ?? "");
-            programacionOriginal = {
-                numero_laboratorio: String(reserva.NUMERO_LABORATORIO ?? ""),
-                fecha_a_reservar: String(reserva.FECHA_A_RESERVAR).split("T")[0],
-                hora_inicio: String(reserva.HORA_INICIO).slice(0, 5),
-                hora_fin: String(reserva.HORA_FIN).slice(0, 5)
-            };
-
-
 
         })
 
-
-
         .catch(error => {
-
 
             console.error(error);
 
-
-            errorMessage.textContent =
-                error.message;
-
+            errorMessage.textContent = error.message;
 
         });
 
 
     }
 
-
-
-
-    await cargarLaboratorios();
-
     await cargarEstados();
-
     await cargarMotivosCancelacion();
-
     await cargarReserva();
 
     const monthYearEl = document.getElementById("month-year");
@@ -667,139 +480,70 @@ document.addEventListener('DOMContentLoaded', async function () {
     await cargarFechasOcupadas();
     await cargarFeriados();
 
-    renderCalendar();
+    form.addEventListener(
+    "submit",
+    async function(event) {
 
-        form.addEventListener(
-        "submit",
-        async function(event) {
+        event.preventDefault();
 
-            event.preventDefault();
+        errorMessage.textContent = "";
 
-            errorMessage.textContent = "";
-
-            const nuevaProgramacion = {
-                numero_laboratorio: selectLaboratorio.value,
-                fecha_a_reservar: document.getElementById("fecha").value,
-                hora_inicio: document.getElementById("horaInicio").value,
-                hora_fin: document.getElementById("horaFin").value
-            };
-
-            const cambioEstado =
-                selectEstado.value !== "" &&
-                selectEstado.value !== estadoOriginal;
-
-            const cambioMotivo =
-                Number(selectEstado.value) === 3 &&
-                selectMotivoCancelacion.value !== motivoCancelacionOriginal;
-
-            const cambioProgramacion =
-                programacionOriginal &&
-                (nuevaProgramacion.numero_laboratorio !== programacionOriginal.numero_laboratorio ||
-                 nuevaProgramacion.fecha_a_reservar !== programacionOriginal.fecha_a_reservar ||
-                 nuevaProgramacion.hora_inicio !== programacionOriginal.hora_inicio ||
-                 nuevaProgramacion.hora_fin !== programacionOriginal.hora_fin);
-
-            try {
-
-                // El estado (Pendiente/Utilizada/Cancelada/Ausente) se
-                // actualiza por /marcar, que no tiene la restriccion de
-                // "ya Cancelada o Utilizada" que si tiene /reprogramar.
-                if (cambioEstado || cambioMotivo) {
-
-                    const bodyMarcar = {
-                        usuario,
-                        clave,
-                        id_estado_reserva: Number(selectEstado.value)
-                    };
-
-                    if (Number(selectEstado.value) === 3) {
-                        bodyMarcar.motivo_cancelacion = selectMotivoCancelacion.value;
-                    }
-
-                    const respuestaEstado = await fetch(`/api/reservas/marcar/${id}`,
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(bodyMarcar)
-                        }
-                    );
-
-                    const dataEstado =
-                        await respuestaEstado.json()
-                        .catch(() => null);
-
-                    if(
-                        !respuestaEstado.ok ||
-                        !dataEstado ||
-                        dataEstado.success === false
-                    ) {
-
-                        throw new Error(
-                            dataEstado?.error ||
-                            "Error al actualizar el estado de la reserva."
-                        );
-
-                    }
-
-                    estadoOriginal = selectEstado.value;
-                    motivoCancelacionOriginal = selectMotivoCancelacion.value;
-
-                }
-
-                // El laboratorio/fecha/horario se actualizan por
-                // /reprogramar, que bloquea si la reserva ya esta
-                // Cancelada o Utilizada.
-                if (cambioProgramacion) {
-
-                    const response = await fetch(`/api/reservas/reprogramar/${id}`,
-                            {
-                                method: "POST",
-                                headers: {
-
-                                    "Content-Type":
-                                        "application/json"
-
-                                },
-
-                                body: JSON.stringify({ usuario, clave, ...nuevaProgramacion })
-
-                            }
-                        );
-
-                    const data =
-                        await response.json()
-                        .catch(() => null);
-
-                    if(
-                        !response.ok ||
-                        !data ||
-                        data.success === false
-                    ) {
-
-                        throw new Error(
-                            data?.error ||
-                            "Error al reprogramar la reserva."
-                        );
+        const body = {
+            usuario,
+            clave,
+            id_estado_reserva: Number(selectEstado.value)
+        };
 
 
-                    }
+        if (Number(selectEstado.value) === 3) {
 
-                    programacionOriginal = nuevaProgramacion;
+            body.motivo_cancelacion =
+                selectMotivoCancelacion.value;
 
-                }
+        }
 
-                window.location.href = "/list_reservas.html";
 
-            } catch(error) {
+        try {
 
-                console.error(error);
+            const respuesta =
+                await fetch(`/api/reservas/marcar/${id}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                });
 
-                errorMessage.textContent =
-                    error.message;
+
+            const data =
+                await respuesta.json();
+
+
+            if (!respuesta.ok || data.success === false) {
+
+                throw new Error(
+                    data.error ||
+                    "Error al actualizar estado."
+                );
 
             }
 
+
+            window.location.href =
+                "/list_reservas.html";
+
+
+        } catch(error) {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                error.message;
+
         }
-    );
+
+    }
+);
 
 });

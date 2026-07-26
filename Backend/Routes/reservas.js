@@ -121,17 +121,28 @@ router.get('/:id', (req, res) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         connection.query(
-            `SELECT r.*,
-                    (SELECT LIST(rec.NOMBRE) FROM DBA.RESERVAS_RECURSOS rr
-                       JOIN DBA.RECURSOS rec ON rr.ID_RECURSO = rec.ID_RECURSO
-                      WHERE rr.ID_RESERVA = r.ID_RESERVA) AS NOMBRES_RECURSOS
-             FROM DBA.RESERVAS r
-             WHERE r.ID_RESERVA = ${id}`,
+            `SELECT * FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
             (err, result) => {
-                connection.disconnect();
-                if (err) return manejarError(err, res, 'consultar reserva');
-                if (result.length > 0) return res.json({ success: true, reserva: result[0] });
-                return res.json({ success: false, error: 'Reserva no encontrada.' });
+                if (err) { connection.disconnect(); return manejarError(err, res, 'consultar reserva'); }
+                if (result.length === 0) {
+                    connection.disconnect();
+                    return res.json({ success: false, error: 'Reserva no encontrada.' });
+                }
+
+                const reserva = result[0];
+
+                connection.query(
+                    `SELECT rr.ID_RECURSO, rec.NOMBRE
+                     FROM DBA.RESERVAS_RECURSOS rr
+                     JOIN DBA.RECURSOS rec ON rr.ID_RECURSO = rec.ID_RECURSO
+                     WHERE rr.ID_RESERVA = ${id}`,
+                    (err, recursos) => {
+                        connection.disconnect();
+                        if (err) return manejarError(err, res, 'consultar recursos de la reserva');
+                        reserva.RECURSOS = recursos || [];
+                        return res.json({ success: true, reserva });
+                    }
+                );
             }
         );
     });
@@ -501,7 +512,7 @@ router.post('/marcar/:id', (req, res) => {
 
 router.post('/reprogramar/:id', (req, res) => {
     const { id } = req.params;
-    const { numero_laboratorio, fecha_a_reservar, hora_inicio, hora_fin, recursos, usuario, clave } = req.body;
+    const { numero_laboratorio, id_tipo_actividad, cantidad_alumnos, fecha_a_reservar, hora_inicio, hora_fin, recursos, usuario, clave } = req.body;
     const listaRecursos = recursos || null; // null = no tocar los recursos; [] = dejar la reserva sin recursos
 
     if (!usuario || !clave || !fecha_a_reservar || !hora_inicio || !hora_fin)
@@ -525,7 +536,7 @@ router.post('/reprogramar/:id', (req, res) => {
             }
 
             connection.query(
-                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ID_ESTADO_RESERVA FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ID_ESTADO_RESERVA, ID_TIPO_ACTIVIDAD FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
                 (err, reservaActual) => {
                     if (err) {
                         connection.disconnect();
@@ -546,7 +557,8 @@ router.post('/reprogramar/:id', (req, res) => {
                     }
 
                     const numeroLab = numero_laboratorio || reservaActual[0].NUMERO_LABORATORIO;
-                    const cantidadAlumnos = reservaActual[0].CANTIDAD_ALUMNOS;
+                    const cantidadAlumnos = cantidad_alumnos || reservaActual[0].CANTIDAD_ALUMNOS;
+                    const idTipoActividad = id_tipo_actividad || reservaActual[0].ID_TIPO_ACTIVIDAD;
 
                     connection.query(
                         `SELECT ESTADO, CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numeroLab}`,
@@ -575,24 +587,23 @@ router.post('/reprogramar/:id', (req, res) => {
                             // criterio que /add: tienen que pertenecer a este laboratorio
                             // y estar disponibles). Si listaRecursos es null, el admin no
                             // toco esa parte del formulario y no la tocamos nosotros.
+                            // A diferencia de /add (que recibe nombres), aca recibimos
+                            // IDs porque el checkbox del frontend usa ID_RECURSO como value.
                             const validarRecursos = (callback) => {
                                 if (listaRecursos === null) return callback(null);
                                 if (listaRecursos.length === 0) return callback([]);
-                                const nombresRecursos = listaRecursos.map(n => `'${n}'`).join(',');
+                                const idsRecursos = listaRecursos.map(i => Number(i)).join(',');
                                 connection.query(
-                                    `SELECT NOMBRE,
-                                            MIN(CASE WHEN DISPONIBILIDAD = 'S' THEN ID_RECURSO END) AS ID_RECURSO,
-                                            MAX(DISPONIBILIDAD) AS DISPONIBLE
+                                    `SELECT ID_RECURSO, NOMBRE, DISPONIBILIDAD
                                      FROM DBA.RECURSOS
-                                     WHERE NOMBRE IN (${nombresRecursos}) AND NUMERO_LABORATORIO = ${numeroLab}
-                                     GROUP BY NOMBRE`,
+                                     WHERE ID_RECURSO IN (${idsRecursos}) AND NUMERO_LABORATORIO = ${numeroLab}`,
                                     (err, result) => {
                                         if (err) { connection.disconnect(); return manejarError(err, res, 'verificar recursos'); }
                                         if (result.length !== listaRecursos.length) {
                                             connection.disconnect();
                                             return res.status(400).json({ success: false, error: 'Alguno de los recursos solicitados no pertenece a este laboratorio.' });
                                         }
-                                        const noDisponible = result.find(r => r.DISPONIBLE !== 'S');
+                                        const noDisponible = result.find(r => r.DISPONIBILIDAD !== 'S');
                                         if (noDisponible) {
                                             connection.disconnect();
                                             return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
@@ -627,6 +638,8 @@ router.post('/reprogramar/:id', (req, res) => {
                                 connection.query(
                                     `UPDATE DBA.RESERVAS
                                      SET NUMERO_LABORATORIO = ${numeroLab},
+                                         ID_TIPO_ACTIVIDAD  = ${idTipoActividad},
+                                         CANTIDAD_ALUMNOS   = ${cantidadAlumnos},
                                          FECHA_A_RESERVAR   = '${fecha_a_reservar}',
                                          HORA_INICIO        = '${hora_inicio}',
                                          HORA_FIN           = '${hora_fin}'
