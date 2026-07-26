@@ -154,6 +154,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         reservas.forEach(reserva => {
 
+            const estadosBloqueados = [ 
+                "C",
+                "A",
+                "U"
+            ];
+
+            const bloquearReprogramar = 
+                estadosBloqueados.includes(
+                    reserva.estado
+                );
+
             reservasList.innerHTML += `
                 <tr>
                     <td>${escapeHtml(reserva.ID_RESERVA)}</td>
@@ -181,7 +192,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             <button
                                 class="btn btn-dark btn-sm"
-                                onclick="reprogramarReserva(${reserva.ID_RESERVA})">
+                                onclick="reprogramarReserva(${reserva.ID_RESERVA})"
+                                ${bloquearReprogramar ? "disabled" : ""}>
                                 <i class="bi bi-calendar2-week"></i>
                                 Reprogramar
                             </button>
@@ -253,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.editarReserva = function (id) {
+        console.log("ID recibido:", id);
         window.location.href = `/upd_reservas.html?id=${id}`;
     };
 
