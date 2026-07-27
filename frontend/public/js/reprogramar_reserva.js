@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const errorMessage = document.getElementById('error-message');
     const selectLaboratorio = document.getElementById('laboratorio');
     const selectTipoActividad = document.getElementById('tipoActividad');
+    const inputCantidadAlumnos = document.getElementById('cantidadAlumnos');
+    const listaRecursos = document.getElementById('listaRecursos');
 
     const id = new URLSearchParams(
         window.location.search
@@ -47,13 +49,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
+    let programacionOriginal = null;
+
     function cargarTipoActividad() {
 
         return fetch(`/api/actividades?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
 
         .then(res => res.json())
 
-        .then(tipo => {
+        .then(tipos => {
 
             selectTipoActividad.innerHTML = `
 
@@ -63,13 +67,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             `;
 
-            tipo.forEach(tip => {
+            tipos.forEach(tipo => {
 
                 const option = document.createElement("option");
 
-                option.value = tip.ID_TIPO_ACTIVIDAD;
+                option.value = tipo.ID_TIPO_ACTIVIDAD;
 
-                option.textContent = tip.NOMBRE;
+                option.textContent = tipo.NOMBRE;
 
                 selectTipoActividad.appendChild(option);
 
@@ -90,17 +94,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     function cargarLaboratorios() {
 
-
         return fetch(
             `/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`
         )
 
-
         .then(res => res.json())
 
-
         .then(laboratorios => {
-
 
             selectLaboratorio.innerHTML = `
 
@@ -110,10 +110,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             `;
 
-
-
             laboratorios.forEach(lab => {
-
 
                 const option =
                     document.createElement("option");
@@ -143,48 +140,63 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     }
 
+    // Trae los recursos del laboratorio elegido y marca los que ya tenia
+    // la reserva (recursosSeleccionados = array de ID_RECURSO en string).
     function cargarRecursos(numeroLaboratorio, recursosSeleccionados = []) {
 
+        listaRecursos.innerHTML = "";
+
+        if (!numeroLaboratorio) return Promise.resolve();
+
         return fetch(`/api/recursos?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}&laboratorio=${encodeURIComponent(numeroLaboratorio)}`)
-            .then(res => res.json())
-            .then(recursos => {
 
-                const lista = document.getElementById("listaRecursos");
-                lista.innerHTML = "";
+        .then(res => res.json())
 
-                recursos.forEach(recurso => {
+        .then(recursos => {
 
-                    const marcado = recursosSeleccionados.includes(
-                        String(recurso.ID_RECURSO)
-                    );
+            listaRecursos.innerHTML = "";
 
-                    lista.innerHTML += `
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value="${recurso.ID_RECURSO}"
-                                id="recurso${recurso.ID_RECURSO}"
-                                ${marcado ? "checked" : ""}
-                            >
+            if (!Array.isArray(recursos) || recursos.length === 0) {
+                listaRecursos.innerHTML = "<p class='text-muted mb-0'>No hay recursos disponibles para este laboratorio.</p>";
+                return;
+            }
 
-                            <label class="form-check-label" for="recurso${recurso.ID_RECURSO}">
-                                ${recurso.NOMBRE}
-                            </label>
-                        </div>
-                    `;
+            recursos.forEach(recurso => {
 
-                });
+                const marcado = recursosSeleccionados.includes(
+                    String(recurso.ID_RECURSO)
+                );
 
-            })
-            .catch(error => {
+                const div = document.createElement("div");
+                div.className = "form-check";
+                div.innerHTML = `
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        value="${recurso.ID_RECURSO}"
+                        id="recurso${recurso.ID_RECURSO}"
+                        ${marcado ? "checked" : ""}
+                    >
+                    <label class="form-check-label" for="recurso${recurso.ID_RECURSO}">
+                        ${recurso.NOMBRE}
+                    </label>
+                `;
 
-                console.error(error);
-
-                errorMessage.textContent =
-                    "No se pudieron cargar los recursos.";
+                listaRecursos.appendChild(div);
 
             });
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            errorMessage.textContent =
+                "No se pudieron cargar los recursos.";
+
+        });
+
     }
 
     function cargarReserva() {
@@ -216,14 +228,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             selectLaboratorio.value =
                 reserva.NUMERO_LABORATORIO ?? "";
-                
-            selectTipoActividad.value =
-                reserva.ID_TIPO_ACTIVIDAD    ?? "";
 
-            document.getElementById("cantidadAlumnos").value = 
+            selectTipoActividad.value =
+                reserva.ID_TIPO_ACTIVIDAD ?? "";
+
+            inputCantidadAlumnos.value =
                 reserva.CANTIDAD_ALUMNOS ?? "";
 
-            const recursosReserva = reserva.recursos
+            const idsRecursosReserva = Array.isArray(reserva.RECURSOS)
                 ? reserva.RECURSOS.map(r => String(r.ID_RECURSO))
                 : [];
 
@@ -239,43 +251,45 @@ document.addEventListener('DOMContentLoaded', async function () {
                 String(reserva.HORA_FIN)
                 .slice(0,5);
 
+            // Guardamos los valores originales para saber, al enviar el
+            // formulario, que cambio realmente el usuario.
             programacionOriginal = {
                 numero_laboratorio: String(reserva.NUMERO_LABORATORIO ?? ""),
                 id_tipo_actividad: String(reserva.ID_TIPO_ACTIVIDAD ?? ""),
+                cantidad_alumnos: String(reserva.CANTIDAD_ALUMNOS ?? ""),
                 fecha_a_reservar: String(reserva.FECHA_A_RESERVAR).split("T")[0],
                 hora_inicio: String(reserva.HORA_INICIO).slice(0, 5),
                 hora_fin: String(reserva.HORA_FIN).slice(0, 5),
-                recursos: reserva.RECURSOS
-                    ? reserva.RECURSOS.map(r => String(r.ID_RECURSO))
-                    : []
+                recursos: idsRecursosReserva
             };
+
+            await cargarRecursos(reserva.NUMERO_LABORATORIO, idsRecursosReserva);
 
         })
 
         .catch(error => {
 
-
             console.error(error);
-
 
             errorMessage.textContent =
                 error.message;
 
-
         });
-
 
     }
 
     await cargarLaboratorios();
-    await cargarTipoActividad();
-    await cargarReserva();
-    await cargarRecursos(
-        selectLaboratorio.value,
-        programacionOriginal.recursos
-    );
 
-    //calendario
+    await cargarTipoActividad();
+
+    await cargarReserva();
+
+    // Si el admin cambia de laboratorio, recargamos los recursos
+    // disponibles para ese laboratorio (no se puede tildar un recurso
+    // que pertenece a otro lab).
+    selectLaboratorio.addEventListener("change", function () {
+        cargarRecursos(selectLaboratorio.value, []);
+    });
 
     const monthYearEl = document.getElementById("month-year");
     const daysEl = document.getElementById("days");
@@ -467,7 +481,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     "today"
                 );
 
-
             }
 
             if(
@@ -480,7 +493,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 day.classList.add(
                     "selected"
                 );
-
 
             }
 
@@ -507,7 +519,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         );
 
-
     }
 
     if(nextMonthBtn) {
@@ -522,10 +533,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 renderCalendar();
 
-
             }
         );
-
 
     }
 
@@ -540,10 +549,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 renderCalendar();
 
-
             }
         );
-
 
     }
 
@@ -552,7 +559,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     renderCalendar();
 
-        form.addEventListener(
+    form.addEventListener(
         "submit",
         async function(event) {
 
@@ -560,9 +567,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             errorMessage.textContent = "";
 
+            const recursosElegidos = Array.from(
+                listaRecursos.querySelectorAll('input[type="checkbox"]:checked')
+            ).map(checkbox => checkbox.value);
+
             const nuevaProgramacion = {
                 numero_laboratorio: selectLaboratorio.value,
                 id_tipo_actividad: selectTipoActividad.value,
+                cantidad_alumnos: inputCantidadAlumnos.value,
                 fecha_a_reservar: document.getElementById("fecha").value,
                 hora_inicio: document.getElementById("horaInicio").value,
                 hora_fin: document.getElementById("horaFin").value
@@ -572,48 +584,51 @@ document.addEventListener('DOMContentLoaded', async function () {
                 programacionOriginal &&
                 (nuevaProgramacion.numero_laboratorio !== programacionOriginal.numero_laboratorio ||
                  nuevaProgramacion.id_tipo_actividad !== programacionOriginal.id_tipo_actividad ||
+                 nuevaProgramacion.cantidad_alumnos !== programacionOriginal.cantidad_alumnos ||
                  nuevaProgramacion.fecha_a_reservar !== programacionOriginal.fecha_a_reservar ||
                  nuevaProgramacion.hora_inicio !== programacionOriginal.hora_inicio ||
                  nuevaProgramacion.hora_fin !== programacionOriginal.hora_fin);
 
+            const recursosOriginales = (programacionOriginal?.recursos || []).slice().sort();
+            const cambioRecursos =
+                JSON.stringify(recursosElegidos.slice().sort()) !== JSON.stringify(recursosOriginales);
+
+            if (!cambioProgramacion && !cambioRecursos) {
+                window.location.href = "/list_reservas.html";
+                return;
+            }
+
             try {
 
-                if (cambioProgramacion) {
+                const response = await fetch(`/api/reservas/reprogramar/${id}`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                usuario,
+                                clave,
+                                ...nuevaProgramacion,
+                                recursos: recursosElegidos
+                            })
+                        }
+                    );
 
-                    const response = await fetch(`/api/reservas/reprogramar/${id}`,
-                            {
-                                method: "POST",
-                                headers: {
+                const data =
+                    await response.json()
+                    .catch(() => null);
 
-                                    "Content-Type":
-                                        "application/json"
+                if(
+                    !response.ok ||
+                    !data ||
+                    data.success === false
+                ) {
 
-                                },
-
-                                body: JSON.stringify({ usuario, clave, ...nuevaProgramacion })
-
-                            }
-                        );
-
-                    const data =
-                        await response.json()
-                        .catch(() => null);
-
-                    if(
-                        !response.ok ||
-                        !data ||
-                        data.success === false
-                    ) {
-
-                        throw new Error(
-                            data?.error ||
-                            "Error al reprogramar la reserva."
-                        );
-
-
-                    }
-
-                    programacionOriginal = nuevaProgramacion;
+                    throw new Error(
+                        data?.error ||
+                        "Error al reprogramar la reserva."
+                    );
 
                 }
 

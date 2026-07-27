@@ -12,8 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const usuario = sessionStorage.getItem("usuario");
     const clave = sessionStorage.getItem("clave");
 
-
-
     // BOTÓN ATRÁS
 
     if (btnInicio) {
@@ -386,13 +384,22 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!response.ok || data.success === false) {
 
 
+                if(
+                    data.error?.includes("SQL Anywhere") ||
+                    data.error?.includes("RAISERROR")
+                ) {
+                    
+                    throw new Error(
+                        "No se pudo agregar el laboratorio."
+                    )
+                };
+
                 throw new Error(
                     data.error ||
-                    "Error al agregar laboratorio"
+                    "No se pudo agregar el laboratorio."
                 );
 
-
-            }
+            };
 
 
             return crearRecursosElegidos(data.numero_laboratorio);

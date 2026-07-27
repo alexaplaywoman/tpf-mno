@@ -123,10 +123,26 @@ router.get('/:id', (req, res) => {
         connection.query(
             `SELECT * FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
             (err, result) => {
-                connection.disconnect();
-                if (err) return manejarError(err, res, 'consultar reserva');
-                if (result.length > 0) return res.json({ success: true, reserva: result[0] });
-                return res.json({ success: false, error: 'Reserva no encontrada.' });
+                if (err) { connection.disconnect(); return manejarError(err, res, 'consultar reserva'); }
+                if (result.length === 0) {
+                    connection.disconnect();
+                    return res.json({ success: false, error: 'Reserva no encontrada.' });
+                }
+
+                const reserva = result[0];
+
+                connection.query(
+                    `SELECT rr.ID_RECURSO, rec.NOMBRE
+                     FROM DBA.RESERVAS_RECURSOS rr
+                     JOIN DBA.RECURSOS rec ON rr.ID_RECURSO = rec.ID_RECURSO
+                     WHERE rr.ID_RESERVA = ${id}`,
+                    (err, recursos) => {
+                        connection.disconnect();
+                        if (err) return manejarError(err, res, 'consultar recursos de la reserva');
+                        reserva.RECURSOS = recursos || [];
+                        return res.json({ success: true, reserva });
+                    }
+                );
             }
         );
     });
@@ -496,12 +512,23 @@ router.post('/marcar/:id', (req, res) => {
 
 router.post('/reprogramar/:id', (req, res) => {
     const { id } = req.params;
-    const { numero_laboratorio, fecha_a_reservar, hora_inicio, hora_fin, usuario, clave } = req.body;
+    const { numero_laboratorio, id_tipo_actividad, cantidad_alumnos, fecha_a_reservar, hora_inicio, hora_fin, recursos, usuario, clave } = req.body;
+    const listaRecursos = recursos || null; // null = no tocar los recursos; [] = dejar la reserva sin recursos
 
     if (!usuario || !clave || !fecha_a_reservar || !hora_inicio || !hora_fin)
         return res.status(400).json({ success: false, error: 'Faltan datos obligatorios.' });
 
-    const diaSemana = new Date(fecha_a_reservar).getDay();
+    // new Date('YYYY-MM-DD') parsea en UTC; con getDay() (que da el dia en
+    // hora local) eso puede correr la fecha un dia para atras en husos
+    // horarios negativos (Paraguay UTC-3/-4), haciendo que un lunes real
+    // se lea como domingo. Armamos la fecha con los componentes locales
+    // en vez de parsear el string.
+    const [anioReprogramar, mesReprogramar, diaReprogramar] = fecha_a_reservar.split('-');
+    const diaSemana = new Date(
+        Number(anioReprogramar),
+        Number(mesReprogramar) - 1,
+        Number(diaReprogramar)
+    ).getDay();
     if (diaSemana === 0 || diaSemana === 6)
         return res.status(400).json({ success: false, error: 'No se puede reprogramar a un fin de semana.' });
 
@@ -540,7 +567,8 @@ router.post('/reprogramar/:id', (req, res) => {
                     }
 
                     const numeroLab = numero_laboratorio || reservaActual[0].NUMERO_LABORATORIO;
-                    const cantidadAlumnos = reservaActual[0].CANTIDAD_ALUMNOS;
+                    const cantidadAlumnos = cantidad_alumnos || reservaActual[0].CANTIDAD_ALUMNOS;
+                    const idTipoActividad = id_tipo_actividad || reservaActual[0].ID_TIPO_ACTIVIDAD;
 
                     connection.query(
                         `SELECT ESTADO, CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numeroLab}`,
@@ -565,6 +593,36 @@ router.post('/reprogramar/:id', (req, res) => {
                                 });
                             }
 
+                            // Recursos no tienen trigger propio, se validan aca (mismo
+                            // criterio que /add: tienen que pertenecer a este laboratorio
+                            // y estar disponibles). Si listaRecursos es null, el admin no
+                            // toco esa parte del formulario y no la tocamos nosotros.
+                            // A diferencia de /add (que recibe nombres), aca recibimos
+                            // IDs porque el checkbox del frontend usa ID_RECURSO como value.
+                            const validarRecursos = (callback) => {
+                                if (listaRecursos === null) return callback(null);
+                                if (listaRecursos.length === 0) return callback([]);
+                                const idsRecursos = listaRecursos.map(i => Number(i)).join(',');
+                                connection.query(
+                                    `SELECT ID_RECURSO, NOMBRE, DISPONIBILIDAD
+                                     FROM DBA.RECURSOS
+                                     WHERE ID_RECURSO IN (${idsRecursos}) AND NUMERO_LABORATORIO = ${numeroLab}`,
+                                    (err, result) => {
+                                        if (err) { connection.disconnect(); return manejarError(err, res, 'verificar recursos'); }
+                                        if (result.length !== listaRecursos.length) {
+                                            connection.disconnect();
+                                            return res.status(400).json({ success: false, error: 'Alguno de los recursos solicitados no pertenece a este laboratorio.' });
+                                        }
+                                        const noDisponible = result.find(r => r.DISPONIBILIDAD !== 'S');
+                                        if (noDisponible) {
+                                            connection.disconnect();
+                                            return res.status(409).json({ success: false, error: `El recurso "${noDisponible.NOMBRE}" no está disponible.` });
+                                        }
+                                        callback(result.map(r => r.ID_RECURSO));
+                                    }
+                                );
+                            };
+
                             const sqlSolapamiento = `
                                 SELECT ID_RESERVA FROM DBA.RESERVAS
                                 WHERE NUMERO_LABORATORIO = ${numeroLab}
@@ -585,19 +643,57 @@ router.post('/reprogramar/:id', (req, res) => {
                                     return res.status(409).json({ success: false, error: 'Ya existe una reserva en ese horario.' });
                                 }
 
+                                validarRecursos((idsRecursosNuevos) => {
+
                                 connection.query(
                                     `UPDATE DBA.RESERVAS
                                      SET NUMERO_LABORATORIO = ${numeroLab},
+                                         ID_TIPO_ACTIVIDAD  = ${idTipoActividad},
+                                         CANTIDAD_ALUMNOS   = ${cantidadAlumnos},
                                          FECHA_A_RESERVAR   = '${fecha_a_reservar}',
                                          HORA_INICIO        = '${hora_inicio}',
                                          HORA_FIN           = '${hora_fin}'
                                      WHERE ID_RESERVA = ${id}`,
                                     (err) => {
-                                        connection.disconnect();
-                                        if (err) return manejarError(err, res, 'reprogramar reserva');
-                                        return res.json({ success: true });
+                                        if (err) { connection.disconnect(); return manejarError(err, res, 'reprogramar reserva'); }
+
+                                        if (idsRecursosNuevos === null) {
+                                            connection.disconnect();
+                                            return res.json({ success: true });
+                                        }
+
+                                        connection.query(
+                                            `DELETE FROM DBA.RESERVAS_RECURSOS WHERE ID_RESERVA = ${id}`,
+                                            (err) => {
+                                                if (err) { connection.disconnect(); return manejarError(err, res, 'actualizar recursos'); }
+
+                                                if (idsRecursosNuevos.length === 0) {
+                                                    connection.disconnect();
+                                                    return res.json({ success: true });
+                                                }
+
+                                                let j = 0;
+                                                const insertarSiguienteRecurso = () => {
+                                                    if (j >= idsRecursosNuevos.length) {
+                                                        connection.disconnect();
+                                                        return res.json({ success: true });
+                                                    }
+                                                    const idRecurso = idsRecursosNuevos[j++];
+                                                    connection.query(
+                                                        `INSERT INTO DBA.RESERVAS_RECURSOS (ID_RESERVA, ID_RECURSO) VALUES (${id}, ${idRecurso})`,
+                                                        (err) => {
+                                                            if (err) { connection.disconnect(); return manejarError(err, res, 'asociar recursos'); }
+                                                            insertarSiguienteRecurso();
+                                                        }
+                                                    );
+                                                };
+                                                insertarSiguienteRecurso();
+                                            }
+                                        );
                                     }
                                 );
+
+                                });
                             });
                         }
                     );
