@@ -35,6 +35,23 @@
     <div class="row justify-content-center g-5">
 
         <div class="col-lg-6">
+            <!-- Alterna entre "solo futuras" (default) e incluir las
+                 pasadas del mes en curso. El handler re-consulta al vuelo. -->
+            <div class="text-center mb-4">
+ 
+                <div class="form-check d-inline-block">
+ 
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="chkIncluirPasadas">
+ 
+                    <label class="form-check-label" for="chkIncluirPasadas">
+                        Incluir reservas pasadas de este mes
+                    </label>
+ 
+                </div>
+ 
+            </div>
 
             <div id="contenedorReservas"></div>
 
