@@ -9,12 +9,12 @@ const conexiones = new Map();  // key: "usuario|clave"  ->  { connection, cola }
 function obtenerOAbrirConexion(usuario, clave, callback) {
     const key = `${usuario}|${clave}`;
     const cached = conexiones.get(key);
-
+//4567890
     if (cached && cached.connection) {
         return callback(null, cached);
     }
 
-    const connection = new Sybase('localhost', 2638, 'tpf_reservas', usuario, clave);
+    const connection = new Sybase('localhost', 2639, 'tpf_reservas', usuario, clave);
     connection.connect((err) => {
         if (err) {
             console.error(`Error de conexion Sybase para ${usuario}:`, err.message || err);

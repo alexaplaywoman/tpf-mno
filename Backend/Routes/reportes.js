@@ -156,6 +156,7 @@ router.get('/auditoria', (req, res) => {
             ${offset}, ${limite})`;
 
         connection.query(sqlCall, (err, result) => {
+            console.log("RESULTADO AUDITORIA:", result);
             connection.disconnect();
             if (err) return manejarError(err, res, 'consultar auditoria');
 
