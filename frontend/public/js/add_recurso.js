@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => {
                 console.error(error);
-                errorMessage.textContent = error.message;
+                errorMessage.textContent = error.message.replace("RAISERROR executed:", "").trim();
             });
 
     });

@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 console.error(error);
-                errorMessage.textContent = error.message;
+                  errorMessage.textContent = error.message.replace("RAISERROR executed:", "").trim();
             });
 
     }
@@ -154,8 +154,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             })
             .catch(error => {
+                
                 console.error(error);
-                errorMessage.textContent = error.message;
+
+                let mensaje = error.message || "Error al actualizar recurso.";
+
+                if(mensaje.includes("RAISERROR")){
+                    mensaje = "No se pudo actualizar el recurso. Verifique los datos ingresados.";
+                }
+
+                if(mensaje.includes("ya existe")){
+                    mensaje = "Ya existe un recurso con ese nombre en ese laboratorio.";
+                }
+
+                errorMessage.textContent = mensaje;
             });
 
     });
