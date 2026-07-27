@@ -519,7 +519,7 @@ router.post('/reprogramar/:id', (req, res) => {
             }
 
             connection.query(
-                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ID_ESTADO_RESERVA FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ESTADO_RESERVA FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
                 (err, reservaActual) => {
                     if (err) {
                         connection.disconnect();
@@ -534,7 +534,7 @@ router.post('/reprogramar/:id', (req, res) => {
                     // (cambiar laboratorio/fecha/horario). El estado en si (marcar
                     // como Utilizada/Ausente/Cancelada) es otra ruta (/marcar,
                     // /cancelar) que no tiene esta restriccion.
-                    if (reservaActual[0].ID_ESTADO_RESERVA === 2 || reservaActual[0].ID_ESTADO_RESERVA === 3) {
+                    if (reservaActual[0].ESTADO_RESERVA === 'C' || reservaActual[0].ESTADO_RESERVA === 'U') {
                         connection.disconnect();
                         return res.status(409).json({ success: false, error: 'No se puede reprogramar una reserva que ya está Cancelada o Utilizada.' });
                     }
@@ -569,7 +569,7 @@ router.post('/reprogramar/:id', (req, res) => {
                                 SELECT ID_RESERVA FROM DBA.RESERVAS
                                 WHERE NUMERO_LABORATORIO = ${numeroLab}
                                   AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                                  AND ID_ESTADO_RESERVA <> (SELECT ID_ESTADO_RESERVA FROM DBA.ESTADO_RESERVA WHERE ESTADO_RESERVA = 'C')
+                                  AND ESTADO_RESERVA <> 'C'
                                   AND ID_RESERVA != ${id}
                                   AND HORA_INICIO < '${hora_fin}'
                                   AND HORA_FIN > '${hora_inicio}'

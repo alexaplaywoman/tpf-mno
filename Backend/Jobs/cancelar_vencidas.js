@@ -44,11 +44,11 @@ function ejecutarJob() {
             }
 
             if (!vencidas || vencidas.length === 0) {
-                console.log('[job-vencidas] Sin reservas para cancelar.');
+                console.log('[job-vencidas] Sin reservas para marcar como ausentess.');
                 return;
             }
 
-            console.log(`[job-vencidas] ${vencidas.length} reserva(s) a cancelar.`);
+            console.log(`[job-vencidas] ${vencidas.length} reserva(s) a marcar como ausentess.`);
 
             // 2. Ejecutar el SP que actualiza los estados en BD
             connection.query('CALL DBA.sp_cancelar_reservas_vencidas()', (err) => {
@@ -61,15 +61,18 @@ function ejecutarJob() {
                 vencidas.forEach(r => {
                     enviarCorreoReserva(
                         r.CORREO,
-                        'Advertencia: reserva cancelada por falta de uso - Lab Kontrol',
+                        // Asunto:
+                        'Advertencia: reserva marcada como ausente - Lab Kontrol',
+
+                        // Cuerpo:
                         `Hola ${r.NOMBRE || ''} ${r.APELLIDO || ''}!\n\n` +
-                        `Tu reserva fue cancelada automaticamente porque no fue confirmada ` +
+                        `Tu reserva fue marcada como ausente porque no fue confirmada ` +
                         `como utilizada dentro del horario reservado:\n\n` +
                         `- Actividad: ${r.ACTIVIDAD}\n` +
                         `- Laboratorio: ${r.NUMERO_LABORATORIO}\n` +
                         `- Fecha: ${String(r.FECHA_A_RESERVAR).split('T')[0]}\n` +
                         `- Horario: ${r.HORA_INICIO} a ${r.HORA_FIN}\n\n` +
-                        `Recorda que las reservas no utilizadas afectan la disponibilidad ` +
+                        `Recorda que las ausencias afectan la disponibilidad ` +
                         `para otros solicitantes.\n\n` +
                         `Lab Kontrol.`
                     );
