@@ -11,9 +11,7 @@
 
 </head>
 
-
 <body>
-
 
     <nav class="navbar navbar-dark bg-secondary px-3">
 
@@ -23,321 +21,176 @@
 
     </nav>
 
-
-
-
-
     <div class="container mt-5">
-
 
         <div class="card shadow mx-auto" style="max-width:600px;">
 
-
             <div class="card-body">
-
 
                 <h2 class="text-center mb-4">
                     Actualizar Solicitante
                 </h2>
 
-
-
-
-
                 <form id="update-solicitante-form">
-
-
-
-                    <!-- EDIFICIO -->
 
                     <div class="mb-3">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Cedula de identidad
+                            Cedula de identidad
 
-                    </label>
+                        </label>
 
+                        <input type="text" id="cedulaIdentidad" class="form-control" required>
 
-                    <input type="text"
-                           id="cedulaIdentidad"
-                           class="form-control"
-                           required>
+                    </div>
 
-                </div>
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
+                            Correo
 
-                <div class="mb-3">
+                        </label>
 
-                    <label class="form-label">
+                        <input type="email" id="correo" class="form-control" required>
 
-                        Correo
+                    </div>
 
-                    </label>
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
-                    <input type="email"
-                           id="correo"
-                           class="form-control"
-                           required>
+                            Carrera
 
-                </div>
+                        </label>
 
+                        <select id="carrera" class="form-control" required>
 
+                            <option value="">
 
+                                Seleccione una carrera
 
+                            </option>
 
+                        </select>
 
+                    </div>
 
-                <div class="mb-3">
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
-                    <label class="form-label">
+                            Solicitante
 
-                        Carrera
+                        </label>
 
-                    </label>
+                        <select id="solicitante" class="form-control" required>
 
+                            <option value="">
 
+                                Seleccione un tipo de solicitante
 
-                    <select 
-                        id="carrera"
-                        class="form-control"
-                        required>
+                            </option>
 
+                        </select>
 
-                        <option value="">
+                    </div>
 
-                            Seleccione una carrera
+                    <div class="mb-3">
 
-                        </option>
+                        <label class="form-label">
 
+                            Tipo documento
 
-                    </select>
+                        </label>
 
+                        <select id="tipoDocumento" class="form-control" required>
 
+                            <option value="">
 
-                </div>
+                                Seleccione un tipo de documento
 
+                            </option>
 
+                        </select>
 
+                    </div>
 
-                <div class="mb-3">
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
-                    <label class="form-label">
+                            Nombre
 
-                        Solicitante
+                        </label>
 
-                    </label>
+                        <input type="text" id="nombre" class="form-control" required>
 
+                    </div>
 
+                    <div class="mb-3">
 
-                    <select 
-                        id="solicitante"
-                        class="form-control"
-                        required>
+                        <label class="form-label">
 
+                            Apellido
 
-                        <option value="">
+                        </label>
 
-                            Seleccione un tipo de solicitante
 
-                        </option>
+                        <input type="text" id="apellido" class="form-control" required>
 
+                    </div>
 
-                    </select>
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
+                            Telefono
 
-                </div>
+                        </label>
 
+                        <input type="text" id="telefono" class="form-control" required>
 
-                <div class="mb-3">
+                    </div>
 
+                    <div class="mb-3">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Tipo documento
+                            Departamento
 
-                    </label>
+                        </label>
 
+                        <select id="departamento" class="form-control" required>
 
+                            <option value="">
 
-                    <select 
-                        id="tipoDocumento"
-                        class="form-control"
-                        required>
+                                Seleccione un departamento
 
+                            </option>
 
-                        <option value="">
+                        </select>
 
-                            Seleccione un tipo de documento
+                    </div>
 
-                        </option>
-
-
-                    </select>
-
-
-
-                </div>
-
-
-
-
-
-                <!-- CAPACIDAD -->
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Nombre
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="nombre"
-                           class="form-control"
-                           required>
-
-
-
-                </div>
-
-
-
-
-
-
-
-
-
-                <!-- COMPUTADORAS -->
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Apellido
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="apellido"
-                           class="form-control"
-                           required>
-
-
-
-                </div>
-
-
-
-
-
-
-
-
-
-                <!-- INTERNET -->
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Telefono
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="telefono"
-                           class="form-control"
-                           required>
-
-
-
-                </div>
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Departamento
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="departamento"
-                           class="form-control"
-                           required>
-
-
-
-                </div>
-
-
-
-
-
-
-                    <button 
-                        id="actualizar"
-                        type="submit"
-                        class="btn btn-dark w-100">
+                    <button id="actualizar" type="submit" class="btn btn-dark w-100">
 
                         Actualizar Solicitante
 
                     </button>
 
-
-
-
-
-                    <div 
-                        id="error-message"
-                        class="text-danger text-center mt-3">
-
-                    </div>
-
-
+                    <div id="error-message" class="text-danger text-center mt-3"></div>
 
                 </form>
 
-
-
             </div>
-
 
         </div>
 
-
     </div>
 
-
-
-
-
-
-<script src="./js/upd_solicitante.js"></script>
-
+    <script src="./js/upd_solicitante.js"></script>
 
 </body>
 

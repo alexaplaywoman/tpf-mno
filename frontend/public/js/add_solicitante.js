@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectCarrera = document.getElementById("carrera");
     const selectSolicitante = document.getElementById("solicitante");
     const selectTipoDocumento = document.getElementById("tipoDocumento");
+    const selectDepartamento = document.getElementById("departamento")
 
 
     const usuario = sessionStorage.getItem("usuario");
@@ -114,6 +115,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 errorMessage.textContent = "No se pudieron cargar los tipos de documento.";
             });
 
+        fetch(`/api/solicitantes/departamentos/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+            .then(res => res.json())
+            .then(tipos => {
+                selectDepartamento.innerHTML = `
+                    <option value="">
+                        Seleccione un departamento
+                    </option>
+                `;
+
+                tipos.forEach(tipo => {
+                    const option = document.createElement("option");
+                    option.value = tipo.ID_DEPARTAMENTO;
+                    option.textContent = tipo.NOMBRE;
+                    selectDepartamento.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                errorMessage.textContent = "No se pudieron cargar los departamentos.";
+            });
+
     }
 
 
@@ -194,8 +216,8 @@ document.addEventListener("DOMContentLoaded", function () {
             telefono:
                 document.getElementById("telefono").value,
 
-            departamento:
-                document.getElementById("departamento").value,
+            id_departamento:
+                selectDepartamento.value
 
 
         };
