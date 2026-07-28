@@ -576,7 +576,10 @@ router.post('/reprogramar/:id', (req, res) => {
                     const idTipoActividad = id_tipo_actividad || reservaActual[0].ID_TIPO_ACTIVIDAD;
 
                     connection.query(
-                        `SELECT ESTADO, CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                        `SELECT l.CAPACIDAD_ALUMNOS, eo.TIPO AS estado_tipo
+                         FROM DBA.LABORATORIOS l
+                         JOIN DBA.ESTADOS_OPERATIVOS eo ON l.ESTADO = eo.ESTADO
+                         WHERE l.NUMERO_LABORATORIO = ${numeroLab}`,
                         (err, labs) => {
                             if (err) {
                                 connection.disconnect();
@@ -586,7 +589,7 @@ router.post('/reprogramar/:id', (req, res) => {
                                 connection.disconnect();
                                 return res.status(404).json({ success: false, error: 'Laboratorio no encontrado.' });
                             }
-                            if (labs[0].ESTADO !== 1) {
+                            if (labs[0].estado_tipo !== 'D') {
                                 connection.disconnect();
                                 return res.status(409).json({ success: false, error: 'El laboratorio no está disponible (bloqueado, en mantenimiento o fuera de servicio).' });
                             }
@@ -634,7 +637,7 @@ router.post('/reprogramar/:id', (req, res) => {
                                 JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
                                 WHERE r.NUMERO_LABORATORIO = ${numeroLab}
                                   AND r.FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                                  AND er.ESTADO_RESERVA <> 'C'
+                                  AND er.ESTADO_RESERVA NOT IN ('C','D')
                                   AND r.ID_RESERVA != ${id}
                                   AND r.HORA_INICIO < '${hora_fin}'
                                   AND r.HORA_FIN > '${hora_inicio}'
