@@ -11,366 +11,192 @@
 
 </head>
 
-
 <body>
 
+    <nav class="navbar navbar-dark bg-secondary px-3">
 
+        <a id="inicio" class="btn btn-dark btn-sm" href="#">
 
-<nav class="navbar navbar-dark bg-secondary px-3">
+            Atrás
 
+        </a>
 
-    <a id="inicio"
-       class="btn btn-dark btn-sm"
-       href="#">
+    </nav>
 
-        Atrás
+    <div class="container mt-5">
 
-    </a>
+        <div class="card shadow mx-auto" style="max-width:600px;">
 
+            <div class="card-body">
 
-</nav>
+                <h2 class="text-center mb-4">
 
+                    Agregar Nuevo Solicitante
 
+                </h2>
 
+                <form id="add-solicitante-form">
 
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
+                            Cedula de identidad
 
-<div class="container mt-5">
+                        </label>
 
 
-    <div class="card shadow mx-auto"
-         style="max-width:600px;">
+                        <input type="text" id="cedulaIdentidad" class="form-control" required>
 
+                    </div>
 
-        <div class="card-body">
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
-            <h2 class="text-center mb-4">
+                            Correo
 
-                Agregar Nuevo Solicitante
+                        </label>
 
-            </h2>
+                        <input type="email" id="correo" class="form-control" required>
 
+                    </div>
 
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
+                            Carrera
 
+                        </label>
+                        
+                        <select id="carrera" class="form-control" required>
 
-            <form id="add-solicitante-form">
+                            <option value="">
 
+                                Seleccione una carrera
 
+                            </option>
 
+                        </select>
 
+                    </div>
 
-                <!-- NUMERO -->
+                    <div class="mb-3">
 
-                <div class="mb-3">
+                        <label class="form-label">
 
-                    <label class="form-label">
+                            Solicitante
 
-                        Cedula de identidad
+                        </label>
 
-                    </label>
+                        <select id="solicitante" class="form-control" required>
 
+                            <option value="">
 
-                    <input type="text"
-                           id="cedulaIdentidad"
-                           class="form-control"
-                           required>
+                                Seleccione un tipo de solicitante
 
-                </div>
+                            </option>
 
+                        </select>
 
+                    </div>
 
-                <div class="mb-3">
+                    <div class="mb-3">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Correo
+                            Tipo documento
 
-                    </label>
+                        </label>
 
+                        <select id="tipoDocumento" class="form-control" required>
 
-                    <input type="email"
-                           id="correo"
-                           class="form-control"
-                           required>
+                            <option value="">
 
-                </div>
+                                Seleccione un tipo de documento
 
+                            </option>
 
+                        </select>
 
+                    </div>
 
+                    <div class="mb-3">
 
+                        <label class="form-label">
 
+                            Nombre
 
-                <div class="mb-3">
+                        </label>
 
+                        <input type="text" id="nombre" class="form-control" required>
 
-                    <label class="form-label">
+                    </div>
 
-                        Carrera
+                    <div class="mb-3">
 
-                    </label>
+                        <label class="form-label">
 
+                            Apellido
 
+                        </label>
 
-                    <select 
-                        id="carrera"
-                        class="form-control"
-                        required>
+                        <input type="text" id="apellido" class="form-control" required>
 
+                    </div>
 
-                        <option value="">
+                    <div class="mb-3">
 
-                            Seleccione una carrera
+                        <label class="form-label">
 
-                        </option>
+                            Telefono
 
+                        </label>
 
-                    </select>
+                        <input type="text" id="telefono" class="form-control" placeholder="Ej: 0981123456" required>
 
+                    </div>
 
+                    <div class="mb-3">
 
-                </div>
+                        <label class="form-label">
 
+                            Departamento
 
+                        </label>
 
+                        <select id="departamento" class="form-control" required>
 
-                <div class="mb-3">
+                            <option value="">
 
+                                Seleccione un departamento
 
-                    <label class="form-label">
+                            </option>
 
-                        Solicitante
+                        </select>
 
-                    </label>
+                    </div>
 
 
+                    <button type="submit" class="btn btn-dark w-100">
 
-                    <select 
-                        id="solicitante"
-                        class="form-control"
-                        required>
+                        Agregar Solicitante
 
+                    </button>
 
-                        <option value="">
+                    <div id="error-message" class="text-danger text-center mt-3"></div>
 
-                            Seleccione un tipo de solicitante
+                </form>
 
-                        </option>
-
-
-                    </select>
-
-
-
-                </div>
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Tipo documento
-
-                    </label>
-
-
-
-                    <select 
-                        id="tipoDocumento"
-                        class="form-control"
-                        required>
-
-
-                        <option value="">
-
-                            Seleccione un tipo de documento
-
-                        </option>
-
-
-                    </select>
-
-
-
-                </div>
-
-
-
-
-
-                <!-- CAPACIDAD -->
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Nombre
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="nombre"
-                           class="form-control"
-                           required>
-
-
-
-                </div>
-
-
-
-
-
-
-
-
-
-                <!-- COMPUTADORAS -->
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Apellido
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="apellido"
-                           class="form-control"
-                           required>
-
-
-
-                </div>
-
-
-
-
-
-
-
-
-
-                <!-- INTERNET -->
-
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Telefono
-
-                    </label>
-
-
-
-                    <input type="text"
-                           id="telefono"
-                           class="form-control"
-                           placeholder="Ej: 0981123456"
-                           required>
-
-
-
-                </div>
-
-                <div class="mb-3">
-
-
-                    <label class="form-label">
-
-                        Departamento
-
-                    </label>
-
-
-
-                    <select
-                        id="departamento"
-                        class="form-control"
-                        required>
-
-                        <option value="">
-
-                            Seleccione un departamento
-
-                        </option>
-
-                    </select>
-
-
-
-                </div>
-
-
-
-
-
-
-
-
-
-                <button type="submit"
-                        class="btn btn-dark w-100">
-
-
-                    Agregar Solicitante
-
-
-                </button>
-
-
-
-
-
-
-                <div id="error-message"
-                     class="text-danger text-center mt-3">
-
-
-                </div>
-
-
-
-
-            </form>
-
+            </div>
 
         </div>
 
-
     </div>
 
-
-</div>
-
-
-
-
-
-
-
-<script src="./js/add_solicitante.js"></script>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-
-
+    <script src="./js/add_solicitante.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
