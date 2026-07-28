@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectCarrera = document.getElementById("carrera");
     const selectSolicitante = document.getElementById("solicitante");
     const selectTipoDocumento = document.getElementById("tipoDocumento");
-    const selectDepartamento = document.getElementById("departamento")
+    const selectDepartamento = document.getElementById("departamento");
 
 
     const usuario = sessionStorage.getItem("usuario");
@@ -117,17 +117,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         fetch(`/api/solicitantes/departamentos/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
             .then(res => res.json())
-            .then(tipos => {
+            .then(departamentos => {
                 selectDepartamento.innerHTML = `
                     <option value="">
                         Seleccione un departamento
                     </option>
                 `;
 
-                tipos.forEach(tipo => {
+                departamentos.forEach(departamento => {
                     const option = document.createElement("option");
-                    option.value = tipo.ID_DEPARTAMENTO;
-                    option.textContent = tipo.NOMBRE;
+                    option.value = departamento.NOMBRE;
+                    option.textContent = departamento.NOMBRE;
                     selectDepartamento.appendChild(option);
                 });
             })

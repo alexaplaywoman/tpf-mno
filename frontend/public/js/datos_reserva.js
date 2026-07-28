@@ -22,7 +22,8 @@ document.addEventListener("DOMContentLoaded", function () {
         P: "Pendiente",
         U: "Utilizada",
         C: "Cancelada",
-        A: "Ausente"
+        A: "Ausente",
+        D: "Desplazada"
     };
 
     function formatearHora(hora) {

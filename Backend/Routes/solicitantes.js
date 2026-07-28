@@ -107,6 +107,25 @@ router.get('/carreras/listar', (req, res) => {
     });
 });
 
+router.get('/departamentos/listar', (req, res) => {
+    const { usuario, clave } = req.query;
+    if (!usuario || !clave)
+        return res.status(400).json({ success: false, error: 'Faltan credenciales.' });
+
+    conectar(usuario, clave, (err, connection) => {
+        if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
+
+        connection.query(
+            'SELECT ID_DEPARTAMENTO, NOMBRE FROM DBA.DEPARTAMENTOS ORDER BY NOMBRE',
+            (err, result) => {
+                connection.disconnect();
+                if (err) return manejarError(err, res, 'consultar departamentos');
+                return res.json(result);
+            }
+        );
+    });
+});
+
 router.get('/tipos-solicitantes/listar', (req, res) => {
     const { usuario, clave } = req.query;
     if (!usuario || !clave)
