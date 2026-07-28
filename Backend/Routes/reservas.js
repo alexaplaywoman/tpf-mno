@@ -38,7 +38,8 @@ router.get('/estados/listar', (req, res) => {
         { id_estado_reserva: 1, estado: 'P', nombre: 'Pendiente' },
         { id_estado_reserva: 2, estado: 'U', nombre: 'Utilizada' },
         { id_estado_reserva: 3, estado: 'C', nombre: 'Cancelada' },
-        { id_estado_reserva: 4, estado: 'A', nombre: 'Ausente' }
+        { id_estado_reserva: 4, estado: 'A', nombre: 'Ausente' },
+        { id_estado_reserva: 5, estado: 'D', nombre: 'Desplazada' }
     ]);
 });
 

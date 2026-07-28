@@ -1,18 +1,17 @@
 /*==============================================================*/
 /* Stored procedures para los 5 reportes por rango de fechas.   */
-/* v2 - refactor sobre la propuesta original.                    */
+/* v3 - agrega exclusion del estado 'D' (Desplazada).            */
 /*                                                              */
-/* Cambios respecto a v1:                                        */
-/*   - Filtrado de estado por LETRA ('C','A','U'), no por ID.    */
-/*     Consistente con el resto del sistema (sp_crear_reserva,   */
-/*     fn_existe_solapamiento_reservas).                         */
-/*   - Reportes 1, 2 y 5 excluyen reservas Canceladas/Ausentes:  */
-/*     "utilizacion" no incluye reservas que nunca ocurrieron.   */
-/*   - Reporte 4 devuelve nombre legible ('Cancelada'/'Ausente') */
-/*     ademas de la letra, para no obligar al frontend a mapear. */
-/*   - Validacion de rango de fechas en cada SP + RAISERROR      */
-/*     coherente. Cubre "manejo de errores".  */
-/*   - fn_validar_rango_fechas reutilizable entre los 5 SPs      */
+/* Cambios respecto a v2:                                        */
+/*   - Reportes 1, 2 y 5 excluyen tambien 'D' (Desplazada): una  */
+/*     reserva desplazada por prioridad nunca ocurrio, no es     */
+/*     utilizacion real (mismo criterio que C y A).              */
+/*   - Reporte 4 (cancelaciones/inasistencias) muestra 'D' como  */
+/*     fila propia etiquetada "Desplazada", para separarla de    */
+/*     las canceladas por el usuario.                            */
+/*   - Reporte 3 (solicitantes) NO cambia: mide "quien reserva   */
+/*     mas", y una desplazada sigue siendo una reserva que el    */
+/*     solicitante hizo.                                          */
 /*                                                              */
 /* Nota sobre "horarios de mayor ocupacion":                      */
 /*   sp_horarios_disponibles genera candidatos cada 1h desde     */
@@ -75,7 +74,7 @@ END;
 
 /*--------------------------------------------------------------*/
 /* 2.1 Laboratorios mas utilizados                                */
-/*     Excluye Canceladas y Ausentes: no son "utilizacion" real.  */
+/*     Excluye Canceladas, Ausentes y Desplazadas.                */
 /*--------------------------------------------------------------*/
 CREATE PROCEDURE "DBA"."sp_reporte_laboratorios_mas_utilizados"(
     IN p_desde DATE,
@@ -98,14 +97,14 @@ BEGIN
     JOIN "DBA"."LABORATORIOS" l  ON l.NUMERO_LABORATORIO = r.NUMERO_LABORATORIO
     JOIN "DBA"."ESTADO_RESERVA" er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
     WHERE r.FECHA_A_RESERVAR BETWEEN p_desde AND p_hasta
-      AND er.ESTADO_RESERVA NOT IN ('C','A')
+      AND er.ESTADO_RESERVA NOT IN ('C','A','D')
     GROUP BY r.NUMERO_LABORATORIO, l.EDIFICIO
     ORDER BY CANTIDAD_RESERVAS DESC;
 END;
 
 /*--------------------------------------------------------------*/
 /* 2.2 Horarios de mayor ocupacion                                */
-/*     Excluye Canceladas y Ausentes.                             */
+/*     Excluye Canceladas, Ausentes y Desplazadas.                */
 /*--------------------------------------------------------------*/
 CREATE PROCEDURE "DBA"."sp_reporte_horarios_mas_ocupados"(
     IN p_desde DATE,
@@ -127,7 +126,7 @@ BEGIN
     FROM "DBA"."RESERVAS" r
     JOIN "DBA"."ESTADO_RESERVA" er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
     WHERE r.FECHA_A_RESERVAR BETWEEN p_desde AND p_hasta
-      AND er.ESTADO_RESERVA NOT IN ('C','A')
+      AND er.ESTADO_RESERVA NOT IN ('C','A','D')
     GROUP BY r.HORA_INICIO
     ORDER BY CANTIDAD_RESERVAS DESC;
 END;
@@ -135,9 +134,8 @@ END;
 /*--------------------------------------------------------------*/
 /* 2.3 Solicitantes con mas reservas                              */
 /*     NO filtra por estado: mide "quien reserva mas", no         */
-/*     "quien usa mas". Una cancelacion sigue siendo una reserva  */
-/*     realizada (util para detectar solicitantes con muchos      */
-/*     cambios o cancelaciones tambien).                          */
+/*     "quien usa mas". Una cancelacion o desplazamiento siguen   */
+/*     siendo una reserva realizada por el solicitante.           */
 /*--------------------------------------------------------------*/
 CREATE PROCEDURE "DBA"."sp_reporte_solicitantes_top"(
     IN p_desde DATE,
@@ -167,8 +165,9 @@ END;
 
 /*--------------------------------------------------------------*/
 /* 2.4 Cancelaciones e inasistencias                              */
-/*     Filtra por letra ('C','A'). Devuelve tambien el nombre     */
-/*     legible para que el frontend no tenga que mapear.          */
+/*     Filtra por letra ('C','A','D'). Muestra 'D' como fila      */
+/*     propia ("Desplazada") para separarla de las canceladas     */
+/*     por el usuario. Devuelve nombre legible para el frontend.  */
 /*--------------------------------------------------------------*/
 CREATE PROCEDURE "DBA"."sp_reporte_cancelaciones_inasistencias"(
     IN p_desde DATE,
@@ -190,13 +189,14 @@ BEGIN
            CASE er.ESTADO_RESERVA
                WHEN 'C' THEN 'Cancelada'
                WHEN 'A' THEN 'Ausente'
+               WHEN 'D' THEN 'Desplazada'
                ELSE er.ESTADO_RESERVA
            END AS ESTADO_NOMBRE,
            COUNT(*) AS CANTIDAD
     FROM "DBA"."RESERVAS" r
     JOIN "DBA"."ESTADO_RESERVA" er ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
     WHERE r.FECHA_A_RESERVAR BETWEEN p_desde AND p_hasta
-      AND er.ESTADO_RESERVA IN ('C','A')
+      AND er.ESTADO_RESERVA IN ('C','A','D')
     GROUP BY er.ESTADO_RESERVA
     ORDER BY er.ESTADO_RESERVA;
 END;
@@ -204,11 +204,13 @@ END;
 /*--------------------------------------------------------------*/
 /* 2.5 Porcentaje de utilizacion de recursos                      */
 /*     Solo cuenta recursos de reservas efectivamente utilizables */
-/*     (excluye Cancelada/Ausente). Si una reserva fue cancelada, */
-/*     el recurso asociado no se uso realmente.                   */
+/*     (excluye Cancelada / Ausente / Desplazada). Si la reserva  */
+/*     no ocurrio, el recurso asociado no se uso realmente.       */
 /*                                                              */
 /*     "Porcentaje" = (usos del recurso) * 100 / (total de usos  */
-/*     de recursos en el rango, excluyendo reservas canceladas). */
+/*     de recursos en el rango, mismo filtro de estado).          */
+/*     El filtro C/A/D debe ser IDENTICO en numerador y           */
+/*     denominador o el porcentaje queda descuadrado.             */
 /*--------------------------------------------------------------*/
 CREATE PROCEDURE "DBA"."sp_reporte_porcentaje_recursos"(
     IN p_desde DATE,
@@ -234,14 +236,14 @@ BEGIN
                JOIN "DBA"."RESERVAS" r2         ON r2.ID_RESERVA = rr2.ID_RESERVA
                JOIN "DBA"."ESTADO_RESERVA" er2  ON er2.ID_ESTADO_RESERVA = r2.ID_ESTADO_RESERVA
                WHERE r2.FECHA_A_RESERVAR BETWEEN p_desde AND p_hasta
-                 AND er2.ESTADO_RESERVA NOT IN ('C','A')
+                 AND er2.ESTADO_RESERVA NOT IN ('C','A','D')
            ), 0) AS NUMERIC(5,2)) AS PORCENTAJE
     FROM "DBA"."RESERVAS_RECURSOS" rr
     JOIN "DBA"."RESERVAS" r          ON r.ID_RESERVA = rr.ID_RESERVA
     JOIN "DBA"."RECURSOS" rec        ON rec.ID_RECURSO = rr.ID_RECURSO
     JOIN "DBA"."ESTADO_RESERVA" er   ON er.ID_ESTADO_RESERVA = r.ID_ESTADO_RESERVA
     WHERE r.FECHA_A_RESERVAR BETWEEN p_desde AND p_hasta
-      AND er.ESTADO_RESERVA NOT IN ('C','A')
+      AND er.ESTADO_RESERVA NOT IN ('C','A','D')
     GROUP BY rec.NOMBRE
     ORDER BY VECES_USADO DESC;
 END;
