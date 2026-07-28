@@ -4,13 +4,14 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// ESTADO_RESERVA guarda un código de una letra (P/U/C/A); acá lo
+// ESTADO_RESERVA guarda un código de una letra (P/U/C/A/D); acá lo
 // traducimos al nombre completo para mostrarlo en la tabla.
 const NOMBRES_ESTADO_RESERVA = {
     P: "Pendiente",
     U: "Utilizada",
     C: "Cancelada",
-    A: "Ausente"
+    A: "Ausente",
+    D: "Desplazada"
 };
 
 function formatearFechaCorta(fecha) {

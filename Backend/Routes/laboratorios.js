@@ -192,9 +192,6 @@ router.get('/disponibilidad-horario', (req, res) => {
             ORDER BY l.NUMERO_LABORATORIO
         `;
 
-
-       
-
         connection.query(sql, (err, result) => {
             connection.disconnect();
             if (err) {

@@ -90,10 +90,11 @@ router.get('/fechas-ocupadas', (req, res) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         const sql = `
-            SELECT FECHA_A_RESERVAR, HORA_INICIO, HORA_FIN
-            FROM DBA.RESERVAS
-            WHERE ID_ESTADO_RESERVA != 3
-              AND FECHA_A_RESERVAR >= CURRENT DATE
+            SELECT r.FECHA_A_RESERVAR, r.HORA_INICIO, r.HORA_FIN
+            FROM DBA.RESERVAS r
+            JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+            WHERE er.ESTADO_RESERVA NOT IN ('C', 'D')
+              AND r.FECHA_A_RESERVAR >= CURRENT DATE
         `;
 
         connection.query(sql, (err, result) => {
@@ -546,7 +547,10 @@ router.post('/reprogramar/:id', (req, res) => {
             }
 
             connection.query(
-                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ESTADO_RESERVA FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                `SELECT r.NUMERO_LABORATORIO, r.CANTIDAD_ALUMNOS, r.ID_TIPO_ACTIVIDAD, er.ESTADO_RESERVA
+                 FROM DBA.RESERVAS r
+                 JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+                 WHERE r.ID_RESERVA = ${id}`,
                 (err, reservaActual) => {
                     if (err) {
                         connection.disconnect();
@@ -624,13 +628,15 @@ router.post('/reprogramar/:id', (req, res) => {
                             };
 
                             const sqlSolapamiento = `
-                                SELECT ID_RESERVA FROM DBA.RESERVAS
-                                WHERE NUMERO_LABORATORIO = ${numeroLab}
-                                  AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                                  AND ESTADO_RESERVA <> 'C'
-                                  AND ID_RESERVA != ${id}
-                                  AND HORA_INICIO < '${hora_fin}'
-                                  AND HORA_FIN > '${hora_inicio}'
+                                SELECT r.ID_RESERVA
+                                FROM DBA.RESERVAS r
+                                JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+                                WHERE r.NUMERO_LABORATORIO = ${numeroLab}
+                                  AND r.FECHA_A_RESERVAR = '${fecha_a_reservar}'
+                                  AND er.ESTADO_RESERVA <> 'C'
+                                  AND r.ID_RESERVA != ${id}
+                                  AND r.HORA_INICIO < '${hora_fin}'
+                                  AND r.HORA_FIN > '${hora_inicio}'
                             `;
 
                             connection.query(sqlSolapamiento, (err, solapados) => {
