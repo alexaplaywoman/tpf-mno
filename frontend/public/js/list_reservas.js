@@ -10,7 +10,8 @@ const NOMBRES_ESTADO_RESERVA = {
     P: "Pendiente",
     U: "Utilizada",
     C: "Cancelada",
-    A: "Ausente"
+    A: "Ausente",
+    D: "Desplazada"
 };
 
 function formatearFechaCorta(fecha) {
