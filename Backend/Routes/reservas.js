@@ -473,8 +473,8 @@ router.post('/marcar/:id', (req, res) => {
     if (!usuario || !clave || !id_estado_reserva)
         return res.status(400).json({ success: false, error: 'Faltan credenciales o el estado.' });
 
-    if (![1, 2, 3, 4].includes(Number(id_estado_reserva)))
-        return res.status(400).json({ success: false, error: 'Estado inválido. Opciones: 1 (Pendiente), 2 (Utilizada), 3 (Cancelada), 4 (No presentado).' });
+    if (![1, 2, 3, 4, 5].includes(Number(id_estado_reserva)))
+        return res.status(400).json({ success: false, error: 'Estado inválido. Opciones: 1 (Pendiente), 2 (Utilizada), 3 (Cancelada), 4 (No presentado), 5 (Desplazada).' });
 
     // El trigger de la base exige MOTIVO_CANCELACION cuando el estado pasa
     // a Cancelada (3); si no lo mandamos, el UPDATE explota en la base en

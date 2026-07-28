@@ -126,7 +126,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 departamentos.forEach(departamento => {
                     const option = document.createElement("option");
-                    option.value = departamento.NOMBRE;
+                    option.value = departamento.ID_DEPARTAMENTO;
                     option.textContent = departamento.NOMBRE;
                     selectDepartamento.appendChild(option);
                 });

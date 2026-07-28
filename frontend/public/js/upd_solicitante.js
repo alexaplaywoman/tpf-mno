@@ -211,9 +211,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 selectTipoDocumento.value =
                     soli.TIPO_DOCUMENTO ?? "";
 
-                selectDepartamento.value =
-                    soli.ID_DEPARTAMENTO ?? "";
-
             })
             .catch(error => {
                 console.error(error);
@@ -264,8 +261,8 @@ document.addEventListener('DOMContentLoaded', function () {
             telefono:
                 document.getElementById("telefono").value,
 
-            id_departamento:
-                selectDepartamento.value
+            departamento:
+                document.getElementById("departamento").value
 
         };
 
