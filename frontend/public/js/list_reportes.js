@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    const PALETA = ['#190933', '#665687', '#B084CC', '#5DD9C1', '#EDD4B2'];
-    const NOMBRES_ESTADO = { C: 'Canceladas', A: 'Ausencias' };
+    const PALETA = ['#190933', '#665687', '#B084CC', '#5DD9C1', '#e7c492'];
+    const NOMBRES_ESTADO = { C: 'Canceladas', A: 'Ausencias', D: 'Desplazadas' };
 
     const graficos = {};
 
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fila: r => [r.NOMBRE, r.APELLIDO, r.CANTIDAD_RESERVAS]
         },
         {
-            titulo: 'Cancelaciones / Ausencias',
+            titulo: 'Cancelaciones / Ausencias / Desplazadas',
             canvasId: 'chartCancelaciones',
             clave: 'cancelaciones',
             columnas: ['Estado', 'Cantidad'],

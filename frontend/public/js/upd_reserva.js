@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             console.error(error);
 
-            errorMessage.textContent = error.message;
+              errorMessage.textContent = error.message.replace("RAISERROR executed:", "").trim();
 
         });
 
@@ -538,9 +538,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             console.error(error);
 
-            errorMessage.textContent =
-                error.message;
-
+              errorMessage.textContent = error.message.replace("RAISERROR executed:", "").trim();
         }
 
     }

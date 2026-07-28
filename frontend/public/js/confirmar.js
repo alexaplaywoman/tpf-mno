@@ -1,9 +1,12 @@
 // Helper: escapa credenciales antes de meterlas en la query string.
+
 function credsQueryString() {
     const usuario = encodeURIComponent(sessionStorage.getItem('usuario') || '');
     const clave   = encodeURIComponent(sessionStorage.getItem('clave')   || '');
     return `usuario=${usuario}&clave=${clave}`;
 }
+
+let reservaExitosa = false;
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -236,6 +239,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (dataReserva.success) {
 
+                reservaExitosa = true;
+
                 const modalConfirmar = bootstrap.Modal.getInstance(
                     document.getElementById("modalConfirmar")
                 );
@@ -252,23 +257,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Al cerrar el modal de exito, limpiamos el sessionStorage
                 // de la reserva (usuario/clave se mantienen porque son la
                 // sesion de conexion a la base) y volvemos al menu.
-                document.getElementById("modalMensaje").addEventListener(
-                    "hidden.bs.modal",
-                    function () {
-                        sessionStorage.removeItem("reservaEvento");
-                        sessionStorage.removeItem("reservaLaboratorio");
-                        sessionStorage.removeItem("datosSolicitante");
-                        sessionStorage.removeItem("edificioSeleccionado");
-                        window.location.href = "menu.html";
-                    },
-                    { once: true }
-                );
 
             } else {
 
+                reservaExitosa = false;
+
                 mostrarMensaje(
                     "error",
-                    dataReserva.error || dataReserva.mensaje || "No se pudo realizar la reserva"
+                    (dataReserva.error || dataReserva.mensaje || "No se pudo realizar la reserva")
+                        .replace("RAISERROR executed:", "")
+                        .trim()
                 );
 
             }
@@ -320,12 +318,19 @@ function mostrarMensaje(tipo, mensaje) {
     }, 800);
 }
 
-document.getElementById("cerrarMensaje").addEventListener("click", function(){
-
+document.getElementById("cerrarMensaje").addEventListener("click", function() {
     document.body.classList.remove("modal-open");
 
     document.querySelectorAll(".modal-backdrop").forEach(function(backdrop){
         backdrop.remove();
     });
 
-});
+    if(reservaExitosa){
+        sessionStorage.removeItem("reservaEvento");
+        sessionStorage.removeItem("reservaLaboratorio");
+        sessionStorage.removeItem("reservaSolicitante");
+        sessionStorage.removeItem("reservaSeleccionado");
+
+        window.location.href = "menu.html";
+    }
+})
