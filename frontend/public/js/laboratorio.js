@@ -1,3 +1,15 @@
+// El nombre de edificio que guarda edificio.js ("Ciencias y Tecnología",
+// con tilde) no siempre coincide letra por letra con LABORATORIOS.EDIFICIO
+// en la base ("Ciencias y Tecnologia", sin tilde). Comparamos ignorando
+// tildes/mayusculas para no depender de que ambos lados esten sincronizados.
+function normalizarTexto(texto) {
+    return String(texto || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toUpperCase()
+        .trim();
+}
+
 // =========================
 // DROPDOWN CUSTOM CON SCROLL (envuelve a un <select> real)
 // Todo el resto del JS lee/escribe
@@ -341,7 +353,7 @@ function cargarLaboratorios(reservaEvento) {
         // al que eligio (el numero de laboratorio no indicaba a que
         // edificio pertenecia).
         const laboratoriosDelEdificio = edificioSeleccionado
-            ? laboratorios.filter(lab => lab.EDIFICIO === edificioSeleccionado)
+            ? laboratorios.filter(lab => normalizarTexto(lab.EDIFICIO) === normalizarTexto(edificioSeleccionado))
             : laboratorios;
 
         // Agrupar recursos disponibles por lab
