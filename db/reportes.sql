@@ -248,6 +248,85 @@ BEGIN
     ORDER BY VECES_USADO DESC;
 END;
 
+
+CREATE PROCEDURE "DBA"."sp_reporte_auditoria"(
+    IN p_fecha_desde   DATE          DEFAULT NULL,
+    IN p_fecha_hasta   DATE          DEFAULT NULL,
+    IN p_grupo         VARCHAR(50)   DEFAULT NULL,
+    IN p_usuario       VARCHAR(128)  DEFAULT NULL,
+    IN p_id_referencia INT           DEFAULT NULL,
+    IN p_offset        INT           DEFAULT 0,
+    IN p_limit         INT           DEFAULT 20 )
+BEGIN
+    DECLARE v_grupo    VARCHAR(50);
+    DECLARE v_usuario  VARCHAR(128);
+    DECLARE v_start_at INT;
+
+    -- Normalizar strings vacios (y 'Todos') a NULL
+    SET v_grupo   = CASE
+                       WHEN p_grupo IS NULL             THEN NULL
+                       WHEN TRIM(p_grupo) = ''          THEN NULL
+                       WHEN TRIM(p_grupo) = 'Todos'     THEN NULL
+                       ELSE TRIM(p_grupo)
+                    END;
+
+    SET v_usuario = CASE
+                       WHEN p_usuario IS NULL           THEN NULL
+                       WHEN TRIM(p_usuario) = ''        THEN NULL
+                       ELSE TRIM(p_usuario)
+                    END;
+
+    -- Validaciones
+    IF p_offset IS NULL OR p_offset < 0 THEN
+        RAISERROR 99201 'El offset no puede ser negativo.';
+        RETURN;
+    END IF;
+
+    IF p_limit IS NULL OR p_limit <= 0 OR p_limit > 100 THEN
+        RAISERROR 99202 'El limite debe ser un entero entre 1 y 100.';
+        RETURN;
+    END IF;
+
+    IF p_fecha_desde IS NOT NULL
+       AND p_fecha_hasta IS NOT NULL
+       AND p_fecha_desde > p_fecha_hasta THEN
+        RAISERROR 99203 'La fecha desde no puede ser mayor que la fecha hasta.';
+        RETURN;
+    END IF;
+
+    IF v_grupo IS NOT NULL
+       AND v_grupo NOT IN ('Reservas','Laboratorios','Mantenimientos') THEN
+        RAISERROR 99204 'Grupo invalido. Valores permitidos: Reservas, Laboratorios, Mantenimientos, Todos.';
+        RETURN;
+    END IF;
+
+    SET v_start_at = p_offset + 1;
+
+    -- --------------------------------------------------------------
+    -- Result set unico: pagina + total (como columna extra por fila)
+    --
+    -- COUNT(*) OVER () se computa DESPUES del WHERE y ANTES de TOP,
+    -- por lo que da el conteo filtrado sin paginar.
+    -- --------------------------------------------------------------
+    SELECT TOP p_limit START AT v_start_at
+           ID_AUDITORIA,
+           FECHA_HORA,
+           USUARIO,
+           TIPO_EVENTO,
+           ID_REFERENCIA,
+           DESCRIPCION,
+           COUNT(*) OVER () AS TOTAL
+    FROM "DBA"."AUDITORIA"
+    WHERE (p_fecha_desde   IS NULL OR FECHA_HORA >= p_fecha_desde)
+      AND (p_fecha_hasta   IS NULL OR FECHA_HORA <  DATEADD(day, 1, p_fecha_hasta))
+      AND (v_grupo         IS NULL
+           OR (v_grupo = 'Reservas'       AND TIPO_EVENTO LIKE 'RESERVA%')
+           OR (v_grupo = 'Laboratorios'   AND TIPO_EVENTO LIKE 'LABORATORIO%')
+           OR (v_grupo = 'Mantenimientos' AND TIPO_EVENTO LIKE 'MANTENIMIENTO%'))
+      AND (v_usuario       IS NULL OR USUARIO LIKE '%' || v_usuario || '%')
+      AND (p_id_referencia IS NULL OR ID_REFERENCIA = p_id_referencia)
+    ORDER BY FECHA_HORA DESC, ID_AUDITORIA DESC;
+END
 /*==============================================================*/
 /* 3. GRANTS                                                     */
 /*==============================================================*/
@@ -257,6 +336,7 @@ GRANT EXECUTE ON DBA.sp_reporte_horarios_mas_ocupados       TO PUBLIC;
 GRANT EXECUTE ON DBA.sp_reporte_solicitantes_top            TO PUBLIC;
 GRANT EXECUTE ON DBA.sp_reporte_cancelaciones_inasistencias TO PUBLIC;
 GRANT EXECUTE ON DBA.sp_reporte_porcentaje_recursos         TO PUBLIC;
+GRANT EXECUTE ON DBA.sp_reporte_auditoria                   TO PUBLIC;
 
 COMMIT;
 
