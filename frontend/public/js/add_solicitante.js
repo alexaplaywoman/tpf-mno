@@ -55,6 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch(`/api/solicitantes/carreras/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
             .then(res => res.json())
             .then(carreras => {
+                console.log(carreras);
+                console.log(carreras.find(c => c.NOMBRE.includes("Dise") || c.NOMBRE.includes("Dise�")));
                 selectCarrera.innerHTML = `
                     <option value="">
                         Seleccione una Carrera
