@@ -167,7 +167,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 recursosOriginales.forEach(recurso => {
                     const id = "recurso" + recurso.NOMBRE.replace(/\s+/g, '');
                     const checkbox = document.getElementById(id);
-                    if (checkbox) checkbox.checked = true;
+                    if (!checkbox) return;
+
+                    checkbox.checked = true;
+
+                    // No se destilda: destildar acá borraria el recurso del
+                    // laboratorio al guardar (ver actualizarRecursos). Solo
+                    // se avisa visualmente que esta unidad esta marcada
+                    // como no disponible.
+                    if (recurso.DISPONIBILIDAD !== 'S') {
+                        const label = checkbox.parentElement.querySelector('label');
+                        if (label) label.textContent += ' (No disponible)';
+                    }
                 });
             })
             .catch(error => {
