@@ -257,7 +257,6 @@ if exists(
     drop table DBA.TIPO_ACTIVIDAD
 end if;
 
-revoke connect from DBA;
 
 if exists(select 1 from sys.sysusertype where type_name='D_CLAVE') then
    drop domain D_CLAVE
@@ -352,9 +351,8 @@ create table DBA.ESTADO_RESERVA
 (
    ID_ESTADO_RESERVA    D_CLAVE                        not null default autoincrement,
    ESTADO_RESERVA       varchar(1)                     not null default 'P'
-      constraint CKC_ESTADO_RESERVA_ESTADO_R check (ESTADO_RESERVA in ('A','P','C','U','D') and ESTADO_RESERVA = upper(ESTADO_RESERVA)),
-   constraint PK_ESTADO_RESERVA primary key clustered (ID_ESTADO_RESERVA),
-   constraint CKC_ESTADO_RESERVA_ESTADO_R check (ESTADO_RESERVA in( 'P','U','C','A' ) and ESTADO_RESERVA = UPPER(ESTADO_RESERVA))
+      constraint CKC_ESTADO_RESERVA_ESTADO_R check (ESTADO_RESERVA in ('P','U','C','A','D') and ESTADO_RESERVA = upper(ESTADO_RESERVA)),
+   constraint PK_ESTADO_RESERVA primary key clustered (ID_ESTADO_RESERVA)
 );
 
 /*==============================================================*/
@@ -392,7 +390,7 @@ create table DBA.MANTENIMIENTOS
 /*==============================================================*/
 create table DBA.PISOS 
 (
-   ID_EDIFICIO          integer                        not null default autoincrement,
+   ID_EDIFICIO          integer                        not null,
    NRO_PISO             integer                        not null,
    constraint PK_PISOS primary key clustered (ID_EDIFICIO, NRO_PISO)
 );
@@ -498,7 +496,6 @@ create table DBA.TIPO_ACTIVIDAD
    ID_PRIORIDAD         integer                        not null,
    NOMBRE               D_NOMBRE                       not null,
    NIVEL_PRIORIDAD      integer                        not null,
-   PRIORIDAD            integer                        not null,
    DURACION_MAX_HORAS   integer                        not null,
    constraint PK_TIPO_ACTIVIDAD primary key clustered (ID_TIPO_ACTIVIDAD)
 );
@@ -629,4 +626,3 @@ alter table DBA.TIPO_ACTIVIDAD
       references DBA.PRIORIDADES (ID_PRIORIDAD)
       on update restrict
       on delete restrict;
-

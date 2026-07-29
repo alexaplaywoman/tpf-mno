@@ -118,7 +118,7 @@ INSERT INTO DEPARTAMENTOS (ID_DEPARTAMENTO, ID_EDIFICIO, NOMBRE) VALUES (5, 3, '
      2 (Media Alta) -> Examen, Defensa Proyecto Final
      3 (Media)      -> Exposicion
      4 (Baja)       -> Clase
-   NIVEL_PRIORIDAD es el valor fino SIN empates (1-6) que usa
+   NIVEL_PRIORIDAD es el valor fino SIN empates (1-7) que usa
    fn_existe_solapamiento_reservas para decidir desplazamientos
    (1 = maxima prioridad real). */
 INSERT INTO TIPO_ACTIVIDAD (ID_TIPO_ACTIVIDAD, ID_PRIORIDAD, NOMBRE, NIVEL_PRIORIDAD, DURACION_MAX_HORAS) 
