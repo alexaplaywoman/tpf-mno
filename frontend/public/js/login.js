@@ -6,7 +6,7 @@ document.getElementById("formLogin").addEventListener("submit", async function (
   const clave = document.getElementById("clave").value;
 
   try {
-    const respuesta = await fetch("/api/accesos", {   // 👈 acá el cambio
+    const respuesta = await fetch("/api/accesos", {   
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ usuario, clave })
