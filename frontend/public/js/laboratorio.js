@@ -1,3 +1,15 @@
+// El nombre de edificio que guarda edificio.js ("Ciencias y Tecnología",
+// con tilde) no siempre coincide letra por letra con LABORATORIOS.EDIFICIO
+// en la base ("Ciencias y Tecnologia", sin tilde). Comparamos ignorando
+// tildes/mayusculas para no depender de que ambos lados esten sincronizados.
+function normalizarTexto(texto) {
+    return String(texto || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toUpperCase()
+        .trim();
+}
+
 // =========================
 // DROPDOWN CUSTOM CON SCROLL (envuelve a un <select> real)
 // Todo el resto del JS lee/escribe
@@ -150,7 +162,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function validar() {
         let deshabilitar = false;
 
-        if (form.laboratorio.value === "") deshabilitar = true;
+        // form.laboratorio es undefined mientras los radios todavia no se
+        // generaron (se cargan async en cargarLaboratorios).
+        if (!form.laboratorio || form.laboratorio.value === "") deshabilitar = true;
         if (form.horaInicio.value === "") deshabilitar = true;
         if (form.horaFin.value === "") deshabilitar = true;
 
@@ -316,6 +330,9 @@ function actualizarOpcionesHoraFin() {
 // eso a veces causaba JZ00L (Login failed) en concurrencia. La cola de
 // conexiones del backend serializa las peticiones, asi que ahora es seguro.
 function cargarLaboratorios(reservaEvento) {
+    const contenedor = document.getElementById('laboratoriosLista');
+    const edificioSeleccionado = sessionStorage.getItem('edificioSeleccionado');
+
     return Promise.all([
         fetch(`/api/laboratorios?${credsQueryString()}`).then(r => r.json()),
         fetch(`/api/recursos?${credsQueryString()}`).then(r => r.json())
@@ -330,6 +347,15 @@ function cargarLaboratorios(reservaEvento) {
             return;
         }
 
+        // Solo los laboratorios del edificio elegido en el paso 1. Sin este
+        // filtro se mostraban labs de TODOS los edificios mezclados, y el
+        // usuario podia terminar reservando un lab de otro edificio distinto
+        // al que eligio (el numero de laboratorio no indicaba a que
+        // edificio pertenecia).
+        const laboratoriosDelEdificio = edificioSeleccionado
+            ? laboratorios.filter(lab => normalizarTexto(lab.EDIFICIO) === normalizarTexto(edificioSeleccionado))
+            : laboratorios;
+
         // Agrupar recursos disponibles por lab
         const recursosPorLab = {};
         recursos.forEach(r => {
@@ -340,11 +366,38 @@ function cargarLaboratorios(reservaEvento) {
             recursosPorLab[r.NUMERO_LABORATORIO].push(r.NOMBRE);
         });
 
-        laboratorios.forEach(lab => {
+        laboratoriosDelEdificio.forEach(lab => {
             lab.recursos_disponibles = recursosPorLab[lab.NUMERO_LABORATORIO] || [];
         });
 
-        verificarLaboratorios(laboratorios, reservaEvento);
+        contenedor.innerHTML = '';
+
+        if (laboratoriosDelEdificio.length === 0) {
+            contenedor.innerHTML = "<p class='text-muted mb-0'>No hay laboratorios disponibles en este edificio.</p>";
+            return;
+        }
+
+        laboratoriosDelEdificio.forEach(lab => {
+            const id = 'lab' + lab.NUMERO_LABORATORIO;
+
+            const div = document.createElement('div');
+            div.className = 'form-check mb-3';
+            div.innerHTML = `
+                <input class="form-check-input"
+                       type="radio"
+                       name="laboratorio"
+                       id="${id}"
+                       value="${lab.NUMERO_LABORATORIO}">
+
+                <label class="form-check-label"
+                       for="${id}">
+                    Laboratorio ${lab.NUMERO_LABORATORIO}
+                </label>
+            `;
+            contenedor.appendChild(div);
+        });
+
+        verificarLaboratorios(laboratoriosDelEdificio, reservaEvento);
     })
     .catch(err => console.error('Error al cargar laboratorios o recursos:', err));
 }

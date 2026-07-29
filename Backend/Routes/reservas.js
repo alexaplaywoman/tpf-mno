@@ -91,10 +91,11 @@ router.get('/fechas-ocupadas', (req, res) => {
         if (err) return manejarError(err, res, 'conectar a la base de datos');
 
         const sql = `
-            SELECT FECHA_A_RESERVAR, HORA_INICIO, HORA_FIN
-            FROM DBA.RESERVAS
-            WHERE ID_ESTADO_RESERVA != 3
-              AND FECHA_A_RESERVAR >= CURRENT DATE
+            SELECT r.FECHA_A_RESERVAR, r.HORA_INICIO, r.HORA_FIN
+            FROM DBA.RESERVAS r
+            JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+            WHERE er.ESTADO_RESERVA NOT IN ('C', 'D')
+              AND r.FECHA_A_RESERVAR >= CURRENT DATE
         `;
 
         connection.query(sql, (err, result) => {
@@ -472,8 +473,8 @@ router.post('/marcar/:id', (req, res) => {
     if (!usuario || !clave || !id_estado_reserva)
         return res.status(400).json({ success: false, error: 'Faltan credenciales o el estado.' });
 
-    if (![1, 2, 3, 4].includes(Number(id_estado_reserva)))
-        return res.status(400).json({ success: false, error: 'Estado inválido. Opciones: 1 (Pendiente), 2 (Utilizada), 3 (Cancelada), 4 (No presentado).' });
+    if (![1, 2, 3, 4, 5].includes(Number(id_estado_reserva)))
+        return res.status(400).json({ success: false, error: 'Estado inválido. Opciones: 1 (Pendiente), 2 (Utilizada), 3 (Cancelada), 4 (No presentado), 5 (Desplazada).' });
 
     // El trigger de la base exige MOTIVO_CANCELACION cuando el estado pasa
     // a Cancelada (3); si no lo mandamos, el UPDATE explota en la base en
@@ -547,7 +548,10 @@ router.post('/reprogramar/:id', (req, res) => {
             }
 
             connection.query(
-                `SELECT NUMERO_LABORATORIO, CANTIDAD_ALUMNOS, ESTADO_RESERVA FROM DBA.RESERVAS WHERE ID_RESERVA = ${id}`,
+                `SELECT r.NUMERO_LABORATORIO, r.CANTIDAD_ALUMNOS, r.ID_TIPO_ACTIVIDAD, er.ESTADO_RESERVA
+                 FROM DBA.RESERVAS r
+                 JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+                 WHERE r.ID_RESERVA = ${id}`,
                 (err, reservaActual) => {
                     if (err) {
                         connection.disconnect();
@@ -572,7 +576,10 @@ router.post('/reprogramar/:id', (req, res) => {
                     const idTipoActividad = id_tipo_actividad || reservaActual[0].ID_TIPO_ACTIVIDAD;
 
                     connection.query(
-                        `SELECT ESTADO, CAPACIDAD_ALUMNOS FROM DBA.LABORATORIOS WHERE NUMERO_LABORATORIO = ${numeroLab}`,
+                        `SELECT l.CAPACIDAD_ALUMNOS, eo.TIPO AS estado_tipo
+                         FROM DBA.LABORATORIOS l
+                         JOIN DBA.ESTADOS_OPERATIVOS eo ON l.ESTADO = eo.ESTADO
+                         WHERE l.NUMERO_LABORATORIO = ${numeroLab}`,
                         (err, labs) => {
                             if (err) {
                                 connection.disconnect();
@@ -582,7 +589,7 @@ router.post('/reprogramar/:id', (req, res) => {
                                 connection.disconnect();
                                 return res.status(404).json({ success: false, error: 'Laboratorio no encontrado.' });
                             }
-                            if (labs[0].ESTADO !== 1) {
+                            if (labs[0].estado_tipo !== 'D') {
                                 connection.disconnect();
                                 return res.status(409).json({ success: false, error: 'El laboratorio no está disponible (bloqueado, en mantenimiento o fuera de servicio).' });
                             }
@@ -625,13 +632,15 @@ router.post('/reprogramar/:id', (req, res) => {
                             };
 
                             const sqlSolapamiento = `
-                                SELECT ID_RESERVA FROM DBA.RESERVAS
-                                WHERE NUMERO_LABORATORIO = ${numeroLab}
-                                  AND FECHA_A_RESERVAR = '${fecha_a_reservar}'
-                                  AND ESTADO_RESERVA <> 'C'
-                                  AND ID_RESERVA != ${id}
-                                  AND HORA_INICIO < '${hora_fin}'
-                                  AND HORA_FIN > '${hora_inicio}'
+                                SELECT r.ID_RESERVA
+                                FROM DBA.RESERVAS r
+                                JOIN DBA.ESTADO_RESERVA er ON r.ID_ESTADO_RESERVA = er.ID_ESTADO_RESERVA
+                                WHERE r.NUMERO_LABORATORIO = ${numeroLab}
+                                  AND r.FECHA_A_RESERVAR = '${fecha_a_reservar}'
+                                  AND er.ESTADO_RESERVA NOT IN ('C','D')
+                                  AND r.ID_RESERVA != ${id}
+                                  AND r.HORA_INICIO < '${hora_fin}'
+                                  AND r.HORA_FIN > '${hora_inicio}'
                             `;
 
                             connection.query(sqlSolapamiento, (err, solapados) => {

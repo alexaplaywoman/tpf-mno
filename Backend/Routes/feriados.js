@@ -11,7 +11,6 @@ let cacheFecha = null;
 async function obtenerFeriados() {
     const hoy = new Date().toDateString();
 
-    // Reusa el cache si ya se trajo hoy
     if (cache && cacheFecha === hoy) return cache;
 
     const eventos = await ical.async.fromURL(URL_FERIADOS_PY);
@@ -39,8 +38,6 @@ router.get('/', async (req, res) => {
         return res.json(feriados);
     } catch (err) {
         console.error('Error al traer feriados de Google:', err);
-        // Si falla (sin internet, feed caido), devolvemos vacio en vez de
-        // romper el calendario entero.
         return res.json([]);
     }
 });

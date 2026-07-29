@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectCarrera = document.getElementById("carrera");
     const selectSolicitante = document.getElementById("solicitante");
     const selectTipoDocumento = document.getElementById("tipoDocumento");
+    const selectDepartamento = document.getElementById("departamento");
 
 
     const usuario = sessionStorage.getItem("usuario");
@@ -54,6 +55,8 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch(`/api/solicitantes/carreras/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
             .then(res => res.json())
             .then(carreras => {
+                console.log(carreras);
+                console.log(carreras.find(c => c.NOMBRE.includes("Dise") || c.NOMBRE.includes("Dise�")));
                 selectCarrera.innerHTML = `
                     <option value="">
                         Seleccione una Carrera
@@ -112,6 +115,27 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => {
                 console.error(error);
                 errorMessage.textContent = "No se pudieron cargar los tipos de documento.";
+            });
+
+        fetch(`/api/solicitantes/departamentos/listar?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
+            .then(res => res.json())
+            .then(departamentos => {
+                selectDepartamento.innerHTML = `
+                    <option value="">
+                        Seleccione un departamento
+                    </option>
+                `;
+
+                departamentos.forEach(departamento => {
+                    const option = document.createElement("option");
+                    option.value = departamento.NOMBRE;
+                    option.textContent = departamento.NOMBRE;
+                    selectDepartamento.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+                errorMessage.textContent = "No se pudieron cargar los departamentos.";
             });
 
     }
@@ -195,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("telefono").value,
 
             departamento:
-                document.getElementById("departamento").value,
+                selectDepartamento.value
 
 
         };
