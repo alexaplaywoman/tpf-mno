@@ -24,8 +24,10 @@ document.getElementById("formLogin").addEventListener("submit", async function (
       if (data.esAdmin === true) {
         window.location.href = "/menu_administrador.html";
       } else {
-        window.location.href = "/menu.html";
+        document.getElementById("msgError").classList.remove("d-none");
+        document.getElementById("msgError").innerText = "Este acceso es exclusivo para administradores."
       }
+      
     } else {
       document.getElementById("msgError").classList.remove("d-none");
       document.getElementById("msgError").innerText = data.mensaje || "Credenciales incorrectas.";
