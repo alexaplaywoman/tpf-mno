@@ -29,25 +29,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function cargarOpciones() {
 
-        fetch(`/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
-            .then(res => res.json())
-            .then(laboratorios => {
-                selectLaboratorio.innerHTML = `
-                    <option value="">Seleccione un laboratorio</option>
-                `;
-
-                laboratorios.forEach(lab => {
-                    const option = document.createElement("option");
-                    option.value = lab.NUMERO_LABORATORIO;
-                    option.textContent = `Laboratorio ${lab.NUMERO_LABORATORIO} - ${lab.EDIFICIO}`;
-                    selectLaboratorio.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error(error);
-                errorMessage.textContent = "No se pudieron cargar los laboratorios.";
-            });
-
         fetch(`/api/solicitantes?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`)
             .then(res => res.json())
             .then(solicitantes => {
@@ -120,6 +101,92 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     cargarOpciones();
+
+    // =====================================
+    // FILTRAR LABORATORIOS DISPONIBLES
+    // (el laboratorio se elige al final: recien cuando ya se conoce
+    // fecha, horario, tipo de actividad, alumnos y recursos, se puede
+    // saber cuales laboratorios realmente sirven)
+    // =====================================
+
+    const selectHoraInicio = document.getElementById("horaInicio");
+    const selectHoraFin = document.getElementById("horaFin");
+    const inputCantidadAlumnos = document.getElementById("cantidadAlumnos");
+
+    function mostrarLaboratorioPlaceholder(texto) {
+        selectLaboratorio.innerHTML = `<option value="">${texto}</option>`;
+        selectLaboratorio.disabled = true;
+    }
+
+    function actualizarLaboratoriosDisponibles() {
+
+        const fecha = document.getElementById("fecha").value;
+        const horaInicio = selectHoraInicio.value;
+        const horaFin = selectHoraFin.value;
+        const idTipoActividad = selectTipoActividad.value;
+        const cantidadAlumnos = Number(inputCantidadAlumnos.value) || 0;
+
+        if (!fecha || !horaInicio || !horaFin || !idTipoActividad || !cantidadAlumnos) {
+            mostrarLaboratorioPlaceholder("Complete los datos anteriores");
+            return;
+        }
+
+        const recursosElegidos = Array.from(
+            contenedorRecursos.querySelectorAll('input[type="checkbox"]:checked')
+        ).map(checkbox => checkbox.value);
+
+        const valorPrevio = selectLaboratorio.value;
+
+        const params = `usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}` +
+            `&fecha=${fecha}&hora_inicio=${horaInicio}&hora_fin=${horaFin}` +
+            `&id_tipo_actividad=${idTipoActividad}` +
+            (recursosElegidos.length > 0 ? `&recursos=${encodeURIComponent(recursosElegidos.join(','))}` : '');
+
+        fetch(`/api/laboratorios/disponibilidad-horario?${params}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data || !Array.isArray(data.laboratorios)) {
+                    console.error('Respuesta invalida de disponibilidad-horario:', data);
+                    mostrarLaboratorioPlaceholder("No se pudieron cargar los laboratorios");
+                    return;
+                }
+
+                const disponibles = data.laboratorios.filter(lab =>
+                    lab.disponible === 'S' && lab.CAPACIDAD_ALUMNOS >= cantidadAlumnos
+                );
+
+                if (disponibles.length === 0) {
+                    mostrarLaboratorioPlaceholder("No hay laboratorios disponibles para estos datos");
+                    return;
+                }
+
+                selectLaboratorio.innerHTML = `<option value="">Seleccione un laboratorio</option>`;
+                selectLaboratorio.disabled = false;
+
+                disponibles.forEach(lab => {
+                    const option = document.createElement("option");
+                    option.value = lab.NUMERO_LABORATORIO;
+                    option.textContent = `Laboratorio ${lab.NUMERO_LABORATORIO} - ${lab.EDIFICIO}`;
+                    selectLaboratorio.appendChild(option);
+                });
+
+                // Si el laboratorio elegido antes sigue siendo valido, lo
+                // mantenemos seleccionado en vez de resetear la eleccion.
+                if (disponibles.some(lab => String(lab.NUMERO_LABORATORIO) === valorPrevio)) {
+                    selectLaboratorio.value = valorPrevio;
+                }
+            })
+            .catch(error => {
+                console.error('Error al consultar disponibilidad de laboratorios:', error);
+                mostrarLaboratorioPlaceholder("No se pudieron cargar los laboratorios");
+            });
+    }
+
+    selectTipoActividad.addEventListener("change", actualizarLaboratoriosDisponibles);
+    selectHoraInicio.addEventListener("change", actualizarLaboratoriosDisponibles);
+    selectHoraFin.addEventListener("change", actualizarLaboratoriosDisponibles);
+    inputCantidadAlumnos.addEventListener("input", actualizarLaboratoriosDisponibles);
+    contenedorRecursos.addEventListener("change", actualizarLaboratoriosDisponibles);
 
     // =====================================
     // AGREGAR RESERVA
@@ -378,6 +445,8 @@ function renderCalendar() {
 
 
                 renderCalendar();
+
+                actualizarLaboratoriosDisponibles();
 
 
                 validar();
