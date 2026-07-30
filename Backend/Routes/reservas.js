@@ -662,7 +662,8 @@ router.post('/reprogramar/:id', (req, res) => {
                                          CANTIDAD_ALUMNOS   = ${cantidadAlumnos},
                                          FECHA_A_RESERVAR   = '${fecha_a_reservar}',
                                          HORA_INICIO        = '${hora_inicio}',
-                                         HORA_FIN           = '${hora_fin}'
+                                         HORA_FIN           = '${hora_fin}',
+                                         ID_ESTADO_RESERVA  = (SELECT ID_ESTADO_RESERVA FROM DBA.ESTADO_RESERVA WHERE ESTADO_RESERVA = 'P')
                                      WHERE ID_RESERVA = ${id}`,
                                     (err) => {
                                         if (err) { connection.disconnect(); return manejarError(err, res, 'reprogramar reserva'); }
