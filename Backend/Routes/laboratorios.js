@@ -142,7 +142,7 @@ router.get('/disponibilidad/:id', (req, res) => {
 });
 
 router.get('/disponibilidad-horario', (req, res) => {
-    const { usuario, clave, fecha, hora_inicio, hora_fin, recursos, id_tipo_actividad } = req.query;
+    const { usuario, clave, fecha, hora_inicio, hora_fin, recursos, id_tipo_actividad, excluir_id_reserva } = req.query;
 
     if (!usuario || !clave || !fecha || !hora_inicio || !hora_fin)
         return res.status(400).json({ success: false, error: 'Faltan credenciales, fecha u horario.' });
@@ -171,6 +171,12 @@ router.get('/disponibilidad-horario', (req, res) => {
                )`
             : '';
 
+        // Al reprogramar una reserva existente, no debe contar contra si
+        // misma para saber si su propio laboratorio actual sigue libre.
+        const condicionExcluir = excluir_id_reserva
+            ? `AND r.ID_RESERVA != ${excluir_id_reserva}`
+            : '';
+
         const sql = `
             SELECT l.NUMERO_LABORATORIO, l.EDIFICIO, l.CAPACIDAD_ALUMNOS, l.ESTADO,
                    CASE
@@ -184,6 +190,7 @@ router.get('/disponibilidad-horario', (req, res) => {
                              AND r.HORA_INICIO < '${hora_fin}'
                              AND r.HORA_FIN > '${hora_inicio}'
                              ${condicionPrioridad}
+                             ${condicionExcluir}
                        ) THEN 'N'
                        ${condicionRecursos}
                        ELSE 'S'
@@ -210,7 +217,7 @@ router.get('/disponibilidad-horario', (req, res) => {
 // bloquearían la nueva (prioridad igual o mayor) — igual criterio que
 // usa sp_crear_reserva para no bloquear/desplazar según prioridad.
 router.get('/horarios-ocupados', (req, res) => {
-    const { usuario, clave, numero_laboratorio, fecha, id_tipo_actividad } = req.query;
+    const { usuario, clave, numero_laboratorio, fecha, id_tipo_actividad, excluir_id_reserva } = req.query;
 
     if (!usuario || !clave || !numero_laboratorio || !fecha)
         return res.status(400).json({ success: false, error: 'Faltan credenciales, laboratorio o fecha.' });
@@ -225,6 +232,12 @@ router.get('/horarios-ocupados', (req, res) => {
                )`
             : '';
 
+        // Al reprogramar una reserva existente, no debe bloquearse contra
+        // su propio horario actual.
+        const condicionExcluir = excluir_id_reserva
+            ? `AND r.ID_RESERVA != ${excluir_id_reserva}`
+            : '';
+
         const sql = `
             SELECT r.HORA_INICIO, r.HORA_FIN
             FROM DBA.RESERVAS r
@@ -233,6 +246,7 @@ router.get('/horarios-ocupados', (req, res) => {
               AND r.FECHA_A_RESERVAR = '${fecha}'
               AND r.ID_ESTADO_RESERVA != 3
               ${condicionPrioridad}
+              ${condicionExcluir}
             ORDER BY r.HORA_INICIO
         `;
 
