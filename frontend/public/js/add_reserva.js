@@ -1,3 +1,85 @@
+// =========================
+// DROPDOWN CUSTOM CON SCROLL (envuelve a un <select> real)
+// =========================
+function inicializarSelectsCustom() {
+
+    document.querySelectorAll(".custom-select-wrapper").forEach(wrapper => {
+
+        const select = document.getElementById(wrapper.dataset.target);
+        const boton = wrapper.querySelector(".custom-select-toggle");
+        const menu = wrapper.querySelector(".custom-select-menu");
+
+        function actualizarMenu() {
+
+            menu.innerHTML = "";
+
+            Array.from(select.options).forEach(opcion => {
+
+                if (opcion.value === "") return;
+
+                const item = document.createElement("div");
+
+                item.className = "custom-select-option";
+                item.textContent = opcion.textContent;
+
+                if (opcion.disabled) {
+                    item.classList.add("disabled");
+                    return;
+                }
+
+                item.addEventListener("click", function () {
+
+                    select.value = opcion.value;
+                    select.dispatchEvent(new Event("change", { bubbles: true }));
+
+                    boton.textContent = opcion.textContent;
+
+                    menu.classList.remove("show");
+
+                });
+
+                menu.appendChild(item);
+
+            });
+
+            const seleccionado = select.options[select.selectedIndex];
+            boton.textContent = (seleccionado && seleccionado.value !== "")
+                ? seleccionado.textContent
+                : "Seleccionar";
+
+        }
+
+        boton.addEventListener("click", function (e) {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            document.querySelectorAll(".custom-select-menu").forEach(m => {
+                if (m !== menu) m.classList.remove("show");
+            });
+
+            menu.classList.toggle("show");
+
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest(".custom-select-wrapper")) {
+                document.querySelectorAll(".custom-select-menu").forEach(m => {
+                    m.classList.remove("show");
+                });
+            }
+        });
+
+        select.addEventListener("change", actualizarMenu);
+
+        actualizarMenu();
+
+    });
+
+}
+
+document.addEventListener("DOMContentLoaded", inicializarSelectsCustom);
+
 document.addEventListener("DOMContentLoaded", function () {
 
     const btnInicio = document.getElementById("inicio");
@@ -7,6 +89,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectSolicitante = document.getElementById("solicitante");
     const selectTipoActividad = document.getElementById("tipoActividad");
     const contenedorRecursos = document.getElementById("listaRecursos");
+    const selectHoraInicio = document.getElementById("horaInicio");
+    const selectHoraFin = document.getElementById("horaFin");
+    const inputCantidadAlumnos = document.getElementById("cantidadAlumnos");
 
     const usuario = sessionStorage.getItem("usuario");
     const clave = sessionStorage.getItem("clave");
@@ -24,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =====================================
-    // CARGAR LABORATORIOS, SOLICITANTES, TIPOS DE ACTIVIDAD Y RECURSOS
+    // CARGAR SOLICITANTES, TIPOS DE ACTIVIDAD Y RECURSOS
     // =====================================
 
     function cargarOpciones() {
@@ -108,10 +193,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // fecha, horario, tipo de actividad, alumnos y recursos, se puede
     // saber cuales laboratorios realmente sirven)
     // =====================================
-
-    const selectHoraInicio = document.getElementById("horaInicio");
-    const selectHoraFin = document.getElementById("horaFin");
-    const inputCantidadAlumnos = document.getElementById("cantidadAlumnos");
 
     function mostrarLaboratorioPlaceholder(texto) {
         selectLaboratorio.innerHTML = `<option value="">${texto}</option>`;
@@ -533,19 +614,6 @@ if (todayBtn) {
 
 
 
-// Hoy
-
-todayBtn.addEventListener("click", function(){
-
-    currentDate = new Date();
-
-    renderCalendar();
-
-});
-
-
-
-
 // Inicializar calendario
 
 async function iniciarCalendario(){
@@ -561,4 +629,3 @@ async function iniciarCalendario(){
 iniciarCalendario();
 
 });
-
