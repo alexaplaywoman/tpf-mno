@@ -1,4 +1,33 @@
 /*==============================================================*/
+/* LabControl - 01_tablas.sql                                   */
+/* Estructura de la base: dominios, tablas, indices y FKs.      */
+/* DBMS: SAP Sybase SQL Anywhere 11 (Watcom-SQL)                */
+/*                                                              */
+/* ORDEN DE EJECUCION DEL PROYECTO:                             */
+/*   1) 01_tablas.sql    <- este archivo (borra y recrea todo)  */
+/*   2) 02_objetos.sql   funciones, SPs, event y triggers        */
+/*   3) 03_permisos.sql  usuarios, grupo ADMINISTRADORES, grants */
+/*   4) datos_prueba_labcontrol_ordenado.sql                     */
+/*   5) carreras_ciencias_contables.sql (opcional, datos extra)  */
+/*                                                              */
+/* NOTAS DE DISENO (para la defensa):                            */
+/*  - Origen: PowerDesigner (definitivo.pdm). Regenerar desde    */
+/*    ahi si se cambia el modelo; no editar el DDL a mano salvo  */
+/*    para AUDITORIA (ver mas abajo).                            */
+/*  - Dominios D_CLAVE / D_FECHA / D_NOMBRE: tipos reutilizables */
+/*    exigidos por la rubrica (definicion de dominios).          */
+/*  - ESTADO_RESERVA acepta P/U/C/A/D. La letra 'D' (Desplazada) */
+/*    se agrego para distinguir la cancelacion automatica por    */
+/*    prioridad de una cancelacion hecha por una persona.        */
+/*  - AUDITORIA no viene del PDM: se agrega al final del script  */
+/*    junto con sus dos indices. Si se regenera el DDL desde     */
+/*    PowerDesigner hay que volver a pegar ese bloque.           */
+/*  - ATENCION al re-ejecutar: este script hace DROP TABLE de    */
+/*    todo. Si hay objetos o sesiones abiertas, correr ROLLBACK  */
+/*    antes (SQLCODE=-210 por locks de DDL).                      */
+/*==============================================================*/
+
+/*==============================================================*/
 /* DBMS name:      Sybase SQL Anywhere 11                       */
 /* Created on:     27/7/2026 19:50:47                           */
 /*==============================================================*/
@@ -626,3 +655,5 @@ alter table DBA.TIPO_ACTIVIDAD
       references DBA.PRIORIDADES (ID_PRIORIDAD)
       on update restrict
       on delete restrict;
+
+COMMIT;
