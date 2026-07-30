@@ -25,5 +25,13 @@ document.getElementById("botonConsultar").addEventListener("click", () => {
     sessionStorage.setItem("numeroCedula", numeroCedula);
     sessionStorage.setItem("correo", correo);
 
+    // Esta consulta es publica (sin login previo): usamos la cuenta de
+    // base de datos generica "solicitante" (solo lectura) para poder
+    // conectar, y filtramos igual por la cedula que la persona escribio.
+    // Sin esto, datos_reserva.js nunca tiene "usuario"/"clave" y siempre
+    // muestra "No hay una sesión activa" sin importar los datos ingresados.
+    sessionStorage.setItem("usuario", "solicitante");
+    sessionStorage.setItem("clave", "soli123");
+
     window.location.href = "datos_reserva.html";
 });
