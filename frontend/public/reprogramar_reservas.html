@@ -33,13 +33,6 @@
                 <form id="reprogramar-reserva-form">
 
                     <div class="mb-3">
-                        <label class="form-label">Laboratorio</label>
-                        <select id="laboratorio" class="form-control" required>
-                            <option value="">Seleccione un laboratorio</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Tipo de actividad</label>
                         <select id="tipoActividad" class="form-control" required>
                             <option value="">Seleccione un tipo de actividad</option>
@@ -52,166 +45,155 @@
 
                     <div class="calendar-container">
 
-                        <div class="calendar-container">
+                        <div class="calendar-header">
 
-                            <div class="calendar-header">
+                            <div class="nav-buttons">
 
-                                <div class="nav-buttons">
+                                <button type="button" id="prev-month" class="nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
 
-                                    <button type="button" id="prev-month" class="nav-btn">
-                                        <i class="fas fa-chevron-left"></i>
-                                    </button>
-
-                                    <button type="button" id="next-month" class="nav-btn">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </button>
-
-                                </div>
-
-                                <div class="month-year" id="month-year">
-                                    Julio 2026
-                                </div>
+                                <button type="button" id="next-month" class="nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
 
                             </div>
 
-                            <div class="weekdays">
-                                <div>Dom</div><div>Lun</div><div>Mar</div>
-                                <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-                            </div>
-
-                            <div class="days" id="days"></div>
-
-                                <div class="calendar-footer">
-
-                                    <button type="button" id="today-btn" class="today-btn">
-                                        <i class="fas fa-calendar-day"></i> Hoy
-                                    </button>
-
-                                </div>
-
+                            <div class="month-year" id="month-year">
+                                Julio 2026
                             </div>
 
                         </div>
 
-                        <div class="mb-3">
+                        <div class="weekdays">
+                            <div>Dom</div><div>Lun</div><div>Mar</div>
+                            <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                        </div>
 
-                    <label for="horaInicio" class="form-label fw-bold">
-                        Hora Inicio
-                    </label>
+                        <div class="days" id="days"></div>
 
+                        <div class="calendar-footer">
 
-                    <div class="custom-select-wrapper" data-target="horaInicio">
+                            <button type="button" id="today-btn" class="today-btn">
+                                <i class="fas fa-calendar-day"></i> Hoy
+                            </button>
 
-
-                        <button type="button"
-                                class="form-select custom-select-toggle text-start">
-                            Seleccionar
-                        </button>
-
-
-                        <div class="custom-select-menu"></div>
-
-
-
-                        <select class="select-oculto"
-                                id="horaInicio"
-                                name="horaInicio"
-                                required
-                                tabindex="-1"
-                                aria-hidden="true">
-
-                            <option value="">
-                                Seleccionar
-                            </option>
-
-                            <option>07:00</option>
-                            <option>08:00</option>
-                            <option>09:00</option>
-                            <option>10:00</option>
-                            <option>11:00</option>
-                            <option>12:00</option>
-                            <option>13:00</option>
-                            <option>14:00</option>
-                            <option>15:00</option>
-                            <option>16:00</option>
-                            <option>17:00</option>
-                            <option>18:00</option>
-                            <option>19:00</option>
-                            <option>20:00</option>
-                            <option>21:00</option>
-
-                        </select>
+                        </div>
 
                     </div>
 
-                </div>
+                    <div class="mb-3">
 
-                        <div class="mb-3">
+                        <label for="horaInicio" class="form-label fw-bold">
+                            Hora Inicio
+                        </label>
 
-                    <label for="horaFin" class="form-label fw-bold">
-                        Hora Fin
-                    </label>
+                        <div class="custom-select-wrapper" data-target="horaInicio">
 
-
-                    <div class="custom-select-wrapper" data-target="horaFin">
-
-
-                        <button type="button"
-                                class="form-select custom-select-toggle text-start">
-                            Seleccionar
-                        </button>
-
-
-                        <div class="custom-select-menu"></div>
-
-
-
-                        <select class="select-oculto"
-                                id="horaFin"
-                                name="horaFin"
-                                required
-                                tabindex="-1"
-                                aria-hidden="true">
-
-
-                            <option value="">
+                            <button type="button"
+                                    class="form-select custom-select-toggle text-start">
                                 Seleccionar
-                            </option>
+                            </button>
 
-                            <option>08:00</option>
-                            <option>09:00</option>
-                            <option>10:00</option>
-                            <option>11:00</option>
-                            <option>12:00</option>
-                            <option>13:00</option>
-                            <option>14:00</option>
-                            <option>15:00</option>
-                            <option>16:00</option>
-                            <option>17:00</option>
-                            <option>18:00</option>
-                            <option>19:00</option>
-                            <option>20:00</option>
-                            <option>21:00</option>
-                            <option>22:00</option>
+                            <div class="custom-select-menu"></div>
 
+                            <select class="select-oculto"
+                                    id="horaInicio"
+                                    name="horaInicio"
+                                    required
+                                    tabindex="-1"
+                                    aria-hidden="true">
 
-                        </select>
+                                <option value="">
+                                    Seleccionar
+                                </option>
 
+                                <option>07:00</option>
+                                <option>08:00</option>
+                                <option>09:00</option>
+                                <option>10:00</option>
+                                <option>11:00</option>
+                                <option>12:00</option>
+                                <option>13:00</option>
+                                <option>14:00</option>
+                                <option>15:00</option>
+                                <option>16:00</option>
+                                <option>17:00</option>
+                                <option>18:00</option>
+                                <option>19:00</option>
+                                <option>20:00</option>
+                                <option>21:00</option>
+
+                            </select>
+
+                        </div>
 
                     </div>
 
-                </div>
+                    <div class="mb-3">
 
+                        <label for="horaFin" class="form-label fw-bold">
+                            Hora Fin
+                        </label>
 
-                        <div class="mb-3">
-                            <label class="form-label">Cantidad de alumnos</label>
-                            <input type="number" id="cantidadAlumnos" class="form-control" required>
+                        <div class="custom-select-wrapper" data-target="horaFin">
+
+                            <button type="button"
+                                    class="form-select custom-select-toggle text-start">
+                                Seleccionar
+                            </button>
+
+                            <div class="custom-select-menu"></div>
+
+                            <select class="select-oculto"
+                                    id="horaFin"
+                                    name="horaFin"
+                                    required
+                                    tabindex="-1"
+                                    aria-hidden="true">
+
+                                <option value="">
+                                    Seleccionar
+                                </option>
+
+                                <option>08:00</option>
+                                <option>09:00</option>
+                                <option>10:00</option>
+                                <option>11:00</option>
+                                <option>12:00</option>
+                                <option>13:00</option>
+                                <option>14:00</option>
+                                <option>15:00</option>
+                                <option>16:00</option>
+                                <option>17:00</option>
+                                <option>18:00</option>
+                                <option>19:00</option>
+                                <option>20:00</option>
+                                <option>21:00</option>
+                                <option>22:00</option>
+
+                            </select>
+
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Recursos</label>
-                            <div id="listaRecursos" class="border rounded p-2"></div>
-                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad de alumnos</label>
+                        <input type="number" id="cantidadAlumnos" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Recursos</label>
+                        <div id="listaRecursos" class="border rounded p-2"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Laboratorio</label>
+                        <select id="laboratorio" class="form-control" required disabled>
+                            <option value="">Complete los datos anteriores</option>
+                        </select>
+                    </div>
 
                     <button type="submit" class="btn btn-dark w-100">
                         Reprogramar Reserva

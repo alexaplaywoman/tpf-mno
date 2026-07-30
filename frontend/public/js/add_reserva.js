@@ -24,19 +24,19 @@ function inicializarSelectsCustom() {
 
                 if (opcion.disabled) {
                     item.classList.add("disabled");
-                    return;
+                    if (opcion.title) item.title = opcion.title;
+                } else {
+                    item.addEventListener("click", function () {
+
+                        select.value = opcion.value;
+                        select.dispatchEvent(new Event("change", { bubbles: true }));
+
+                        boton.textContent = opcion.textContent;
+
+                        menu.classList.remove("show");
+
+                    });
                 }
-
-                item.addEventListener("click", function () {
-
-                    select.value = opcion.value;
-                    select.dispatchEvent(new Event("change", { bubbles: true }));
-
-                    boton.textContent = opcion.textContent;
-
-                    menu.classList.remove("show");
-
-                });
 
                 menu.appendChild(item);
 
@@ -199,6 +199,158 @@ document.addEventListener("DOMContentLoaded", function () {
         selectLaboratorio.disabled = true;
     }
 
+    // =====================================
+    // BLOQUEO DE HORAS YA RESERVADAS
+    // Como el laboratorio se elige al final, todavia no hay uno solo
+    // contra el cual chequear ocupacion. En cambio, se calculan los
+    // laboratorios "candidatos" (los que cumplen capacidad/recursos/
+    // estado para lo ya cargado) y una hora queda bloqueada solo si
+    // TODOS los candidatos estan ocupados en ese momento -- si alguno
+    // esta libre, la hora sigue habilitada (mismo criterio que
+    // laboratorio.js del lado del solicitante, pero agregado entre labs).
+    // =====================================
+
+    let ocupadosPorLabCandidato = null; // null = todavia no se calculo
+
+    function sumarHora(hora, minutos) {
+        const [h, m] = hora.split(':').map(Number);
+        const total = h * 60 + m + minutos;
+        const hh = Math.floor(total / 60) % 24;
+        const mm = total % 60;
+        return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    }
+
+    function horaOcupadaEnTodosLosCandidatos(inicio, fin) {
+        if (!ocupadosPorLabCandidato || ocupadosPorLabCandidato.length === 0) return true;
+        return ocupadosPorLabCandidato.every(ocupados =>
+            ocupados.some(o => inicio < o.HORA_FIN && fin > o.HORA_INICIO)
+        );
+    }
+
+    function actualizarOpcionesHoraInicio() {
+        Array.from(selectHoraInicio.options).forEach(option => {
+            if (option.value === "") return;
+
+            if (ocupadosPorLabCandidato === null) {
+                option.disabled = false;
+                option.title = "";
+                return;
+            }
+
+            const ocupada = horaOcupadaEnTodosLosCandidatos(option.value, sumarHora(option.value, 60));
+            option.disabled = ocupada;
+            option.title = ocupada ? "Sin laboratorios disponibles a esta hora" : "";
+        });
+
+        if (selectHoraInicio.selectedOptions[0] && selectHoraInicio.selectedOptions[0].disabled) {
+            selectHoraInicio.value = "";
+        }
+
+        selectHoraInicio.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    // La hora de fin tiene que ser posterior a la de inicio, y ademas no
+    // puede caer en un rango donde todos los candidatos estan ocupados.
+    function actualizarOpcionesHoraFin() {
+        const horaInicio = selectHoraInicio.value;
+
+        Array.from(selectHoraFin.options).forEach(option => {
+            if (option.value === "") return;
+
+            if (!horaInicio || option.value <= horaInicio) {
+                option.disabled = true;
+                option.title = "Debe ser posterior a la hora de inicio";
+                return;
+            }
+
+            const ocupada = ocupadosPorLabCandidato !== null &&
+                horaOcupadaEnTodosLosCandidatos(horaInicio, option.value);
+
+            option.disabled = ocupada;
+            option.title = ocupada ? "Sin laboratorios disponibles en ese horario" : "";
+        });
+
+        if (selectHoraFin.selectedOptions[0] && selectHoraFin.selectedOptions[0].disabled) {
+            selectHoraFin.value = "";
+        }
+
+        selectHoraFin.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    // Recalcula los laboratorios candidatos (capacidad/recursos/estado,
+    // sin mirar todavia el horario) y trae sus horarios ya ocupados para
+    // poder bloquear las horas imposibles.
+    function actualizarCandidatosYBloqueos() {
+
+        const fecha = document.getElementById("fecha").value;
+        const idTipoActividad = selectTipoActividad.value;
+        const cantidadAlumnos = Number(inputCantidadAlumnos.value) || 0;
+
+        if (!fecha || !idTipoActividad || !cantidadAlumnos) {
+            ocupadosPorLabCandidato = null;
+            actualizarOpcionesHoraInicio();
+            return;
+        }
+
+        const recursosElegidos = Array.from(
+            contenedorRecursos.querySelectorAll('input[type="checkbox"]:checked')
+        ).map(checkbox => checkbox.value);
+
+        Promise.all([
+            fetch(`/api/laboratorios?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`).then(r => r.json()),
+            fetch(`/api/recursos?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}`).then(r => r.json())
+        ])
+            .then(([laboratorios, recursos]) => {
+
+                if (!Array.isArray(laboratorios) || !Array.isArray(recursos)) {
+                    ocupadosPorLabCandidato = [];
+                    actualizarOpcionesHoraInicio();
+                    return;
+                }
+
+                const recursosPorLab = {};
+                recursos.forEach(r => {
+                    if (r.DISPONIBILIDAD !== 'S') return;
+                    if (!recursosPorLab[r.NUMERO_LABORATORIO]) recursosPorLab[r.NUMERO_LABORATORIO] = [];
+                    recursosPorLab[r.NUMERO_LABORATORIO].push(r.NOMBRE);
+                });
+
+                const candidatos = laboratorios.filter(lab => {
+                    if (lab.estado_tipo !== 'D') return false;
+                    if (lab.CAPACIDAD_ALUMNOS < cantidadAlumnos) return false;
+                    const disponiblesLab = recursosPorLab[lab.NUMERO_LABORATORIO] || [];
+                    return recursosElegidos.every(r => disponiblesLab.includes(r));
+                });
+
+                if (candidatos.length === 0) {
+                    ocupadosPorLabCandidato = [];
+                    actualizarOpcionesHoraInicio();
+                    return;
+                }
+
+                return Promise.all(candidatos.map(lab =>
+                    fetch(`/api/laboratorios/horarios-ocupados?usuario=${encodeURIComponent(usuario)}&clave=${encodeURIComponent(clave)}` +
+                          `&numero_laboratorio=${lab.NUMERO_LABORATORIO}&fecha=${fecha}&id_tipo_actividad=${idTipoActividad}`)
+                        .then(r => r.json())
+                        .then(ocupados => Array.isArray(ocupados)
+                            ? ocupados.map(o => ({
+                                HORA_INICIO: String(o.HORA_INICIO).slice(0, 5),
+                                HORA_FIN: String(o.HORA_FIN).slice(0, 5)
+                            }))
+                            : []
+                        )
+                )).then(porLab => {
+                    ocupadosPorLabCandidato = porLab;
+                    actualizarOpcionesHoraInicio();
+                });
+            })
+            .catch(error => {
+                console.error('Error al calcular horas ocupadas:', error);
+                ocupadosPorLabCandidato = null;
+                actualizarOpcionesHoraInicio();
+            });
+    }
+
     function actualizarLaboratoriosDisponibles() {
 
         const fecha = document.getElementById("fecha").value;
@@ -263,11 +415,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    selectTipoActividad.addEventListener("change", actualizarLaboratoriosDisponibles);
-    selectHoraInicio.addEventListener("change", actualizarLaboratoriosDisponibles);
+    selectTipoActividad.addEventListener("change", actualizarCandidatosYBloqueos);
+    selectHoraInicio.addEventListener("change", actualizarOpcionesHoraFin);
     selectHoraFin.addEventListener("change", actualizarLaboratoriosDisponibles);
-    inputCantidadAlumnos.addEventListener("input", actualizarLaboratoriosDisponibles);
-    contenedorRecursos.addEventListener("change", actualizarLaboratoriosDisponibles);
+    inputCantidadAlumnos.addEventListener("input", actualizarCandidatosYBloqueos);
+    contenedorRecursos.addEventListener("change", actualizarCandidatosYBloqueos);
 
     // =====================================
     // AGREGAR RESERVA
@@ -527,7 +679,7 @@ function renderCalendar() {
 
                 renderCalendar();
 
-                actualizarLaboratoriosDisponibles();
+                actualizarCandidatosYBloqueos();
 
 
                 validar();
