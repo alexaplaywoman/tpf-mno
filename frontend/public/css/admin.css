@@ -590,3 +590,123 @@ textarea {
     }
 
 }
+
+/* =========================
+   SELECT PERSONALIZADO HORAS
+   ========================= */
+
+/* Select real oculto pero presente en el form */
+.select-oculto {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+
+/* Wrapper */
+.custom-select-wrapper {
+    position: relative;
+}
+
+
+/* Botón que muestra la hora seleccionada */
+.custom-select-toggle {
+    cursor: pointer;
+    background-color: white !important;
+    color: var(--dark) !important;
+    border: 1px solid #ced4da !important;
+    text-align: left;
+}
+
+
+/* Menú desplegable */
+.custom-select-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+
+    max-height: 180px;
+    overflow-y: auto;
+
+    background: white;
+
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+
+    z-index: 1000;
+}
+
+
+/* Mostrar opciones */
+.custom-select-menu.show {
+    display: block;
+}
+
+
+/* Opciones */
+.custom-select-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+
+    color: var(--dark);
+}
+
+
+.custom-select-option:hover {
+    background-color: white;
+    color: var(--dark);
+}
+
+
+/* Hora seleccionada */
+.custom-select-option.selected {
+    background-color: var(--purple);
+    color: white;
+}
+
+
+/* Horarios ocupados */
+.custom-select-option.disabled {
+    color: #999;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+
+/* Scroll */
+.custom-select-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+
+.custom-select-menu::-webkit-scrollbar-thumb {
+    background: var(--bar);
+    border-radius: 4px;
+}
+
+/* ===================================
+   CORREGIR SELECT DE HORAS
+   =================================== */
+
+.custom-select-toggle,
+.custom-select-toggle:hover,
+.custom-select-toggle:focus,
+.custom-select-toggle:active {
+    background: white !important;
+    color: var(--dark) !important;
+    border: 1px solid #ced4da !important;
+    box-shadow: none !important;
+}
+
+.custom-select-toggle::after {
+    color: var(--dark);
+}

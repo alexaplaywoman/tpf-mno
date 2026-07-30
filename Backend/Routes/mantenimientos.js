@@ -18,7 +18,12 @@ function verificarAdmin(connection, usuario, callback) {
 
 const ESTADO_LAB_MANTENIMIENTO = 3; // laboratorio en mantenimiento
 const ESTADO_LAB_DISPONIBLE = 1;    // laboratorio disponible
-const ESTADOS_MANT_FINALIZADOS = [3, 4]; // Realizado o Cancelado
+
+// Se compara por la letra (ESTADO_MANTENIMIENTO) en vez del ID numerico:
+// el ID es autoincrement y puede no coincidir con el orden logico P/E/R/C
+// segun como se hayan cargado los datos, como paso antes (2=R, 3=E).
+const CODIGOS_MANT_ACTIVOS = ['P', 'E'];     // Pendiente o En proceso
+const CODIGOS_MANT_FINALIZADOS = ['R', 'C']; // Realizado o Cancelado
 
 router.get('/', (req, res) => {
     const { usuario, clave } = req.query;
@@ -99,10 +104,14 @@ router.post('/add', (req, res) => {
     conectar(usuario, clave, (err, connection) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
+        const codigosActivos = CODIGOS_MANT_ACTIVOS.map(c => `'${c}'`).join(',');
+
         connection.query(
-            `SELECT ID_MANTENIMIENTO FROM DBA.MANTENIMIENTOS
-             WHERE NUMERO_LABORATORIO = ${numero_laboratorio}
-               AND ID_ESTADO_MANTENIMIENTO IN (1, 2)`,
+            `SELECT m.ID_MANTENIMIENTO
+             FROM DBA.MANTENIMIENTOS m
+             JOIN DBA.ESTADOS_MANTENIMIENTOS em ON em.ID_ESTADO_MANTENIMIENTO = m.ID_ESTADO_MANTENIMIENTO
+             WHERE m.NUMERO_LABORATORIO = ${numero_laboratorio}
+               AND em.ESTADO_MANTENIMIENTO IN (${codigosActivos})`,
             (err, activos) => {
                 if (err) {
                     connection.disconnect();
@@ -168,7 +177,7 @@ router.post('/estado/:id', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            `SELECT ID_ESTADO_MANTENIMIENTO FROM DBA.ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento}`,
+            `SELECT ESTADO_MANTENIMIENTO FROM DBA.ESTADOS_MANTENIMIENTOS WHERE ID_ESTADO_MANTENIMIENTO = ${id_estado_mantenimiento}`,
             (err, estados) => {
                 if (err) {
                     connection.disconnect();
@@ -178,6 +187,8 @@ router.post('/estado/:id', (req, res) => {
                     connection.disconnect();
                     return res.status(400).json({ success: false, error: 'Estado de mantenimiento no válido.' });
                 }
+
+                const codigoNuevoEstado = estados[0].ESTADO_MANTENIMIENTO;
 
                 connection.query(
                     `SELECT NUMERO_LABORATORIO FROM DBA.MANTENIMIENTOS WHERE ID_MANTENIMIENTO = ${id}`,
@@ -207,7 +218,7 @@ router.post('/estado/:id', (req, res) => {
                                 return manejarError(err, res, 'actualizar mantenimiento');
                             }
 
-                            const estadoLab = ESTADOS_MANT_FINALIZADOS.some(e => e == id_estado_mantenimiento)
+                            const estadoLab = CODIGOS_MANT_FINALIZADOS.includes(codigoNuevoEstado)
                                 ? ESTADO_LAB_DISPONIBLE
                                 : ESTADO_LAB_MANTENIMIENTO;
 
