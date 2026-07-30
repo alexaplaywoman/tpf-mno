@@ -1,3 +1,103 @@
+
+function inicializarSelectsCustom() {
+
+    document.querySelectorAll(".custom-select-wrapper").forEach(wrapper => {
+
+        const select = document.getElementById(wrapper.dataset.target);
+        const boton = wrapper.querySelector(".custom-select-toggle");
+        const menu = wrapper.querySelector(".custom-select-menu");
+
+
+        function actualizarMenu() {
+
+            menu.innerHTML = "";
+
+
+            Array.from(select.options).forEach(opcion => {
+
+                if(opcion.value === "") return;
+
+
+                const item = document.createElement("div");
+
+                item.className = "custom-select-option";
+                item.textContent = opcion.textContent;
+
+
+                if(opcion.disabled){
+                    item.classList.add("disabled");
+                    return;
+                }
+
+
+                item.addEventListener("click", function(){
+
+                    select.value = opcion.value;
+
+                    select.dispatchEvent(
+                        new Event("change")
+                    );
+
+                    boton.textContent = opcion.textContent;
+
+                    menu.classList.remove("show");
+
+                });
+
+
+                menu.appendChild(item);
+
+            });
+
+        }
+
+
+        boton.addEventListener("click", function(e){
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // cerrar otros menús abiertos
+            document.querySelectorAll(".custom-select-menu").forEach(m => {
+                if (m !== menu) {
+                    m.classList.remove("show");
+                }
+            });
+
+            menu.classList.toggle("show");
+
+        });
+
+        document.addEventListener("click", function(e){
+
+            if (!e.target.closest(".custom-select-wrapper")) {
+
+                document.querySelectorAll(".custom-select-menu")
+                    .forEach(menu => {
+                        menu.classList.remove("show");
+                    });
+
+            }
+
+        });
+
+
+        select.addEventListener("change", actualizarMenu);
+
+
+        actualizarMenu();
+
+    });
+
+}
+
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    inicializarSelectsCustom
+);
+
 document.addEventListener("DOMContentLoaded", function () {
 
     const btnInicio = document.getElementById("inicio");
@@ -7,6 +107,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectSolicitante = document.getElementById("solicitante");
     const selectTipoActividad = document.getElementById("tipoActividad");
     const contenedorRecursos = document.getElementById("listaRecursos");
+    const selectHoraInicio = document.getElementById("horaInicio");
+    const selectHoraFin = document.getElementById("horaFin");
+
+    let horariosOcupadosLab = [];
 
     const usuario = sessionStorage.getItem("usuario");
     const clave = sessionStorage.getItem("clave");
@@ -120,6 +224,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     cargarOpciones();
+
+    selectLaboratorio.addEventListener("change", actualizarHorariosOcupadosDelLab);
+
+    selectHoraInicio.addEventListener("change", actualizarOpcionesHoraFin);
+
+    selectHoraFin.addEventListener("change", validarHorario);
 
     // =====================================
     // AGREGAR RESERVA
@@ -373,14 +483,41 @@ function renderCalendar() {
                 selectedDate = fecha;
 
 
-                document.getElementById("fecha").value =
-                    fechaString;
+                document.getElementById("fechaSeleccionada").value = fechaString;
 
 
                 renderCalendar();
 
 
                 validar();
+
+                actualizarHorariosOcupadosDelLab();
+
+
+            });
+
+
+        }
+
+        function bloquearHorasInicio(){
+
+            Array.from(selectHoraInicio.options).forEach(option => {
+
+
+                if(option.value === ""){
+                    return;
+                }
+
+
+                let ocupado = horariosOcupadosLab.some(h => {
+
+                    return option.value >= h.HORA_INICIO &&
+                        option.value < h.HORA_FIN;
+
+                });
+
+
+                option.disabled = ocupado;
 
 
             });
@@ -490,6 +627,122 @@ async function iniciarCalendario(){
 
 
 iniciarCalendario();
+
+function actualizarHorariosOcupadosDelLab() {
+
+    const laboratorio = selectLaboratorio.value;
+    const fecha = document.getElementById("fechaSeleccionada").value;
+
+
+    if (!laboratorio || !fecha) {
+        horariosOcupadosLab = [];
+        return;
+    }
+
+
+    fetch(`/api/laboratorios/horarios-ocupados?usuario=${usuario}&clave=${clave}&numero_laboratorio=${laboratorio}&fecha=${fecha}`)
+        .then(res => res.json())
+        .then(data => {
+
+            console.log("HORARIOS OCUPADOS:", data);
+
+
+            horariosOcupadosLab = data.map(h => ({
+                HORA_INICIO: String(h.HORA_INICIO).substring(0,5),
+                HORA_FIN: String(h.HORA_FIN).substring(0,5)
+            }));
+
+
+            bloquearHorasInicio();
+            actualizarOpcionesHoraFin();
+
+
+        })
+        .catch(error => {
+
+            console.error(error);
+            horariosOcupadosLab = [];
+
+        });
+
+}
+
+actualizarMenuHoraFin();
+
+function actualizarOpcionesHoraFin(){
+
+    const inicio = selectHoraInicio.value;
+
+
+    Array.from(selectHoraFin.options).forEach(option => {
+
+        if(option.value === ""){
+            return;
+        }
+
+
+        if(!inicio || option.value <= inicio){
+
+            option.disabled = true;
+            option.title = "Debe ser posterior a la hora inicio";
+            return;
+
+        }
+
+
+        const ocupado = horariosOcupadosLab.some(h =>
+            inicio < h.HORA_FIN &&
+            option.value > h.HORA_INICIO
+        );
+
+
+        option.disabled = ocupado;
+
+        option.title = ocupado
+            ? "Horario ocupado"
+            : "";
+
+    });
+
+
+    if(selectHoraFin.selectedOptions[0]?.disabled){
+        selectHoraFin.value = "";
+    }
+
+}
+
+function validarHorario(){
+
+    const inicio = selectHoraInicio.value;
+    const fin = selectHoraFin.value;
+
+
+    if(!inicio || !fin){
+        return;
+    }
+
+
+    const ocupado = horariosOcupadosLab.some(h =>
+        inicio < h.HORA_FIN &&
+        fin > h.HORA_INICIO
+    );
+
+
+    if(ocupado){
+
+        errorMessage.textContent =
+        "El laboratorio ya tiene una reserva en ese horario.";
+
+        selectHoraInicio.value = "";
+        selectHoraFin.value = "";
+
+    } else {
+
+        errorMessage.textContent = "";
+
+    }
+
+}
 
 });
 

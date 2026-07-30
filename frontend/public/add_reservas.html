@@ -20,6 +20,7 @@
     </a>
 </nav>
 
+
 <div class="container mt-5">
 
     <div class="card shadow mx-auto" style="max-width:600px;">
@@ -30,30 +31,51 @@
                 Agregar Nueva Reserva
             </h2>
 
+
             <form id="add-reserva-form">
+
 
                 <div class="mb-3">
                     <label class="form-label">Laboratorio</label>
+
                     <select id="laboratorio" class="form-control" required>
-                        <option value="">Seleccione un laboratorio</option>
+                        <option value="">
+                            Seleccione un laboratorio
+                        </option>
                     </select>
                 </div>
+
+
 
                 <div class="mb-3">
                     <label class="form-label">Solicitante</label>
+
                     <select id="solicitante" class="form-control" required>
-                        <option value="">Seleccione un solicitante</option>
+                        <option value="">
+                            Seleccione un solicitante
+                        </option>
                     </select>
                 </div>
+
+
 
                 <div class="mb-3">
                     <label class="form-label">Tipo de actividad</label>
+
                     <select id="tipoActividad" class="form-control" required>
-                        <option value="">Seleccione un tipo de actividad</option>
+                        <option value="">
+                            Seleccione un tipo de actividad
+                        </option>
                     </select>
                 </div>
 
-                <label class="form-label">Fecha</label>
+
+
+
+                <label class="form-label">
+                    Fecha
+                </label>
+
 
                 <div id="fecha" class="calendar-container">
 
@@ -71,56 +93,216 @@
 
                         </div>
 
+
                         <div class="month-year" id="month-year">
                             Julio 2026
                         </div>
 
                     </div>
 
+
+
                     <div class="weekdays">
-                        <div>Dom</div><div>Lun</div><div>Mar</div>
-                        <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                        <div>Dom</div>
+                        <div>Lun</div>
+                        <div>Mar</div>
+                        <div>Mié</div>
+                        <div>Jue</div>
+                        <div>Vie</div>
+                        <div>Sáb</div>
                     </div>
 
+
                     <div class="days" id="days"></div>
+
 
                     <div class="calendar-footer">
 
                         <button type="button" id="today-btn" class="today-btn">
-                            <i class="fas fa-calendar-day"></i> Hoy
+                            <i class="fas fa-calendar-day"></i>
+                            Hoy
                         </button>
 
                     </div>
 
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Hora inicio</label>
-                    <input type="time" id="horaInicio" class="form-control" required>
-                </div>
+
+                <input type="hidden" id="fechaSeleccionada">
+
+
+
+
 
                 <div class="mb-3">
-                    <label class="form-label">Hora fin</label>
-                    <input type="time" id="horaFin" class="form-control" required>
+
+                    <label for="horaInicio" class="form-label fw-bold">
+                        Hora Inicio
+                    </label>
+
+
+                    <div class="custom-select-wrapper" data-target="horaInicio">
+
+
+                        <button type="button"
+                                class="form-select custom-select-toggle text-start">
+                            Seleccionar
+                        </button>
+
+
+                        <div class="custom-select-menu"></div>
+
+
+
+                        <select class="select-oculto"
+                                id="horaInicio"
+                                name="horaInicio"
+                                required
+                                tabindex="-1"
+                                aria-hidden="true">
+
+                            <option value="">
+                                Seleccionar
+                            </option>
+
+                            <option>07:00</option>
+                            <option>08:00</option>
+                            <option>09:00</option>
+                            <option>10:00</option>
+                            <option>11:00</option>
+                            <option>12:00</option>
+                            <option>13:00</option>
+                            <option>14:00</option>
+                            <option>15:00</option>
+                            <option>16:00</option>
+                            <option>17:00</option>
+                            <option>18:00</option>
+                            <option>19:00</option>
+                            <option>20:00</option>
+                            <option>21:00</option>
+
+                        </select>
+
+                    </div>
+
                 </div>
+
+
+
+
 
                 <div class="mb-3">
-                    <label class="form-label">Cantidad de alumnos</label>
-                    <input type="number" id="cantidadAlumnos" class="form-control" required>
+
+                    <label for="horaFin" class="form-label fw-bold">
+                        Hora Fin
+                    </label>
+
+
+                    <div class="custom-select-wrapper" data-target="horaFin">
+
+
+                        <button type="button"
+                                class="form-select custom-select-toggle text-start">
+                            Seleccionar
+                        </button>
+
+
+                        <div class="custom-select-menu"></div>
+
+
+
+                        <select class="select-oculto"
+                                id="horaFin"
+                                name="horaFin"
+                                required
+                                tabindex="-1"
+                                aria-hidden="true">
+
+
+                            <option value="">
+                                Seleccionar
+                            </option>
+
+                            <option>08:00</option>
+                            <option>09:00</option>
+                            <option>10:00</option>
+                            <option>11:00</option>
+                            <option>12:00</option>
+                            <option>13:00</option>
+                            <option>14:00</option>
+                            <option>15:00</option>
+                            <option>16:00</option>
+                            <option>17:00</option>
+                            <option>18:00</option>
+                            <option>19:00</option>
+                            <option>20:00</option>
+                            <option>21:00</option>
+                            <option>22:00</option>
+
+
+                        </select>
+
+
+                    </div>
+
                 </div>
+
+
+
+
 
                 <div class="mb-3">
-                    <label class="form-label">Recursos</label>
-                    <div id="listaRecursos" class="border rounded p-2"></div>
+
+                    <label class="form-label">
+                        Cantidad de alumnos
+                    </label>
+
+
+                    <input type="number"
+                           id="cantidadAlumnos"
+                           class="form-control"
+                           required>
+
                 </div>
 
-                <button type="submit" class="btn btn-dark w-100">
+
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Recursos
+                    </label>
+
+
+                    <div id="listaRecursos"
+                         class="border rounded p-2">
+                    </div>
+
+                </div>
+
+
+
+
+
+                <button type="submit"
+                        class="btn btn-dark w-100">
+
                     Agregar Reserva
+
                 </button>
 
-                <div id="error-message" class="text-danger text-center mt-3"></div>
+
+
+
+                <div id="error-message"
+                     class="text-danger text-center mt-3">
+                </div>
+
 
             </form>
+
 
         </div>
 
@@ -128,9 +310,13 @@
 
 </div>
 
+
+
 <script src="./js/add_reserva.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 
+
 </body>
+
 </html>
