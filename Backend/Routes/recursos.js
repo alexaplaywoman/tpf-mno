@@ -25,7 +25,7 @@ router.get('/tipos', (req, res) => {
         if (err) return res.status(500).json({ success: false, error: 'Error de conexión.' });
 
         connection.query(
-            'SELECT DISTINCT NOMBRE FROM DBA.RECURSOS ORDER BY NOMBRE',
+            "SELECT DISTINCT NOMBRE FROM DBA.RECURSOS WHERE DISPONIBILIDAD = 'S' ORDER BY NOMBRE",
             (err, result) => {
                 connection.disconnect();
                 if (err) return manejarError(err, res, 'consultar tipos de recursos');
