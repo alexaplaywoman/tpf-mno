@@ -4,7 +4,6 @@
 
 # Node
 node_modules/
-.claude/
 
 # Variables de entorno (credenciales, nunca se suben)
 .env
