@@ -13,7 +13,7 @@ Universidad Católica Nuestra Señora de la Asunción — FCyT, Análisis de Sis
 - **Java Runtime (JRE 8+)**. El driver `sybase` de npm no es nativo: levanta un proceso Java con jConnect. Sin Java instalado, la conexión falla con `Unable to access jarfile`.
 
 ---
-# Para instalar las dependencias: pip install -r requirements.txt
+## Para instalar las dependencias: pip install -r requirements.txt
 
 ## 1. Base de datos
 
@@ -59,7 +59,7 @@ El orden no es opcional: los `GRANT EXECUTE` de `03_permisos.sql` fallan si los 
 
 ### 1.4. Usuarios de la base
 
-La autenticación se hace contra usuarios de SQL Anywhere; no existe una tabla de usuarios propia.
+La autenticación se hace contra usuarios de SQL Anywhere; no existe una tabla de usuarios propia. Cambiar por la contraseña a utilizar
 
 | Usuario | Clave | Uso |
 |---|---|---|
@@ -79,11 +79,15 @@ Crear un archivo `.env` en la raíz del proyecto:
 
 ```
 SCHEDULER_USUARIO=dba
-SCHEDULER_CLAVE=sql
+SCHEDULER_CLAVE=contrasenha
 
 # Configuración del envío de correos
 SMTP_USER=[completar]
 SMTP_PASS=[completar]
+
+#Correo desde donde se enviaran los correos
+EMAIL_USER=tu-correo@gmail.com
+EMAIL_PASS=contraseña-de-aplicacion-de-16-caracteres
 ```
 
 Los parámetros de conexión a la base están en `conexion.js`:
